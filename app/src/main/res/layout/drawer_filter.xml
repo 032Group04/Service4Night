@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    >
+
+    <SlidingDrawer
+        android:id="@+id/drawer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="fill"
+        android:content="@+id/content"
+        android:handle="@+id/handle_image_view"
+        android:orientation="horizontal"
+        android:rotation="180">
+
+        <Button
+            android:id="@id/handle_image_view"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
+
+            android:layout_height="wrap_content"
+            android:background="@mipmap/ic_filter"
+            android:contentDescription="@string/filter_label"
+            android:drawableTop="@mipmap/ic_filter"
+            android:foreground="@mipmap/ic_filter"
+            android:foregroundGravity="fill_horizontal|fill_vertical"
+            android:gravity="top"
+            android:rotation="180" />
+
+        <FrameLayout
+            android:id="@id/content"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:alpha="1.0"
+            android:background="#E6009688"
+            android:rotation="180"
+
+            >
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|center_vertical"
+                android:layout_marginTop="100dp"
+
+                android:fontFamily="@font/kalam"
+                android:text="@string/filter_label"
+                android:textAlignment="center"
+                android:textSize="42sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center|start"
+                android:layout_margin="20dp"
+                android:orientation="vertical">
+
+                <CheckBox
+                    android:id="@+id/water_checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp"
+
+                    android:text="@string/waterLabel"
+                    android:textColorHighlight="#020202" />
+
+                <CheckBox
+                    android:id="@+id/electricity_checkBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp"
+
+                    android:text="@string/electricityLabel"
+                    android:textColorHighlight="#020202" />
+            </LinearLayout>
+        </FrameLayout>
+    </SlidingDrawer>
+
+</FrameLayout>

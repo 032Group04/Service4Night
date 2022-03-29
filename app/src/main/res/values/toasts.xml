@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_button_toast">Select a location first (long press)</string>
+</resources>

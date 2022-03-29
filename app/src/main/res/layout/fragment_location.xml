@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LocationFragment"
+    android:layout_marginHorizontal="5dp"
+    android:layout_marginVertical="10dp">
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/picture_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginHorizontal="10dp"
+
+        app:flow_horizontalAlign="center"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/textview_latitude"
+        android:layout_width="100dp"
+        android:layout_height="25dp"
+        android:text="@string/latitude"
+        app:layout_constraintBottom_toTopOf="@id/textview_longitude"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.033"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/picture_view_pager"
+        app:layout_constraintVertical_bias="0.611" />
+
+    <TextView
+        android:id="@+id/textview_longitude"
+        android:layout_width="100dp"
+        android:layout_height="25dp"
+        android:layout_marginBottom="20dp"
+        android:text="@string/longitude"
+        app:layout_constraintBottom_toTopOf="@id/location_type_radio_group"
+        app:layout_constraintEnd_toEndOf="parent"
+
+        app:layout_constraintHorizontal_bias="0.033"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/buttonValidate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/validate"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/description_scroll_view"
+        app:layout_constraintVertical_bias="0.593" />
+
+
+    <ScrollView
+        android:id="@+id/description_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="165dp"
+
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="8dp"
+        android:background="#DDDDDD"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/location_type_radio_group">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/descriptionEditText"
+
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+
+
+                android:hint="@string/description_hint"
+
+                />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <RadioGroup
+        android:id="@+id/location_type_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="195dp"
+        android:layout_marginHorizontal="20dp"
+        app:layout_constraintBottom_toTopOf="@id/description_scroll_view"
+        tools:layout_editor_absoluteX="19dp">
+
+        <RadioButton
+            android:id="@+id/water_radioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/waterLabel" />
+
+        <RadioButton
+            android:id="@+id/electricity_radioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/electricityLabel" />
+    </RadioGroup>
+</androidx.constraintlayout.widget.ConstraintLayout>

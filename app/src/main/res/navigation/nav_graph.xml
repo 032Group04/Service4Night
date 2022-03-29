@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/MenuFragment">
+
+    <fragment
+        android:id="@+id/MenuFragment"
+        android:name="fr.abitbol.service4night.MenuFragment"
+        android:label="@string/Menu_fragment_label"
+        tools:layout="@layout/fragment_menu">
+
+        <action
+            android:id="@+id/action_MenuFragment_to_AddLocationFragment"
+            app:destination="@id/AddLocationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/AddLocationFragment"
+        android:name="fr.abitbol.service4night.LocationAddFragment"
+        android:label="@string/AddLocation_fragment_label"
+        tools:layout="@layout/fragment_add_location">
+
+        <action
+            android:id="@+id/action_AddLocationFragment_to_MenuFragment"
+            app:destination="@id/MenuFragment" />
+    </fragment>
+</navigation>

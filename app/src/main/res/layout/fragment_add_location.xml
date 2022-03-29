@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LocationAddFragment"
+    android:layout_marginHorizontal="5dp"
+    android:layout_marginVertical="10dp">
+
+    <FrameLayout
+        android:id="@+id/picture_add_layout"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginHorizontal="10dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/add_picture"
+        android:backgroundTint="#809E8F8F"
+        android:backgroundTintMode="src_atop">
+
+
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/take_picture_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:layout_margin="5dp"
+            android:alpha="1.0"
+            android:clickable="true"
+            android:src="@android:drawable/ic_menu_camera" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+
+            android:adjustViewBounds="true"/>
+    </FrameLayout>
+
+
+    <Button
+        android:id="@+id/buttonValidate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/validate"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/description_scroll_view"
+        app:layout_constraintVertical_bias="0.593" />
+
+
+    <CheckBox
+        android:id="@+id/water_radioButton"
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="28dp"
+        android:text="@string/waterLabel"
+        app:layout_constraintBottom_toTopOf="@id/description_scroll_view"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+
+    <CheckBox
+        android:id="@+id/electricity_radioButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="@string/electricityLabel"
+        app:layout_constraintBottom_toTopOf="@+id/water_radioButton"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/description_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="121dp"
+
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="36dp"
+        android:background="#DDDDDD"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/water_radioButton">
+
+
+        <EditText
+            android:id="@+id/descriptionEditText"
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:hint="@string/description_hint"
+
+            android:inputType="textAutoCorrect"
+
+            />
+
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textview_longitude"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginBottom="48dp"
+        android:text="@string/longitude"
+        app:layout_constraintBottom_toTopOf="@id/electricity_radioButton"
+
+
+        android:layout_marginStart="20dp"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/textview_latitude"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="10dp"
+        android:text="@string/latitude"
+        app:layout_constraintBottom_toTopOf="@id/textview_longitude"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/picture_add_layout"
+        app:layout_constraintVertical_bias="1.0" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "27325412324",
+    "project_id": "service4night",
+    "storage_bucket": "service4night.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27325412324:android:cebf5f1ab8e1fe0fe80df1",
+        "android_client_info": {
+          "package_name": "fr.abitbol.service4night"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "27325412324-nkksf9ff2i03eu3a92bnsa5fsv5q4rnr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTlkfO0JNoBZgOT-25iZdHszDvdIxt1jM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "27325412324-nkksf9ff2i03eu3a92bnsa5fsv5q4rnr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
