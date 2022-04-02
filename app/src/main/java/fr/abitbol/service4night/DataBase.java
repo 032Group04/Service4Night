@@ -2,6 +2,7 @@ package fr.abitbol.service4night;
 
 
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -9,12 +10,16 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DataBase  {
     private final String TAG = "logging from Database";
@@ -23,46 +28,41 @@ public class DataBase  {
         dataBase = FirebaseFirestore.getInstance();
     }
 
-    public void getData(String collection){
-        //DocumentReference document = dataBase.collection("locations").document("2bvxd9pTZk8xh9aDwbHQ");
+    public void callLocations(String collection, MapsActivity caller){
+
+        AtomicReference<ArrayList<Location>> locationsReference = null;
         dataBase.collection(collection)
                 .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()){
-                            for (QueryDocumentSnapshot doc : task.getResult()){
-                                Log.i(TAG, "id : "+doc.getId() + "\ndata : "+ doc.getData());
-                            }
-                        }
-                        else{
-                            Log.i(TAG, "onComplete: error' getting document");
-                        }
-                    }
-                });
+                .addOnCompleteListener(caller);
+
+
     }
-    public void registerLocation(Location location){
+
+    public Map<String, Object> getData(String collection, String document){
+        DocumentReference docRef = dataBase.collection(collection).document(document);
+        AtomicReference<Map<String, Object>> result = null;
+        docRef.get().addOnCompleteListener(task ->{
+            if (task.isSuccessful()){
+                double d = (double) task.getResult().getData().get("latitude");
+                Log.i(TAG, "getData: double latitude value: " + d );
+                String description = (String) task.getResult().getData().get("description");
+                Log.i(TAG, "getData: String description value :"+ description);
+                result.set(task.getResult().getData());
+            }
+        });
+        return result.get();
+    }
+    public void registerLocation(Location location,LocationAddFragment caller){
         Map<String,Object> mappedLocation = new HashMap<>();
         mappedLocation.put("latitude",location.getPoint().latitude);
         mappedLocation.put("longitude",location.getPoint().longitude);
         mappedLocation.put("id",location.getId());
         mappedLocation.put("description",location.getDescription());
-        // voir firestore storage pour les photos et checker quelles classes sont serialisableq
+
+        // voir firestore storage pour les photos et checker quelles classes sont serialisables
         dataBase.collection("locations").document()
                 .set(mappedLocation)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {
-                        Log.i(TAG, "onSuccess: location succesfully written");
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.i(TAG, "onFailure: location failed to be written");
-
-                    }
-                });
+                .addOnCompleteListener(caller);
 
 
     }

@@ -1,5 +1,6 @@
 package fr.abitbol.service4night;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
 import android.content.Context;
@@ -9,20 +10,26 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SlidingDrawer;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.ArrayList;
+
 import fr.abitbol.service4night.databinding.ActivityMapsBinding;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot> {
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
+    private DataBase dataBase;
 
     private final String TAG = "mapsActivity logging";
     public static final int MAP_TYPE_EXPLORE = 3737;
@@ -44,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
             case  MAP_TYPE_EXPLORE:
                 adding = false;
+                dataBase = new DataBase();
                 binding.mapActionButton.setImageResource(R.drawable.ic_search);
                 LayoutInflater inflater =(LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View drawer = (View) inflater.inflate(R.layout.drawer_filter, (ViewGroup) findViewById(R.id.drawer));
@@ -76,9 +84,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     public void showMarkers(Location... locations){
-        for (Location l : locations){
-            mMap.addMarker(new MarkerOptions().position(l.getPoint()).title(l.getId()));
+        if (mMap != null) {
+            mMap.clear();
 
+            for (Location l : locations) {
+                mMap.addMarker(new MarkerOptions().position(l.getPoint()).title(l.getId()));
+
+            }
+        }
+    }
+    public void filterLocations(ArrayList<Location> locations){
+        if (mMap != null){
+            LatLngBounds searchArea = mMap.getProjection().getVisibleRegion().latLngBounds;
+            Log.i(TAG, "before filtering arraylist size is: " + locations.size());
+            locations.removeIf(location -> !(searchArea.contains(location.getPoint())));
+            Log.i(TAG, "after filtering arraylist size is: " + locations.size());
+            showMarkers(locations.toArray(new Location[locations.size()]));
         }
     }
 
@@ -123,6 +144,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
             //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+            mMap.setInfoWindowAdapter(new InfoWindow(MapsActivity.this));
+
+            mMap.setOnMapLongClickListener(latLng -> {
+                Log.i(TAG, "lat : " + latLng.latitude + "\nlong : "+ latLng.longitude);
+
+            });
 
 //        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 //            @Override
@@ -130,19 +157,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                Toast.makeText(getApplicationContext(),"long click to select location",Toast.LENGTH_LONG).show();
 //            }
 //        });
-        }
 
             binding.mapActionButton.setOnClickListener(view -> {
-                if (adding){
-                    Toast.makeText(this, getResources().getText(R.string.map_button_toast), Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    LatLngBounds searchArea = mMap.getProjection().getVisibleRegion().latLngBounds;
-                }
+                dataBase.callLocations("locations",MapsActivity.this);
+
+
             });
+        }
+
+
 
 
     }
 
 
+    @Override
+    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+        Log.i(TAG, "onComplete: Maps activityu callback received");
+        if (task.isSuccessful()){
+            ArrayList<Location> locations  = new ArrayList<>();
+            for (QueryDocumentSnapshot doc : task.getResult()){
+                Log.i(TAG, "id : "+doc.getId() + "\ndata : "+ doc.getData());
+                locations.add(LocationBuilder.build(doc.getData()));
+            }
+            filterLocations(locations);
+        }
+        else{
+            Log.i(TAG, "onComplete: error' getting document");
+        }
+    }
 }

@@ -18,7 +18,10 @@
 
     <string name="waterLabel">Water</string>
     <string name="electricityLabel">Electricity</string>
-
+    <string name="wifi_label">Wifi</string>
+    <string name="drinkable_label">Drinkable</string>
+    <string name="dumpster_label">Dumpster</string>
+    <string name="water_drain_label">Water drain</string>
     <!--             Hints                   -->
 
     <string name="description_hint">Describe the location here.</string>
@@ -26,4 +29,6 @@
     <!-- Strings used for descriptions -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="map_button_description">map button</string>
+    <string name="image_add_button_description">button to add pictures</string>
+
 </resources>

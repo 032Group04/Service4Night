@@ -1,6 +1,7 @@
 package fr.abitbol.service4night;
 
 import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +22,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +31,7 @@ import java.io.IOException;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
 
 
-public class LocationAddFragment extends Fragment {
+public class LocationAddFragment extends Fragment implements OnCompleteListener<Void> {
 
     private FragmentAddLocationBinding binding;
 
@@ -105,8 +108,7 @@ public class LocationAddFragment extends Fragment {
             public void onClick(View view) {
 //                NavHostFragment.findNavController(LocationAddFragment.this)
 //                        .navigate(R.id.action_AddLocationFragment_to_MenuFragment);
-                dataBase.registerLocation(location);
-
+                dataBase.registerLocation(location,LocationAddFragment.this);
             }
         });
     }
@@ -132,4 +134,16 @@ public class LocationAddFragment extends Fragment {
         binding = null;
     }
 
+    @Override
+    public void onComplete(@NonNull Task task) {
+        if (task.isSuccessful()){
+            Log.i(TAG, "onComplete: location successfully written. ");
+            Toast.makeText(getContext(), getString(R.string.location_add_success), Toast.LENGTH_LONG).show();
+        }
+        else{
+            Log.i(TAG, "onComplete: location failed to be written");
+            Toast.makeText(getContext(), getString(R.string.location_add_fail), Toast.LENGTH_LONG).show();
+        }
+        NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
+    }
 }

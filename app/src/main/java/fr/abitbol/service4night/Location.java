@@ -23,7 +23,8 @@ public class Location {
     private String id;
     private LatLng point;
     private Bitmap picture;
-    public Location(double latitude, double longitude, String _description) throws IOException {
+    private boolean electricity, water, drinkableWater, wifi,dumpster,drainage;
+    public Location(double latitude, double longitude, String _description)  {
         point = new LatLng(latitude, longitude);
 
         description = _description;
@@ -31,7 +32,7 @@ public class Location {
 
 
     }
-    public Location(LatLng _point, String _description) throws IOException {
+    public Location(LatLng _point, String _description) {
         point = _point;
 
         description = _description;

@@ -9,7 +9,7 @@
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/content_main.xml" value="0.2765625" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/content_maps.xml" value="0.3546875" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/drawer_filter.xml" value="0.2" />
-        <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_add_location.xml" value="0.33" />
+        <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_add_location.xml" value="0.21920289855072464" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_first.xml" value="0.3546875" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_location.xml" value="0.3546875" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_map.xml" value="0.16" />
@@ -18,6 +18,7 @@
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_menu.xml" value="0.1" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/fragment_second.xml" value="0.17249240121580547" />
         <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/layout.xml" value="0.15579710144927536" />
+        <entry key="..\:/Users/aperi/AndroidStudioProjects/NFA024/Service4Night/app/src/main/res/layout/window_info.xml" value="0.75" />
       </map>
     </option>
   </component>
