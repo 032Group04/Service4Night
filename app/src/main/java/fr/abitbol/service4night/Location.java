@@ -7,6 +7,10 @@ import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
@@ -17,16 +21,19 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import fr.abitbol.service4night.services.Service;
+
 public class Location {
 
     private String description;
     private String id;
     private LatLng point;
     private Bitmap picture;
+    private Map<String, Service> services;
     private boolean electricity, water, drinkableWater, wifi,dumpster,drainage;
     public Location(double latitude, double longitude, String _description)  {
         point = new LatLng(latitude, longitude);
-
+        services = new HashMap<>();
         description = _description;
         id = String.format(Locale.FRANCE,Double.toString(latitude)+'|'+ longitude);
 
@@ -34,6 +41,7 @@ public class Location {
     }
     public Location(LatLng _point, String _description) {
         point = _point;
+        services = new HashMap<>();
 
         description = _description;
         id = String.format(Locale.FRANCE,Double.toString(point.latitude)+'|'+ point.longitude);
@@ -41,11 +49,52 @@ public class Location {
 
     }
 
+    public void addService(Service service){
+        if (services.containsKey(service.getLabel())){
+            services.replace(service.getLabel(),service);
+        }
+        else {
+            services.put(service.getLabel(), service);
+        }
+    }
+
     public Map<String,Object> getMappedLocation(){
         Map<String,Object> locationMap = new HashMap<>();
         locationMap.put(id,this);
         return locationMap;
 
+    }
+    public Service gotService(Service service){
+        return services.getOrDefault(service.getLabel(),null);
+    }
+    public Service gotService(String label){
+        return services.getOrDefault(label,null);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+
+        if (this == obj){
+            return true;
+        }
+        if (!(obj instanceof Location)){
+            return false;
+        }
+        else{
+            return id.equals(((Location) obj).getId());
+        }
+
+
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return id;
+    }
+
+    public Map<String, Service> getServices() {
+        return services;
     }
 
     public Bitmap getPicture() {

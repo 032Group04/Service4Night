@@ -12,35 +12,49 @@ import androidx.annotation.Nullable;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Marker;
 
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
+
+import fr.abitbol.service4night.databinding.WindowInfoBinding;
 
 
 public class InfoWindow extends GridLayout implements GoogleMap.InfoWindowAdapter {
 
-    private Context context;
-    public InfoWindow(Context _context) {
-        super(_context);
-        context = _context;
+
+    private WindowInfoBinding binding;
+    private AtomicReference<ArrayList<Location>> locationsRef;
+
+    public InfoWindow(Context context) {
+        super(context);
+        init(context);
+
+//        inflate(context,R.layout.window_info,this);
+    }
+
+    public InfoWindow(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+//        inflate(context,R.layout.window_info,this);
+        init(context);
+    }
+
+    public InfoWindow(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+//        inflate(context,R.layout.window_info,this);
+        init(context);
+    }
+
+    public InfoWindow(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        init(context);
+//        inflate(context,R.layout.window_info,this);
+    }
+    private void init(Context context){
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater.inflate(R.layout.window_info,this);
+        binding = WindowInfoBinding.inflate(inflater);
+        MapsActivity mapsActivity =  (MapsActivity) context;
+        locationsRef = new AtomicReference<>(mapsActivity.getVisibleLocations());
 
-        inflate(_context,R.layout.window_info,this);
-    }
-
-    public InfoWindow(Context _context, @Nullable AttributeSet attrs) {
-        super(_context, attrs);
-        context = _context;
-        inflate(_context,R.layout.window_info,this);
-    }
-
-    public InfoWindow(Context _context, AttributeSet attrs, int defStyleAttr) {
-        super(_context, attrs, defStyleAttr);
-        context = _context;
-        inflate(_context,R.layout.window_info,this);
-    }
-
-    public InfoWindow(Context _context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(_context, attrs, defStyleAttr, defStyleRes);
-        context = _context;
-        inflate(_context,R.layout.window_info,this);
     }
 
     @Nullable
@@ -52,6 +66,19 @@ public class InfoWindow extends GridLayout implements GoogleMap.InfoWindowAdapte
     @Nullable
     @Override
     public View getInfoContents(@NonNull Marker marker) {
-    return this;
+        Location location = null;
+
+        for (Location l : locationsRef.get()){
+            if (l.getId().equals(marker.getTitle()) ){
+                location = l;
+                break;
+            }
+        }
+        if (location != null){
+            binding.descriptionTextView.setText(location.getDescription());
+            binding.coordinatesTextView.setText(location.getPoint().toString());
+            
+        }
+        return this;
     }
 }

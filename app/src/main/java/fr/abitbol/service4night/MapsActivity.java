@@ -15,6 +15,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLngBounds;
+
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -22,6 +23,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import fr.abitbol.service4night.databinding.ActivityMapsBinding;
 
@@ -29,8 +31,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
-    private DataBase dataBase;
 
+    private DataBase dataBase;
+    private ArrayList<Location> visibleLocations;
     private final String TAG = "mapsActivity logging";
     public static final int MAP_TYPE_EXPLORE = 3737;
     public static final int MAP_TYPE_ADD = 7337;
@@ -42,7 +45,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //Navigation.findNavController(this,R.id.map).getGraph().
-
+        visibleLocations = null;
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         switch (getIntent().getIntExtra(MAP_MODE_BUNDLE_NAME,-1)){
             case MAP_TYPE_ADD:
@@ -175,15 +178,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onComplete(@NonNull Task<QuerySnapshot> task) {
         Log.i(TAG, "onComplete: Maps activityu callback received");
         if (task.isSuccessful()){
-            ArrayList<Location> locations  = new ArrayList<>();
+            visibleLocations  = new ArrayList<>();
             for (QueryDocumentSnapshot doc : task.getResult()){
                 Log.i(TAG, "id : "+doc.getId() + "\ndata : "+ doc.getData());
-                locations.add(LocationBuilder.build(doc.getData()));
+                visibleLocations.add(LocationBuilder.build(doc.getData()));
             }
-            filterLocations(locations);
+            filterLocations(visibleLocations);
         }
         else{
             Log.i(TAG, "onComplete: error' getting document");
         }
+    }
+
+    public ArrayList<Location> getVisibleLocations() {
+        return visibleLocations;
     }
 }
