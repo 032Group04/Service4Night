@@ -14,6 +14,7 @@ public abstract class Service {
     public static final String DUMPSTER_SERVICE = "Dumpster";
     public static final String INTERNET_SERVICE = "Internet";
     public static final String DRAINAGE_SERVICE = "Drainage";
+    public static final String BATHROOM_SERVICE = "Bathroom";
     private String label;
     public Service(String _label){
         label = _label;
@@ -45,4 +46,6 @@ public abstract class Service {
     public String toString() {
         return (label + " service type.");
     }
+
+
 }

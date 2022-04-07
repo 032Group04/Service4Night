@@ -1,7 +1,7 @@
 package fr.abitbol.service4night.services;
 
 public class InternetService extends Service{
-    enum ConnectionType{public_wifi, private_provider}
+    public enum ConnectionType{public_wifi, private_provider}
     private ConnectionType connectionType;
     private float price;
 
@@ -11,4 +11,10 @@ public class InternetService extends Service{
        price = _price;
 
    }
+    public InternetService(ConnectionType type){
+        super(INTERNET_SERVICE);
+        connectionType = type;
+        price = 0;
+
+    }
 }

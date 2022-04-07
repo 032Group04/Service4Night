@@ -58,6 +58,7 @@ public class DataBase  {
         mappedLocation.put("longitude",location.getPoint().longitude);
         mappedLocation.put("id",location.getId());
         mappedLocation.put("description",location.getDescription());
+        mappedLocation.put("services",location.getServices());
 
         // voir firestore storage pour les photos et checker quelles classes sont serialisables
         dataBase.collection("locations").document()

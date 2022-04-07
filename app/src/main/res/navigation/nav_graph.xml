@@ -14,6 +14,12 @@
         <action
             android:id="@+id/action_MenuFragment_to_AddLocationFragment"
             app:destination="@id/AddLocationFragment" />
+        <action
+            android:id="@+id/action_MenuFragment_to_LocationFragment"
+            app:destination="@id/LocationFragment"/>
+        <action
+            android:id="@+id/action_MenuFragment_to_mapsActivity"
+            app:destination="@id/mapsActivity" />
     </fragment>
     <fragment
         android:id="@+id/AddLocationFragment"
@@ -25,4 +31,18 @@
             android:id="@+id/action_AddLocationFragment_to_MenuFragment"
             app:destination="@id/MenuFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/LocationFragment"
+        android:name="fr.abitbol.service4night.LocationFragment"
+        android:label=""
+        tools:layout="@layout/fragment_location">
+        <action
+            android:id="@+id/action_LocationFragment_to_MenuFragment"
+            app:destination="@id/MenuFragment"/>
+    </fragment>
+    <activity
+        android:id="@+id/mapsActivity"
+        android:name="fr.abitbol.service4night.MapsActivity"
+        android:label="activity_maps"
+        tools:layout="@layout/activity_maps" />
 </navigation>

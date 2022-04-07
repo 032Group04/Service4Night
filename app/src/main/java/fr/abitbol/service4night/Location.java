@@ -30,24 +30,28 @@ public class Location {
     private LatLng point;
     private Bitmap picture;
     private Map<String, Service> services;
-    private boolean electricity, water, drinkableWater, wifi,dumpster,drainage;
-    public Location(double latitude, double longitude, String _description)  {
+
+
+    public Location(double latitude, double longitude, String _description,HashMap<String,Service> _services)  {
         point = new LatLng(latitude, longitude);
-        services = new HashMap<>();
+        services = _services;
         description = _description;
         id = String.format(Locale.FRANCE,Double.toString(latitude)+'|'+ longitude);
 
 
     }
-    public Location(LatLng _point, String _description) {
+
+    public Location(LatLng _point, String _description, HashMap<String,Service> _services) {
         point = _point;
-        services = new HashMap<>();
+        services = _services;
 
         description = _description;
         id = String.format(Locale.FRANCE,Double.toString(point.latitude)+'|'+ point.longitude);
 
 
     }
+
+
 
     public void addService(Service service){
         if (services.containsKey(service.getLabel())){

@@ -3,4 +3,6 @@
     <string name="map_button_toast">Select a location first (long press)</string>
     <string name="location_add_success">Location successfully added</string>
     <string name="location_add_fail">Failed to add location</string>
+    <string name="arguments_missing_error">Error : incorrect or missing coordinates.</string>
+    <string name="price_parsing_error">price input is incorrect</string>
 </resources>
