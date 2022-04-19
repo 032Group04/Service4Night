@@ -14,11 +14,12 @@
         android:content="@+id/content"
         android:handle="@+id/handle_image_view"
         android:orientation="horizontal"
-        android:rotation="180">
+
+        android:rotation="0">
+
 
         <Button
             android:id="@id/handle_image_view"
-            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="wrap_content"
 
             android:layout_height="wrap_content"
@@ -28,7 +29,9 @@
             android:foreground="@mipmap/ic_filter"
             android:foregroundGravity="fill_horizontal|fill_vertical"
             android:gravity="top"
-            android:rotation="180" />
+
+
+            android:rotation="0" />
 
         <FrameLayout
             android:id="@id/content"
@@ -36,7 +39,7 @@
             android:layout_height="fill_parent"
             android:alpha="1.0"
             android:background="#E6009688"
-            android:rotation="180"
+            android:rotation="0"
 
             >
 
@@ -59,7 +62,7 @@
                 android:orientation="vertical">
 
                 <CheckBox
-                    android:id="@+id/water_checkbox"
+                    android:id="@+id/drawer_water_checkbox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="20dp"
@@ -68,7 +71,7 @@
                     android:textColorHighlight="#020202" />
 
                 <CheckBox
-                    android:id="@+id/electricity_checkBox"
+                    android:id="@+id/drawer_electricity_checkBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="20dp"

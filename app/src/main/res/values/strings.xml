@@ -21,7 +21,9 @@
     <string name="wifi_label">Wifi</string>
     <string name="drinkable_label">Drinkable</string>
     <string name="dumpster_label">Dumpster</string>
-    <string name="water_drain_label">Water drain</string>
+    <string name="grey_water_drain_label">Water drain (Grey water)</string>
+    <string name="black_water_label">Black water</string>
+    <string name="black_water_drain_label">Black water drainage</string>
     <!--             Hints                   -->
 
     <string name="description_hint">Describe the location here.</string>
@@ -33,6 +35,26 @@
     <string name="price_label">Price</string>
     <string name="internet_label">Internet</string>
     <string name="private_network_label">Private network</string>
+    <string name="account_settings_title">Account settings</string>
+    <string name="application_settings_title">Application Settings</string>
 
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="log_in_menu_item">Log in</string>
+
+    <string-array name="themeList">
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+    </string-array>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome!"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="public_wifi_label">public Wifi</string>
 
 </resources>

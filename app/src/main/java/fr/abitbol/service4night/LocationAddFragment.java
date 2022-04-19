@@ -1,13 +1,9 @@
 package fr.abitbol.service4night;
 
-import android.content.Context;
-import android.content.pm.ActivityInfo;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,10 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -37,9 +31,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
+import fr.abitbol.service4night.services.DrainService;
+import fr.abitbol.service4night.services.DumpService;
 import fr.abitbol.service4night.services.ElectricityService;
 import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
@@ -105,13 +100,19 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         else{
             binding.addDrinkableCheckBox.setEnabled(false);
         }
-        if (binding.addPublicWifiRadioButton.isChecked()){
+        if (binding.addPrivateNetworkRadioButton.isChecked()){
+            binding.addInternetPriceLabel.setVisibility(View.VISIBLE);
+            binding.internetPriceEditText.setVisibility(View.VISIBLE);
+        }
+        else{
             binding.addInternetPriceLabel.setVisibility(View.GONE);
             binding.internetPriceEditText.setVisibility(View.GONE);
         }
+        if (binding.addDrainageCheckbox.isChecked()){
+            binding.addDarkWaterCheckBox.setVisibility(View.VISIBLE);
+        }
         else{
-            binding.addInternetPriceLabel.setVisibility(View.VISIBLE);
-            binding.internetPriceEditText.setVisibility(View.VISIBLE);
+            binding.addDarkWaterCheckBox.setVisibility(View.GONE);
         }
         binding.addWaterCheckBox.setOnClickListener(view -> {
             if (((CheckBox) view).isChecked()){
@@ -130,6 +131,14 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             else{
                 binding.addInternetPriceLabel.setVisibility(View.VISIBLE);
                 binding.internetPriceEditText.setVisibility(View.VISIBLE);
+            }
+        });
+        binding.addDrainageCheckbox.setOnClickListener(view -> {
+            if (binding.addDrainageCheckbox.isChecked()){
+                binding.addDarkWaterCheckBox.setVisibility(View.VISIBLE);
+            }
+            else{
+                binding.addDarkWaterCheckBox.setVisibility(View.GONE);
             }
         });
 
@@ -203,17 +212,31 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 //                NavHostFragment.findNavController(LocationAddFragment.this)
 //                        .navigate(R.id.action_AddLocationFragment_to_MenuFragment);
                 services = new HashMap<>();
-                binding.descriptionEditText.getText().toString();
-                description = binding.descriptionEditText.getText().toString();
-                Log.i(TAG, "onClick: description = "+ description);
-                dataBase.registerLocation(new Location(point,description,services),LocationAddFragment.this);
+
+
+                if (processInputs()) {
+                    dataBase.registerLocation(new Location(point, description, services), LocationAddFragment.this);
+                }
             }
         });
     }
-    public boolean processServices(){
+    public boolean processInputs(){
+        if (binding.addDescriptionEditText.getText().length() < 4){
+            Toast.makeText(getContext(), getString(R.string.empty_description), Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        else{
+            description = binding.addDescriptionEditText.getText().toString();
+            Log.i(TAG, "onClick: description = "+ description);
+        }
+        boolean service = false;
+
+
         if (binding.addWaterCheckBox.isChecked()){
+            service = true;
             boolean drinkable = binding.addDrinkableCheckBox.isChecked();
             boolean update = services.containsKey(Service.WATER_SERVICE);
+            Log.i(TAG, "processServices: water checked : drikable = "+ drinkable+" , update = " + update);
             float price;
             if(binding.addWaterPriceEditText.getText().length() == 0){
                 Log.i(TAG, "getServices: water price is empty");
@@ -221,9 +244,10 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
             else{
                 try{
-                    price = parsePrice(binding.addWaterPriceEditText);
+                    price = parsePrice(binding.addWaterPriceEditText,"water service");
 
                 }catch (NumberFormatException e){
+                    Toast.makeText(getContext(), "", Toast.LENGTH_SHORT).show();
                     return false;
                 }
             }
@@ -236,7 +260,10 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
         }
         if (binding.addElectricityCheckBox.isChecked()){
+            service = true;
             boolean update = services.containsKey(Service.ELECTRICITY_SERVICE);
+            Log.i(TAG, "processServices: electricity checked : update = " + update);
+
             float price;
             if(binding.electricityPriceEditText.getText().length() == 0){
                 Log.i(TAG, "getServices: water price is empty");
@@ -244,7 +271,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
             else{
                 try{
-                    price = parsePrice(binding.electricityPriceEditText);
+                    price = parsePrice(binding.electricityPriceEditText,"electricity service");
 
                 }catch (NumberFormatException e){
                     return false;
@@ -259,14 +286,16 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
         }
         if (binding.addInternetCheckBox.isChecked()){
+            service = true;
             boolean update = services.containsKey(Service.INTERNET_SERVICE);
             InternetService.ConnectionType connectionType;
+
             float price = 0;
             if (binding.addPrivateNetworkRadioButton.isChecked()){
                  connectionType = InternetService.ConnectionType.private_provider;
-                if(binding.electricityPriceEditText.getText().length() > 0) {
+                if(binding.internetPriceEditText.getText().length() > 0) {
                     try {
-                        price = parsePrice(binding.internetPriceEditText);
+                        price = parsePrice(binding.internetPriceEditText,"internet service");
 
                     } catch (NumberFormatException e) {
                         return false;
@@ -276,7 +305,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             else{
                 connectionType = InternetService.ConnectionType.public_wifi;
             }
-
+            Log.i(TAG, "processServices: internet checked : connection type = "+ connectionType.name()+" update = " + update);
             if (update){
                 if (connectionType.equals(InternetService.ConnectionType.public_wifi)) {
                     services.replace(Service.INTERNET_SERVICE, new InternetService(connectionType));
@@ -295,18 +324,47 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
 
         }
-        //réfléchir a remplir services au coup par coup avec des listener
+        if (binding.addDumpsterCheckBox.isChecked()){
+            service = true;
+            boolean update = services.containsKey(Service.DUMPSTER_SERVICE);
+            Log.i(TAG, "processInputs: dumpster service checked , update = " + update);
+            if (update){
+                services.replace(Service.DUMPSTER_SERVICE,new DumpService());
+            }
+            else{
+                services.put(Service.DUMPSTER_SERVICE,new DumpService());
+            }
+        }
+        if (binding.addDrainageCheckbox.isChecked()){
+            service = true;
+            boolean update = services.containsKey(Service.DRAINAGE_SERVICE);
+            boolean blackWater = binding.addDarkWaterCheckBox.isChecked();
+            Log.i(TAG, "processInputs: drainage service checked , update = " + update + " , blackwater = " + blackWater);
 
-        return true;
+            if (update){
+                services.replace(Service.DRAINAGE_SERVICE,new DrainService(blackWater));
+            }
+            else{
+                services.put(Service.DRAINAGE_SERVICE,new DrainService(blackWater));
+            }
+        }
+        //réfléchir a remplir services au coup par coup avec des listener
+        if (service) {
+            return true;
+        }
+        else{
+            Toast.makeText(getContext(), getString(R.string.no_service_selected), Toast.LENGTH_LONG).show();
+            return false;
+        }
 
     }
-    public float parsePrice(EditText editText) throws NumberFormatException{
+    public float parsePrice(EditText editText,String name) throws NumberFormatException{
         float price;
         try{
             price = Float.parseFloat(editText.getText().toString());
         }catch (NumberFormatException e){
             Log.i(TAG, "processServices: " + e.getMessage()+" from " + editText.getTransitionName());
-            Toast.makeText(getContext(), getString(R.string.price_parsing_error), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.price_parsing_error_named)+name, Toast.LENGTH_SHORT).show();
             editText.requestFocus();
             throw e;
 

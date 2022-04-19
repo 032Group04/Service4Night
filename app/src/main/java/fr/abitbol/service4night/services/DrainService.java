@@ -1,11 +1,15 @@
 package fr.abitbol.service4night.services;
 
 public class DrainService extends Service {
-    enum DrainageType{ grey_water, black_water}
-    private DrainageType drainageType;
 
-    public DrainService(DrainageType type) {
+    private boolean blackWater;
+
+    public DrainService(boolean _blackWater) {
         super(DRAINAGE_SERVICE);
-        drainageType = type;
+        blackWater = _blackWater;
+    }
+
+    public boolean isBlackWater() {
+        return blackWater;
     }
 }

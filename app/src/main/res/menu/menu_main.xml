@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="fr.abitbol.service4night.MainActivity">
+
+    <item
+        android:id="@+id/app_settings_item"
+        android:orderInCategory="99"
+        android:title="@string/application_settings_title"
+        android:icon="@android:drawable/ic_menu_manage"
+        app:showAsAction="always"
+        />
+    <item
+        android:title="@string/account_settings_title"
+        android:visible="false"
+        android:id="@+id/account_settings_item"
+        android:icon="@mipmap/ic_account_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        />
+    <item
+        android:title="@string/log_in_menu_item"
+        android:id="@+id/log_in_item"
+        android:orderInCategory="95"
+        app:showAsAction="always"
+        android:icon="@mipmap/ic_sign_in"/>
+
+
+</menu>

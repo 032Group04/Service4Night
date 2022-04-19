@@ -1,247 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingTop="10dp"
-    android:paddingHorizontal="5dp"
-    android:focusableInTouchMode="true"
-    android:minHeight="20dp"
-    android:layout_marginHorizontal="10dp">
-
-    <FrameLayout
-        android:id="@+id/pictureAddLayout"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-
-        android:layout_margin="2dp"
-
-        >
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/location_add_viewPager"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:layout_gravity="center"
-
-            />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/take_picture_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right"
-            android:layout_margin="5dp"
-            android:alpha="1.0"
-            android:clickable="true"
-            android:contentDescription="@string/image_add_button_description"
-            android:src="@android:drawable/ic_menu_camera" />
-    </FrameLayout>
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1" />
+    android:layout_width="match_parent">
     <LinearLayout
+
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+        android:layout_height="match_parent"
+        android:paddingTop="10dp"
+        android:paddingHorizontal="5dp"
+        android:focusableInTouchMode="true"
+        android:minHeight="20dp"
+        android:layout_marginHorizontal="10dp">
 
-        <EditText
-            android:id="@+id/location_add_textview_latitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="@string/latitude"
-            android:inputType="numberDecimal"
-            android:textSize="12sp" />
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
-
-        <EditText
-            android:id="@+id/location_add_textview_longitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:hint="@string/longitude"
-            android:textSize="12sp" />
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
-    </LinearLayout>
-
-    <GridLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="4"
-        android:rowCount="4"
-
-
-        >
-        <LinearLayout
+        <FrameLayout
+            android:id="@+id/pictureAddLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_column="0"
-            android:layout_row="0"
+            android:layout_height="200dp"
 
-            android:layout_marginBottom="10dp"
+            android:layout_margin="2dp"
+
             >
-
-            <CheckBox
-                android:id="@+id/add_water_checkBox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="fill_horizontal"
-
-                android:text="@string/waterLabel"
-                android:textSize="12sp" />
-            <Space
-                android:layout_width="wrap_content"
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/location_add_viewPager"
                 android:layout_height="match_parent"
-                android:layout_weight="1" />
-
-            <CheckBox
-                android:id="@+id/add_drinkable_checkBox"
-
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-
-                android:layout_gravity="fill_horizontal"
-                android:text="@string/drinkable_label"
-                android:textColor="@color/black"
-                android:textSize="12sp" />
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:labelFor="@id/add_water_price_editText"
-                android:text="@string/price_label"
-                android:textColor="@color/black"
-                android:textSize="12sp" />
-
-
-            <EditText
-                android:id="@+id/add_water_price_editText"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="fill_horizontal"
-
-                android:importantForAutofill="no"
-
-                android:inputType="numberDecimal"
-                android:minEms="3"
-
-                android:textSize="12sp"
-                tools:ignore="TouchTargetSizeCheck,TextContrastCheck" />
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_column="0"
-            android:layout_row="1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            android:layout_marginBottom="10dp">
-
-            <CheckBox
-                android:id="@+id/add_electricity_checkBox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/electricityLabel"
-                android:textSize="12sp" />
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="0.2" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:labelFor="@id/electricity_price_editText"
-                android:text="@string/price_label"
-                android:textColor="@color/black"
-                android:textSize="12sp" />
-
-            <EditText
-                android:id="@+id/electricity_price_editText"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="fill_horizontal"
-
-                android:importantForAutofill="no"
-
-                android:inputType="numberDecimal"
-                android:minEms="3"
-
-                android:textSize="12sp"
-                tools:ignore="TouchTargetSizeCheck,TextContrastCheck" />
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_row="2"
-            android:layout_column="0"
-            >
-
-            <CheckBox
-                android:id="@+id/add_internet_checkBox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/internet_label"
-                android:textSize="12sp" />
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-            <RadioGroup
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
                 android:orientation="horizontal"
-                android:id="@+id/add_internet_type_radioGroup"
+                android:layout_gravity="center"
+
+                />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/take_picture_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|right"
+                android:layout_margin="5dp"
+                android:alpha="1.0"
+                android:clickable="true"
+                android:contentDescription="@string/image_add_button_description"
+                android:src="@android:drawable/ic_menu_camera" />
+        </FrameLayout>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <EditText
+                android:id="@+id/location_add_textview_latitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="@string/latitude"
+                android:inputType="numberDecimal"
+                android:textSize="10sp" />
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <EditText
+                android:id="@+id/location_add_textview_longitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:hint="@string/longitude"
+                android:textSize="10sp" />
+            <Space
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="4"
+            android:rowCount="4"
+
+
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_column="0"
+                android:layout_row="0"
+
+                android:layout_marginBottom="10dp"
                 >
-                <RadioButton
+
+                <CheckBox
+                    android:id="@+id/add_water_checkBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="fill_horizontal"
+                    android:buttonTint="@color/blue_main"
+
+                    android:text="@string/waterLabel"
+                    android:textSize="10sp" />
+                <Space
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:id="@+id/add_private_network_radioButton"
-                    android:text="@string/private_network_label"
-                    android:textColor="@color/black"
-                    android:textSize="12sp"
-                    android:layout_marginRight="10dp"/>
+                    android:layout_weight="1" />
+
+                <CheckBox
+                    android:id="@+id/add_drinkable_checkBox"
+
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/blue_main"
+
+                    android:layout_gravity="fill_horizontal"
+                    android:text="@string/drinkable_label"
+                    android:textSize="10sp" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:id="@+id/add_internet_price_label"
-                    android:labelFor="@id/internet_price_editText"
+                    android:labelFor="@id/add_water_price_editText"
                     android:text="@string/price_label"
-                    android:textColor="@color/black"
-                    android:textSize="12sp" />
+                    android:textSize="10sp" />
+
 
                 <EditText
-                    android:id="@+id/internet_price_editText"
+                    android:id="@+id/add_water_price_editText"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_gravity="fill_horizontal"
@@ -251,60 +147,223 @@
                     android:inputType="numberDecimal"
                     android:minEms="3"
 
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     tools:ignore="TouchTargetSizeCheck,TextContrastCheck" />
-                <RadioButton
-                    android:id="@+id/add_public_wifi_radioButton"
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_column="0"
+                android:layout_row="1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                android:layout_marginBottom="10dp">
+
+                <CheckBox
+                    android:id="@+id/add_electricity_checkBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="@string/electricityLabel"
+                    android:buttonTint="@color/blue_main"
+
+                    android:textSize="10sp" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.2" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:labelFor="@id/electricity_price_editText"
+                    android:text="@string/price_label"
+                    android:textSize="10sp" />
+
+                <EditText
+                    android:id="@+id/electricity_price_editText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_gravity="fill_horizontal"
-                    android:text="public Wifi"
-                    android:textColor="@color/black"
-                    android:textSize="12sp"
 
-                    />
+                    android:importantForAutofill="no"
 
-            </RadioGroup>
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
+                    android:inputType="numberDecimal"
+                    android:minEms="3"
+
+                    android:textSize="10sp"
+                    tools:ignore="TouchTargetSizeCheck,TextContrastCheck" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_row="2"
+                android:layout_column="0"
+                >
+
+                <CheckBox
+                    android:id="@+id/add_internet_checkBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/internet_label"
+                    android:buttonTint="@color/blue_main"
+
+                    android:textSize="10sp" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+                <RadioGroup
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:id="@+id/add_internet_type_radioGroup"
+                    >
+
+                    <RadioButton
+                        android:id="@+id/add_private_network_radioButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="10dp"
+                        android:gravity="center"
+                        android:text="@string/private_network_label"
+                        android:buttonTint="@color/blue_main"
+
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/add_internet_price_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:labelFor="@id/internet_price_editText"
+                        android:text="@string/price_label"
+                        android:textSize="10sp" />
+
+                    <EditText
+                        android:id="@+id/internet_price_editText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="fill_horizontal"
+
+                        android:importantForAutofill="no"
+
+                        android:inputType="numberDecimal"
+                        android:minEms="3"
+
+                        android:textSize="10sp"
+                        tools:ignore="TouchTargetSizeCheck,TextContrastCheck" />
+
+                    <RadioButton
+                        android:id="@+id/add_public_wifi_radioButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="fill_horizontal"
+                        android:text="@string/public_wifi_label"
+                        android:buttonTint="@color/blue_main"
+
+                        android:textSize="10sp"
+
+                        />
+
+                </RadioGroup>
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
 
 
-        </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_row="3"
+                android:layout_column="0">
+
+                <CheckBox
+                    android:id="@+id/add_dumpsterCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dumpster_label"
+                    android:buttonTint="@color/blue_main"
+
+                    android:textSize="10sp" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <CheckBox
+                    android:id="@+id/add_drainageCheckbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/grey_water_drain_label"
+                    android:buttonTint="@color/blue_main"
+                    android:textSize="10sp" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <CheckBox
+                    android:id="@+id/add_darkWaterCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/blue_main"
+                    android:text="@string/black_water_label"
+                    android:textSize="10sp" />
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
 
 
+            </LinearLayout>
 
-    </GridLayout>
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1" />
-    <EditText
-        android:id="@+id/descriptionEditText"
+        </GridLayout>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
 
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAlignment="textStart"
-        android:gravity="start"
-        android:hint="@string/description_hint"
-        android:layout_weight="1"
-        android:inputType="textAutoCorrect"
+        <EditText
+            android:id="@+id/add_descriptionEditText"
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:autofillHints="description"
+            android:gravity="start"
+            android:hint="@string/description_hint"
+            android:inputType="textAutoCorrect|textMultiLine"
+            android:minLines="3"
+            android:imeOptions="normal"
+            android:background="@color/blue_light"
+
+            android:textAlignment="textStart"
+            android:textSize="12sp" />
+        <Button
+            android:id="@+id/buttonValidate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/validate"/>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+    </LinearLayout>
 
 
-        android:autofillHints="description" />
-    <Button
-        android:id="@+id/buttonValidate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/validate"/>
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1" />
-
-</LinearLayout>
-
-
+</ScrollView>

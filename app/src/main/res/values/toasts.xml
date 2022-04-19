@@ -5,4 +5,8 @@
     <string name="location_add_fail">Failed to add location</string>
     <string name="arguments_missing_error">Error : incorrect or missing coordinates.</string>
     <string name="price_parsing_error">price input is incorrect</string>
+    <string name="price_parsing_error_named">price input is incorrect for </string>
+    <string name="empty_description">Description is important !</string>
+    <string name="no_service_selected">You must select at least one service</string>
+    <string name="connection_failed">Connection failed : </string>
 </resources>

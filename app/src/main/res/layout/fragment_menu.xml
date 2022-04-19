@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/kalam"
         android:text="@string/Menu_fragment_label"
-        android:textColor="#000000"
+
         android:textSize="50sp"
         app:layout_constraintBottom_toTopOf="@id/addLocationButton"
         app:layout_constraintEnd_toEndOf="parent"
