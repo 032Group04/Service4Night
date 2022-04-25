@@ -13,13 +13,32 @@
 
         <action
             android:id="@+id/action_MenuFragment_to_AddLocationFragment"
-            app:destination="@id/AddLocationFragment" />
+            app:destination="@id/AddLocationFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
         <action
             android:id="@+id/action_MenuFragment_to_LocationFragment"
-            app:destination="@id/LocationFragment"/>
+            app:destination="@id/LocationFragment" />
         <action
             android:id="@+id/action_MenuFragment_to_mapsActivity"
-            app:destination="@id/mapsActivity" />
+            app:destination="@id/mapsActivity"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+        <action
+            android:id="@+id/action_MenuFragment_to_signInFragment"
+            app:destination="@id/signInFragment"
+            app:enterAnim="@anim/fui_slide_in_right"
+            app:exitAnim="@anim/fui_slide_out_left"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim"
+            app:popUpTo="@id/MenuFragment" />
+        <action
+            android:id="@+id/action_MenuFragment_to_settingsActivity"
+            app:destination="@id/settingsActivity"
+            app:popUpTo="@id/MenuFragment" />
     </fragment>
     <fragment
         android:id="@+id/AddLocationFragment"
@@ -45,4 +64,19 @@
         android:name="fr.abitbol.service4night.MapsActivity"
         android:label="activity_maps"
         tools:layout="@layout/activity_maps" />
+    <fragment
+        android:id="@+id/signInFragment"
+        android:name="fr.abitbol.service4night.SignInFragment"
+        android:label="fragment_sign_in"
+        tools:layout="@layout/fragment_sign_in" >
+        <action
+            android:id="@+id/action_signInFragment_to_MenuFragment"
+            app:destination="@id/MenuFragment"
+            app:popEnterAnim="@anim/fui_slide_in_right" />
+    </fragment>
+    <activity
+        android:id="@+id/settingsActivity"
+        android:name="fr.abitbol.service4night.SettingsActivity"
+        android:label="activity_settings"
+        tools:layout="@layout/activity_settings" />
 </navigation>

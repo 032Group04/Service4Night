@@ -1,7 +1,10 @@
 package fr.abitbol.service4night;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -25,6 +28,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,12 +53,15 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private final String TAG = "LocationAddFragment logging";
     private LatLng point;
     private String description;
+    private String name;
     private HashMap<String, Service> services;
     private Bitmap picture;
     List<SliderItems> images;
     private Uri uri;
     private DataBase dataBase;
     private ViewPager2 viewPager;
+    //TODO : demander au prof meilleure méthode (re-récupérer user ou passer id en argument)
+    private FirebaseUser user;
     private ActivityResultLauncher<Uri> mGetcontent = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
 
 
@@ -91,7 +99,14 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             Bundle savedInstanceState
     ) {
 
-
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null){
+            if (!(NavHostFragment.findNavController(LocationAddFragment.this).popBackStack())){
+                Toast.makeText(getContext(), "", Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
+                
+            }
+        }
         images = new ArrayList<>();
         binding = FragmentAddLocationBinding.inflate(inflater, container, false);
         if (binding.addWaterCheckBox.isChecked()){
@@ -122,6 +137,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                 binding.addDrinkableCheckBox.setEnabled(false);
             }
         });
+
         binding.addInternetTypeRadioGroup.setOnCheckedChangeListener((radioGroup, i) -> {
             Log.i(TAG, "RadioGroup onCheckedChangeListener called; i = " + i);
             if (binding.addPublicWifiRadioButton.isChecked()){
@@ -176,6 +192,29 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     Log.i(TAG, "onCreateView: intent extras: " + point.toString());
                     binding.locationAddTextviewLatitude.setText(Double.toString(point.latitude));
                     binding.locationAddTextviewLongitude.setText(Double.toString(point.longitude));
+                    //TODO : ajouter locale au geocoder selon position utilisateur
+                    Geocoder geocoder = new Geocoder(getContext());
+                    List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
+//                    Address address = addresses.get(0);
+                    for (Address address : addresses) {
+                        Log.i(TAG, "onViewCreated: address lines : " + address.getMaxAddressLineIndex());
+                        Log.i(TAG, "onViewCreated: adress to string: " + address.toString());
+                        Log.i(TAG, "onViewCreated: address url : " + address.getUrl());
+                        Log.i(TAG, "onViewCreated: adress");
+
+                        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                            Log.i(TAG, "onViewCreated: adresss Line " + i + " : " + address.getAddressLine(i));
+
+                        }
+                    }
+//                    if (address.getFeatureName() != null){
+//                        name = address.getFeatureName();
+//                        Log.i(TAG, "onViewCreated: adress feature name :" + name);
+//                    }
+//                    else{
+//                        name = address.getAddressLine(0);
+//                    }
+
 
 
                 }
@@ -215,7 +254,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
 
                 if (processInputs()) {
-                    dataBase.registerLocation(new Location(point, description, services), LocationAddFragment.this);
+                    dataBase.registerLocation(new Location(point, description, services, user.getUid(),name,false), LocationAddFragment.this);
                 }
             }
         });
@@ -385,6 +424,10 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         uri = FileProvider.getUriForFile(getContext(),"fr.abitbol.service4night.fileprovider",file);
 
         mGetcontent.launch(uri);
+    }
+    public void resume(Location location){
+        //TODO : afficher les données de location pour récupérer ajout abandonné
+
     }
 
     @Override

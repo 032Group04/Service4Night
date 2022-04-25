@@ -19,7 +19,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import fr.abitbol.service4night.databinding.FragmentMenuBinding;
 
 
-public class MenuFragment extends Fragment {
+public class MenuFragment extends Fragment implements SettingsNavigation {
     private final String TAG = "MenuFragment logging";
     private FragmentMenuBinding binding;
     private final ActivityResultLauncher<Intent> mGetContent = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -63,7 +63,7 @@ public class MenuFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
+        //TODO : ajouter un message sur les modes de connexion
 
         binding.addLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,7 +102,9 @@ public class MenuFragment extends Fragment {
 //            NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_AddLocationFragment,data.getExtras());
 //        }
 //    }
-
+    public void navigateToSignIn(){
+        NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_signInFragment);
+    }
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -110,5 +112,9 @@ public class MenuFragment extends Fragment {
     }
 
 
+    @Override
+    public void navigateToSettingsActivity() {
+        NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_settingsActivity);
 
+    }
 }

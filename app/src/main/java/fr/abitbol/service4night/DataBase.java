@@ -28,6 +28,7 @@ public class DataBase  {
         dataBase = FirebaseFirestore.getInstance();
     }
 
+    //TODO: lancer dans un service
     public void callLocations(String collection, MapsActivity caller){
 
         AtomicReference<ArrayList<Location>> locationsReference = null;
@@ -53,38 +54,23 @@ public class DataBase  {
         return result.get();
     }
     public void registerLocation(Location location,LocationAddFragment caller){
+        //TODO: gérer accès hors ligne, soit ajouter aux sharedPreferences soit voir version hors ligne firebase
         Map<String,Object> mappedLocation = new HashMap<>();
         mappedLocation.put("latitude",location.getPoint().latitude);
         mappedLocation.put("longitude",location.getPoint().longitude);
         mappedLocation.put("id",location.getId());
         mappedLocation.put("description",location.getDescription());
         mappedLocation.put("services",location.getServices());
+        mappedLocation.put("user_id",location.getUser_id());
+        mappedLocation.put("name",location.getName());
+        mappedLocation.put("confirmed",location.isConfirmed());
 
         // voir firestore storage pour les photos et checker quelles classes sont serialisables
-        dataBase.collection("locations").document()
+        dataBase.collection("locations").document(location.getId())
                 .set(mappedLocation)
                 .addOnCompleteListener(caller);
 
 
     }
 
-    /*
-    *   pour firebase realtime database
-    */
-//        public void registerLocation(Location location){
-//        DataBase dataBase = new DataBase("https://service4night-default-rtdb.europe-west1.firebasedatabase.app/");
-//
-//            dataBase.databaseReference.child("locations").child("water").child(location.getId()).setValue(location);
-//
-//    }
-//    DatabaseReference databaseReference;
-
-//    public DataBase(String URL){
-//        databaseReference = FirebaseDatabase.getInstance(URL).getReference();
-//    }
-//
-//    public Location[] getLocations(){
-//        Query locationsQuery = databaseReference.equalTo("locations");
-//        locationsQuery.
-//    }
 }

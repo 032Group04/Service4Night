@@ -3,12 +3,72 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SignInFragment">
-
-    <!-- TODO: Update blank fragment layout -->
+    tools:context=".SignInFragment"
+    android:background="@color/blue_light">
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:id="@+id/textview_first"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/kalam"
+        android:text="@string/sign_in_title"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="30dp"
+
+        android:textSize="50sp"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:gravity="center">
+        <EditText
+            android:background="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"
+            android:id="@+id/sign_in_email_editText"
+            android:maxLines="1"
+            android:autofillHints="emailAddress"
+            android:hint="@string/mail_address_hint"
+            android:layout_marginVertical="30dp"/>
+
+        <EditText
+            android:background="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sign_in_password"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:layout_marginVertical="10dp"
+            android:hint="@string/password_hint"/>
+        <EditText
+            android:background="@color/white"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/sign_in_password_confirm"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:hint="@string/password_confirm_hint"/>
+
+
+    </LinearLayout>
+    <TextView
+        android:layout_gravity="center"
+        android:textSize="10sp"
+        android:textAlignment="center"
+        android:textColor="@color/design_default_color_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/sign_in_password_requires_editText"
+        android:text="@string/password_requirements"
+        android:visibility="invisible"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="40dp"
+        android:id="@+id/sign_in_button"
+        android:text="@string/validate"/>
 
 </FrameLayout>

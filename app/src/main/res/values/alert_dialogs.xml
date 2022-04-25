@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pop_back_abort">All data inputs in this page will be lost, Are you sure ?</string>
+    <string name="pop_back_abort_title">Cancel</string>
+</resources>

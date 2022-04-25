@@ -8,5 +8,17 @@
     <string name="price_parsing_error_named">price input is incorrect for </string>
     <string name="empty_description">Description is important !</string>
     <string name="no_service_selected">You must select at least one service</string>
-    <string name="connection_failed">Connection failed : </string>
+    <string name="log_in_failed">Log in failed : </string>
+    <string name="log_in_success">Logged in successfully</string>
+    <string name="log_out_failed">Log out failed : </string>
+    <string name="log_out_success">Logged out successfully</string>
+    <string name="empty_password">You must enter a password</string>
+    <string name="empty_mail">You must enter a valid mail</string>
+    <string name="password_unconfirmed">You must confirm password</string>
+    <string name="password_format_wrong">Password doesn\'t match requirements</string>
+    <string name="mail_format_wrong">Wrong mail format</string>
+    <string name="not_logged_in">You must be logged in to add a location.</string>
+    <string name="already_looged_in">You are already logged in.</string>
+    <string name="sign_in_failed">Sign in Failed : </string>
+    <string name="sign_in_success">Successfully signed in</string>
 </resources>

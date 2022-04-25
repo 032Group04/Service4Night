@@ -56,5 +56,12 @@
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
     <string name="public_wifi_label">public Wifi</string>
+    <string name="sign_in_menu_item">Sign in</string>
+    <string name="log_out_menu_item">Log out</string>
+    <string name="mail_address_hint">Mail address</string>
+    <string name="password_hint">Password</string>
+    <string name="password_confirm_hint">Password (confirm)</string>
+    <string name="sign_in_title">Sign in</string>
+    <string name="password_requirements">Password must be 8-25 symbols, digits, lower and upper case characters.</string>
 
 </resources>

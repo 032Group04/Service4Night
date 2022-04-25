@@ -67,9 +67,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
+        //TODO : localiser l'utilisateur pour centrer la map
+
         visibleLocations = null;
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         switch (getIntent().getIntExtra(MAP_MODE_BUNDLE_NAME,-1)){
+            // TODO set popBack in navGraph on map or on main menu
             case MAP_TYPE_ADD:
                 adding = true;
                 binding.mapActionButton.setImageResource(R.drawable.ic_done);
@@ -164,12 +167,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG,"theme preference is :" + theme);
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,R.raw.eg_map_night));
         }
+        else if (theme.equals("Light")){
+            Log.i(TAG,"theme preference is :" + theme);
+
+        }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
         if (adding){
             mMap.setOnMapLongClickListener(latLng -> {
                 Log.i(TAG, "lat : " + latLng.latitude + "\nlong : "+ latLng.longitude);
                 mMap.clear();
+
                 mMap.addMarker(new MarkerOptions()
                         .position(latLng)
                         .draggable(false)

@@ -1,6 +1,9 @@
 package fr.abitbol.service4night;
 
+import android.app.AlertDialog;
+import android.app.FragmentManager;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -13,6 +16,7 @@ import android.os.Bundle;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 
@@ -23,9 +27,12 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.preference.PreferenceManager;
@@ -43,7 +50,7 @@ import java.util.List;
 
 import fr.abitbol.service4night.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity implements ActivityResultCallback<FirebaseAuthUIAuthenticationResult> {
+public class MainActivity extends AppCompatActivity implements ActivityResultCallback<FirebaseAuthUIAuthenticationResult>, NavController.OnDestinationChangedListener {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
@@ -56,20 +63,17 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
     public static boolean prefChanged;
 
-
+    //TODO: ajouter une note aux locations et un favori pour l'utilisateur
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.i(TAG, "onCreate called");
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        if (user == null) {
-            auth = FirebaseAuth.getInstance();
-            user = auth.getCurrentUser();
-        }
-        if (user != null){
-            binding.toolbar.getMenu().getItem(R.id.log_in_item).setVisible(false);
-            binding.toolbar.getMenu().getItem(R.id.account_settings_item).setVisible(true);
-        }
+
+        auth = FirebaseAuth.getInstance();
+        //TODO : gérer comptes anonymes
+        //TODO : tester si internet et sinon passer en mode hors ligne
+        user = auth.getCurrentUser();
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String theme = preferences.getString("theme","unknown");
@@ -84,42 +88,96 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
+
+        //TODO : cacher toolBar hors du menu
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
-
+        
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+        navController.addOnDestinationChangedListener(this);
+
+
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
 
 
     }
+    public void manageToolBar(){
+
+    }
 
     @Override
     protected void onStart() {
         super.onStart();
+        Log.i(TAG, "onStart called ");
+
+
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        Log.i(TAG, "onCreateOptionsMenu called");
+
+        if (user != null){
+            Log.i(TAG, "onCreateOptionsMenu: user is valid : " + user.getEmail());
+
+            getMenuInflater().inflate(R.menu.menu_logged, menu);
+        }
+        else{
+            Log.i(TAG, "onCreateOptionsMenu: user is null");
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+        }
+
 
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Log.i(TAG, "onOptionsItemSelected called item : "+ item);
+        // TODO : ajouter modification du compte
 
         if(item.getItemId() == R.id.account_settings_item){
-            Log.i(TAG, "onOptionItemSelected called with map_item");
-            Intent mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=new-york"));
-
-            startActivity(mapIntent);
+            
         }
+        else if (item.getItemId() == android.R.id.home){
+            Log.i(TAG, "onOptionsItemSelected: home button clicked");
+            Fragment fragment = getVisibleFragment();
+            if (fragment != null){
+                if (fragment instanceof LocationAddFragment){
+                    //TODO : si temps : sauvegarder données location dans sharedPreferences pour reprendre plus tard
+                    new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.pop_back_abort_title))
+                        .setMessage(getString(R.string.pop_back_abort))
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                NavHostFragment.findNavController(fragment).popBackStack();
+
+                            }
+                        })
+
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setNegativeButton(android.R.string.no, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                }
+                else {
+                    NavHostFragment.findNavController(fragment).popBackStack();
+                }
+            }
+        }
+
         else if (item.getItemId() == R.id.app_settings_item){
-            Intent appSettingsIntent = new Intent(getApplicationContext(),SettingsActivity.class);
-            startActivity(appSettingsIntent);
+//            Intent appSettingsIntent = new Intent(getApplicationContext(),SettingsActivity.class);
+//            startActivity(appSettingsIntent);
+            Fragment fragment = getVisibleFragment();
+            if (fragment instanceof SettingsNavigation) {
+                Log.i(TAG, "onOptionsItemSelected: fragment does implements SettingsNavigation");
+                NavHostFragment.findNavController(fragment).navigate(R.id.action_MenuFragment_to_settingsActivity);
+            }
+
         }
         else if (item.getItemId() == R.id.log_in_item){
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -133,8 +191,46 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                 .build()
             );
         }
+        else if (item.getItemId() == R.id.log_out_item){
+            AuthUI.getInstance().signOut(this).addOnCompleteListener(task -> {
+               if (task.isSuccessful()){
+                   user = null;
+                   Log.i(TAG, "onOptionsItemSelected: logged out successfully");
+                   Toast.makeText(this, getString(R.string.log_out_success), Toast.LENGTH_SHORT).show();
+                   recreate();
+               }
+               else{
+                   Log.i(TAG, "onOptionsItemSelected: logged out fail");
+                   Toast.makeText(this, getString(R.string.log_out_failed), Toast.LENGTH_SHORT).show();
 
-        return super.onOptionsItemSelected(item);
+               }
+            });
+        }
+        else if (item.getItemId() == R.id.sign_in_item){
+            Fragment fragment = getVisibleFragment();
+            if (fragment instanceof MenuFragment){
+                Log.i(TAG, "onOptionsItemSelected: visible fragment is a MenuFragment");
+                ((MenuFragment) fragment).navigateToSignIn();
+            }
+
+        }
+
+        return true;
+    }
+    private Fragment getVisibleFragment(){
+
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("fragment_container");
+        List<Fragment> fragments = fragment.getChildFragmentManager().getFragments();
+        for (Fragment f : fragments){
+            if(f!=null && f.isVisible()){
+                Log.i(TAG, "getvisiblefragment returns a fragment");
+                return f;
+            }
+        }
+        Log.i(TAG, "getvisiblefragment returns null");
+        return null;
+
+
     }
 
     @Override
@@ -153,6 +249,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             prefChanged = false;
             recreate();
         }
+
 
 
     }
@@ -178,17 +275,30 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
         if (result.getResultCode() == RESULT_OK){
-            Toast.makeText(this, "successfully logged in", Toast.LENGTH_SHORT).show();
+            Log.i(TAG, "onActivityResult: loggin success");
+            Toast.makeText(this, getString(R.string.log_in_success), Toast.LENGTH_SHORT).show();
             user = FirebaseAuth.getInstance().getCurrentUser();
+            //recreate();
         }
         else{
             if ((response == null)){
                 Log.i(TAG, "onActivityResult: user canceled login");
             }
             else{
-                Log.e(TAG,"onActivityResult: connection failed :" + response.getError().getMessage());
-                Toast.makeText(this, getString(R.string.connection_failed) + response.getError().getMessage(), Toast.LENGTH_SHORT).show();
+                if (response.getError() != null) {
+                    Log.e(TAG, "onActivityResult: connection failed :" + response.getError().getMessage());
+                    Toast.makeText(this, getString(R.string.log_in_failed) + response.getError().getMessage(), Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Log.e(TAG, "onActivityResult: connection failed");
+                    Toast.makeText(this, getString(R.string.log_in_failed) , Toast.LENGTH_SHORT).show();
+                }
             }
         }
+    }
+
+    @Override
+    public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+        Log.i(TAG, "onDestinationChanged called");
     }
 }

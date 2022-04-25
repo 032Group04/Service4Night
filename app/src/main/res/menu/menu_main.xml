@@ -11,19 +11,18 @@
         android:icon="@android:drawable/ic_menu_manage"
         app:showAsAction="always"
         />
-    <item
-        android:title="@string/account_settings_title"
-        android:visible="false"
-        android:id="@+id/account_settings_item"
-        android:icon="@mipmap/ic_account_settings"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        />
+
     <item
         android:title="@string/log_in_menu_item"
         android:id="@+id/log_in_item"
         android:orderInCategory="95"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom|withText"
+        android:icon="@mipmap/ic_log_in"/>
+    <item
+        android:title="@string/sign_in_menu_item"
+        android:id="@+id/sign_in_item"
+        android:orderInCategory="96"
+        app:showAsAction="never"
         android:icon="@mipmap/ic_sign_in"/>
 
 
