@@ -16,7 +16,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Marker;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import fr.abitbol.service4night.databinding.WindowInfoBinding;
@@ -38,7 +40,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
     //private View mContent;
 
     public InfoWindow(MapsActivity context){
-
+        Log.i(TAG, "InfoWindow: constructor called");
         //LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         //mContent = inflater.inflate(R.layout.window_info,null);
 
@@ -88,6 +90,12 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
     @Nullable
     @Override
     public View getInfoContents(@NonNull Marker marker) {
+        Log.i(TAG, "getInfoContents called");
+        for (int i = 0; i<= 6 ; i++){
+            if (getCheckbox(i) != null){
+                getCheckbox(i).setVisibility(View.INVISIBLE);
+            }
+        }
         locationsRef = new AtomicReference<>(mapsActivity.getVisibleLocations());
         Location location = null;
         if (locationsRef.get() != null) {
@@ -101,14 +109,16 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
         else{
             Log.i(TAG, "getInfoContents: locationRef is null");
         }
-        
+
         if (location != null){
             Log.i(TAG, "getInfoContents: location is not null");
+            binding.nameTextView.setText(location.getName());
             binding.descriptionTextView.setText(location.getDescription());
             Log.i(TAG, "getInfoContents: description is : "+ location.getDescription());
             binding.coordinatesTextView.setText(String.format(Locale.ENGLISH,"Lat : %f - Long : %f",location.getPoint().latitude,location.getPoint().longitude) );
             int count =0;
-            if (location.getServices().containsKey(Service.ELECTRICITY_SERVICE)){
+            Map<String,Service> services = location.getServices();
+            if (services.containsKey(Service.ELECTRICITY_SERVICE)){
                 Log.i(TAG, "getInfoContents:  instance of electricity service");
                 count++;
                 CheckBox box = getCheckbox(count);
@@ -116,14 +126,15 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 box.setVisibility(View.VISIBLE);
                 box.setChecked(true);
             }
-            if (location.getServices().containsKey(Service.WATER_SERVICE)){
+            if (services.containsKey(Service.WATER_SERVICE)){
+                Service waterService = services.get(Service.WATER_SERVICE);
                 Log.i(TAG, "getInfoContents:  instance of water service");
                 count++;
                 CheckBox box = getCheckbox(count);
                 box.setText(R.string.waterLabel);
                 box.setVisibility(View.VISIBLE);
                 box.setChecked(true);
-                if (((WaterService) (location.getServices().get(Service.WATER_SERVICE))).isDrinkable()) {
+                if (((WaterService)waterService).isDrinkable()) {
                     count++;
                     CheckBox box2 = getCheckbox(count);
                     box2.setText(R.string.drinkable_label);
@@ -133,7 +144,10 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
 
                 }
             }
-            if (location.getServices().containsKey(Service.INTERNET_SERVICE)){
+
+
+
+            if (services.containsKey(Service.INTERNET_SERVICE)){
                 Log.i(TAG, "getInfoContents:  instance of internet service");
                 count++;
                 CheckBox box = getCheckbox(count);
@@ -142,7 +156,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 box.setChecked(true);
 
             }
-            if (location.getServices().containsKey(Service.DUMPSTER_SERVICE)){
+            if (services.containsKey(Service.DUMPSTER_SERVICE)){
                 Log.i(TAG, "getInfoContents:  instance of dump service");
                 count++;
                 CheckBox box = getCheckbox(count);
@@ -151,15 +165,15 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 box.setChecked(true);
 
             }
-            if (location.getServices().containsKey(Service.DRAINAGE_SERVICE)){
+            if (services.containsKey(Service.DRAINAGE_SERVICE)){
+                Service drainService = services.get(Service.DRAINAGE_SERVICE);
                 Log.i(TAG, "getInfoContents:  instance of drain service");
                 count++;
                 CheckBox box = getCheckbox(count);
 
                 box.setVisibility(View.VISIBLE);
 
-                box.setText((((DrainService) location.getServices().get(Service.DRAINAGE_SERVICE))
-                        .isBlackWater())? R.string.black_water_drain_label : R.string.grey_water_drain_label);
+                box.setText((((DrainService)drainService).isBlackWater())? R.string.black_water_drain_label : R.string.grey_water_drain_label);
 
                 box.setChecked(true);
 
@@ -206,7 +220,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
 //                }
 //            });
         }
-        //binding.getRoot().invalidate();
+        binding.getRoot().invalidate();
         return binding.getRoot();
     }
 }

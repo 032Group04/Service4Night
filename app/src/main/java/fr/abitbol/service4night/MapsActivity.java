@@ -113,7 +113,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         setContentView(binding.getRoot());
-        Log.i(TAG, "onCreate: extra "+ getIntent().getStringExtra(MAP_MODE_BUNDLE_NAME));
+        //Log.i(TAG, "onCreate: extra "+ getIntent().getStringExtra(MAP_MODE_BUNDLE_NAME));
 
 
 
@@ -200,6 +200,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
             //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+            //TODO : fermer infowindow si clic sur retour
             mMap.setInfoWindowAdapter(new InfoWindow(MapsActivity.this));
 
             mMap.setOnMapLongClickListener(latLng -> {
@@ -233,8 +234,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (task.isSuccessful()){
             visibleLocations  = new ArrayList<>();
             for (QueryDocumentSnapshot doc : task.getResult()){
+
                 Log.i(TAG, "id : "+doc.getId() + "\ndata : "+ doc.getData());
-                visibleLocations.add(LocationBuilder.build(doc.getData()));
+                visibleLocations.add(Location.Builder.build(doc));
             }
             filterLocations(visibleLocations);
         }

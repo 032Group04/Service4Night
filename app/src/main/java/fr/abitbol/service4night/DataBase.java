@@ -32,6 +32,7 @@ public class DataBase  {
     public void callLocations(String collection, MapsActivity caller){
 
         AtomicReference<ArrayList<Location>> locationsReference = null;
+
         dataBase.collection(collection)
                 .get()
                 .addOnCompleteListener(caller);
@@ -53,6 +54,16 @@ public class DataBase  {
         });
         return result.get();
     }
+
+    public Map<String, Object> parseServices(Location location){
+        Map<String,Object> servicesMap = new HashMap<>();
+        location.getServices().forEach((s, service) -> {
+
+        });
+        return servicesMap;
+
+    }
+
     public void registerLocation(Location location,LocationAddFragment caller){
         //TODO: gérer accès hors ligne, soit ajouter aux sharedPreferences soit voir version hors ligne firebase
         Map<String,Object> mappedLocation = new HashMap<>();

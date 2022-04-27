@@ -2,14 +2,15 @@ package fr.abitbol.service4night.services;
 
 public class WaterService extends Service {
     private boolean drinkable;
-    private float price;
-    public WaterService(float _price, boolean _drinkable) {
-        super(WATER_SERVICE);
+    private double price;
+    public static final String NAME = "Water";
+    public WaterService(double _price, boolean _drinkable) {
+        super(NAME);
         price = _price;
         drinkable = _drinkable;
     }
     public WaterService(boolean _drinkable){
-        super(WATER_SERVICE);
+        super(NAME);
         drinkable = _drinkable;
         price = 0;
     }
@@ -22,11 +23,11 @@ public class WaterService extends Service {
         this.drinkable = drinkable;
     }
 
-    public float getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(float price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 }

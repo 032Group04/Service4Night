@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +14,7 @@ import androidx.annotation.Nullable;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,13 +31,14 @@ public class Location {
     private String id;
     private String name;
     private LatLng point;
-    private Bitmap picture;
+
     private Map<String, Service> services;
     private String user_id;
     private boolean confirmed;
+    private static final String TAG = "Location logging";
 
 
-    public Location(double latitude, double longitude, String _description,HashMap<String,Service> _services, String _user_id,String _name,boolean _confirmed)  {
+    public Location(double latitude, double longitude, String _description,Map<String,Service> _services, String _user_id,String _name,boolean _confirmed)  {
         point = new LatLng(latitude, longitude);
         services = _services;
         description = _description;
@@ -46,7 +49,7 @@ public class Location {
 
     }
 
-    public Location(LatLng _point, String _description, HashMap<String,Service> _services,String _user_id,String _name,boolean _confirmed) {
+    public Location(LatLng _point, String _description, Map<String,Service> _services,String _user_id,String _name,boolean _confirmed) {
         point = _point;
         services = _services;
         user_id = _user_id;
@@ -73,9 +76,7 @@ public class Location {
         return locationMap;
 
     }
-    public Service gotService(Service service){
-        return services.getOrDefault(service.getLabel(),null);
-    }
+
     public Service gotService(String label){
         return services.getOrDefault(label,null);
     }
@@ -106,14 +107,6 @@ public class Location {
         return services;
     }
 
-    public Bitmap getPicture() {
-        return picture;
-    }
-
-    public void setPicture(Bitmap bitmap) {
-
-        this.picture = bitmap;
-    }
 
     public boolean isLocationInArea (LatLngBounds bounds){
           return bounds.contains(point);
@@ -169,5 +162,35 @@ public class Location {
 
     public LatLng getPoint() {
         return point;
+    }
+    public static class Builder {
+        private static final String TAG = "LocationBuilder logging";
+
+
+        public static Location build(QueryDocumentSnapshot data) throws NullPointerException {
+            //TODO : créer constantes dans DataBase pour noms des données
+            double latitude = data.getDouble("latitude");
+            Log.i(TAG, "build: lat  =" + latitude);
+            double longitude = data.getDouble("longitude");
+            Log.i(TAG, "build: lng = " + longitude);
+            String description = data.getString("description");
+            Log.i(TAG, "build: description = " + description);
+            Map<String, Map<String, Object>> servicesData = (Map<String, Map<String, Object>>) data.get("services");
+            Map<String, Service> services = null;
+            if (servicesData != null) {
+                services = Service.Builder.buildServices(servicesData);
+            } else {
+                Log.i(TAG, "build: map services data is null");
+            }
+
+
+            return new Location(latitude, longitude, description, services, (String) data.get("user_id"), (String) data.get("name"), (boolean) data.get("confirmed"));
+        }
+
+
+        public static String generateId(LatLng point) {
+
+            return String.format(Locale.ENGLISH, Double.toString(point.latitude) + '|' + point.longitude);
+        }
     }
 }

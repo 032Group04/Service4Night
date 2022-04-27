@@ -20,6 +20,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
@@ -36,6 +37,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
 import fr.abitbol.service4night.services.DrainService;
@@ -54,7 +57,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private LatLng point;
     private String description;
     private String name;
-    private HashMap<String, Service> services;
+    private Map<String, Service> services;
     private Bitmap picture;
     List<SliderItems> images;
     private Uri uri;
@@ -102,11 +105,14 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null){
             if (!(NavHostFragment.findNavController(LocationAddFragment.this).popBackStack())){
-                Toast.makeText(getContext(), "", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.not_logged_in), Toast.LENGTH_SHORT).show();
                 NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
                 
             }
         }
+
+
+
         images = new ArrayList<>();
         binding = FragmentAddLocationBinding.inflate(inflater, container, false);
         if (binding.addWaterCheckBox.isChecked()){
@@ -172,15 +178,6 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
 //        images.add(BitmapFactory.decodeResource(getResources(),R.drawable.ic_search));
         viewPager.setAdapter(new SliderAdapter(images,viewPager));
-        return binding.getRoot();
-
-    }
-
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        Log.i(TAG, "onViewCreated: called");
-        super.onViewCreated(view, savedInstanceState);
-
-//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         if (savedInstanceState == null) {
 
@@ -188,33 +185,44 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             dataBase = new DataBase();
             if (getArguments() != null) {
                 try {
-                    point = getArguments().getParcelable("point");
+                    point = ((LatLng)getArguments().getParcelable("point"));
                     Log.i(TAG, "onCreateView: intent extras: " + point.toString());
                     binding.locationAddTextviewLatitude.setText(Double.toString(point.latitude));
                     binding.locationAddTextviewLongitude.setText(Double.toString(point.longitude));
                     //TODO : ajouter locale au geocoder selon position utilisateur
                     Geocoder geocoder = new Geocoder(getContext());
                     List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
-//                    Address address = addresses.get(0);
-                    for (Address address : addresses) {
-                        Log.i(TAG, "onViewCreated: address lines : " + address.getMaxAddressLineIndex());
-                        Log.i(TAG, "onViewCreated: adress to string: " + address.toString());
-                        Log.i(TAG, "onViewCreated: address url : " + address.getUrl());
-                        Log.i(TAG, "onViewCreated: adress");
-
-                        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
-                            Log.i(TAG, "onViewCreated: adresss Line " + i + " : " + address.getAddressLine(i));
-
-                        }
+                    Address address = addresses.get(0);
+//                    for (Address address : addresses) {
+//                        Log.i(TAG, "onViewCreated: address lines : " + address.getMaxAddressLineIndex());
+//                        Log.i(TAG, "onViewCreated: adress to string: " + address.toString());
+//                        Log.i(TAG, "onViewCreated: address url : " + address.getUrl());
+//                        Log.i(TAG, "onViewCreated: adress");
+//
+//                        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+//                            Log.i(TAG, "onViewCreated: adresss Line " + i + " : " + address.getAddressLine(i));
+//
+//                        }
+//                    }
+                    Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
+                    if (address.getFeatureName() != null && address.getFeatureName().length() > 8){
+                        name = address.getFeatureName();
+                        Log.i(TAG, "onViewCreated: adress feature name :" + name);
                     }
-//                    if (address.getFeatureName() != null){
-//                        name = address.getFeatureName();
-//                        Log.i(TAG, "onViewCreated: adress feature name :" + name);
-//                    }
-//                    else{
-//                        name = address.getAddressLine(0);
-//                    }
-
+                    else{
+                        name = address.getAddressLine(0);
+                    }
+                    MainActivity mainActivity = (MainActivity) getActivity();
+                    if (mainActivity != null){
+                        Log.i(TAG, "onViewCreated: main activity not null");
+                        ActionBar actionBar = mainActivity.getSupportActionBar();
+                        if (actionBar != null){
+                            Log.i(TAG, "onViewCreated: action bar not null");
+                            actionBar.setTitle(name);
+                        }
+                        else Log.i(TAG, "onViewCreated: action bar is null");
+                    }
+                    else Log.i(TAG, "onViewCreated: mainActivity is null");
 
 
                 }
@@ -232,18 +240,28 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
         }
 
+        return binding.getRoot();
+
+    }
+
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        Log.i(TAG, "onViewCreated: called");
+        super.onViewCreated(view, savedInstanceState);
+
+//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 
         binding.takePictureButton.setOnClickListener(button -> {
             //File file = File.createTempFile(name,".jpg");
 //            mGetcontent.launch(location.getUri());
             try {
-                takePicture(LocationBuilder.generateId(point));
+                takePicture(Location.Builder.generateId(point));
             } catch (IOException e) {
                 Toast.makeText(getContext(),e.getMessage(),Toast.LENGTH_LONG);
             }
         });
 
-        // ajouter possibilité de selectionner une photo dans le téléphone
+        //TODO : ajouter possibilité de selectionner une photo dans le téléphone
 
         binding.buttonValidate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -276,7 +294,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             boolean drinkable = binding.addDrinkableCheckBox.isChecked();
             boolean update = services.containsKey(Service.WATER_SERVICE);
             Log.i(TAG, "processServices: water checked : drikable = "+ drinkable+" , update = " + update);
-            float price;
+            double price;
             if(binding.addWaterPriceEditText.getText().length() == 0){
                 Log.i(TAG, "getServices: water price is empty");
                 price = 0;
@@ -286,6 +304,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     price = parsePrice(binding.addWaterPriceEditText,"water service");
 
                 }catch (NumberFormatException e){
+                    Log.i(TAG, "processInputs: error while parsing price");
                     Toast.makeText(getContext(), "", Toast.LENGTH_SHORT).show();
                     return false;
                 }
@@ -303,7 +322,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             boolean update = services.containsKey(Service.ELECTRICITY_SERVICE);
             Log.i(TAG, "processServices: electricity checked : update = " + update);
 
-            float price;
+            double price;
             if(binding.electricityPriceEditText.getText().length() == 0){
                 Log.i(TAG, "getServices: water price is empty");
                 price = 0;
@@ -329,7 +348,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             boolean update = services.containsKey(Service.INTERNET_SERVICE);
             InternetService.ConnectionType connectionType;
 
-            float price = 0;
+            double price = 0;
             if (binding.addPrivateNetworkRadioButton.isChecked()){
                  connectionType = InternetService.ConnectionType.private_provider;
                 if(binding.internetPriceEditText.getText().length() > 0) {
@@ -337,6 +356,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                         price = parsePrice(binding.internetPriceEditText,"internet service");
 
                     } catch (NumberFormatException e) {
+                        Log.i(TAG, "processInputs: " + e.getMessage());
                         return false;
                     }
                 }
@@ -397,8 +417,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
 
     }
-    public float parsePrice(EditText editText,String name) throws NumberFormatException{
-        float price;
+    public double parsePrice(EditText editText,String name) throws NumberFormatException{
+        double price;
         try{
             price = Float.parseFloat(editText.getText().toString());
         }catch (NumberFormatException e){
@@ -441,13 +461,13 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     public void onComplete(@NonNull Task task) {
         if (task.isSuccessful()){
             Log.i(TAG, "onComplete: location successfully written. ");
-            Toast.makeText(getContext(), getString(R.string.location_add_success), Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), getString(R.string.location_add_success), Toast.LENGTH_SHORT).show();
         }
         else{
             Log.i(TAG, "onComplete: location failed to be written");
             Log.i(TAG, "onComplete: task to string : " + task.toString());
             Log.i(TAG, "onComplete: task get Exception : "+ task.getException());
-            Toast.makeText(getContext(), getString(R.string.location_add_fail), Toast.LENGTH_LONG).show();
+            Toast.makeText(getContext(), getString(R.string.location_add_fail), Toast.LENGTH_SHORT).show();
         }
         NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
     }

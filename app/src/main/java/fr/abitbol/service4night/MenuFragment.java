@@ -28,7 +28,7 @@ public class MenuFragment extends Fragment implements SettingsNavigation {
                 public void onActivityResult(ActivityResult result) {
                     switch (result.getResultCode()) {
                         case MapsActivity.MAP_TYPE_ADD:
-                            Log.i(TAG, "onActivityResult: map adding point result received : " + result.getData().getBundleExtra(MapsActivity.MAP_POINT_BUNDLE_NAME));
+                            //Log.i(TAG, "onActivityResult: map adding point result received : " + result.getData().getBundleExtra(MapsActivity.MAP_POINT_BUNDLE_NAME));
                             NavHostFragment.findNavController(MenuFragment.this)
                                 .navigate(R.id.action_MenuFragment_to_AddLocationFragment, result.getData().getExtras());
                             break;
