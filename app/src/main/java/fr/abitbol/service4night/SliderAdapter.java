@@ -1,7 +1,5 @@
 package fr.abitbol.service4night;
 
-import android.graphics.Bitmap;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,11 +12,11 @@ import androidx.viewpager2.widget.ViewPager2;
 import java.util.List;
 
 public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderViewHolder> {
-    private List<SliderItems> sliderItems;
+    private List<SliderItem> sliderItems;
     private ViewPager2 viewPager2;
-    SliderAdapter(List<SliderItems> sliderItems, ViewPager2 viewPager2) {
-        this.sliderItems = sliderItems;
-        this.viewPager2 = viewPager2;
+    SliderAdapter(List<SliderItem> _sliderItems, ViewPager2 _viewPager2) {
+        this.sliderItems = _sliderItems;
+        this.viewPager2 = _viewPager2;
     }
     @NonNull
     @Override
@@ -45,7 +43,7 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView_slider);
         }
-        void setImage(SliderItems sliderItems){
+        void setImage(SliderItem sliderItems){
             //use glide or picasso in case you get image from internet
             imageView.setImageBitmap(sliderItems.getImage());
         }

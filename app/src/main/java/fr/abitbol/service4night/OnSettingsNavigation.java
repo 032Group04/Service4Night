@@ -1,5 +1,5 @@
 package fr.abitbol.service4night;
 
-public interface SettingsNavigation {
+public interface OnSettingsNavigation {
     public void navigateToSettingsActivity();
 }

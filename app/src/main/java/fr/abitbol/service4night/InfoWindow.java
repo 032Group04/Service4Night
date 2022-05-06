@@ -1,13 +1,8 @@
 package fr.abitbol.service4night;
 
-import android.content.Context;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.GridLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,17 +11,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Marker;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import fr.abitbol.service4night.databinding.WindowInfoBinding;
-import fr.abitbol.service4night.services.BathroomService;
 import fr.abitbol.service4night.services.DrainService;
-import fr.abitbol.service4night.services.DumpService;
-import fr.abitbol.service4night.services.ElectricityService;
-import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
@@ -35,7 +25,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
 
     private final String TAG = "InfoWindow logging";
     private WindowInfoBinding binding;
-    private AtomicReference<ArrayList<Location>> locationsRef;
+    private AtomicReference<ArrayList<MapLocation>> locationsRef;
     private MapsActivity mapsActivity;
     //private View mContent;
 
@@ -97,11 +87,11 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
             }
         }
         locationsRef = new AtomicReference<>(mapsActivity.getVisibleLocations());
-        Location location = null;
+        MapLocation mapLocation = null;
         if (locationsRef.get() != null) {
-            for (Location l : locationsRef.get()){
+            for (MapLocation l : locationsRef.get()){
                 if (l.getId().equals(marker.getTitle()) ){
-                    location = l;
+                    mapLocation = l;
                     break;
                 }
             }    
@@ -110,14 +100,14 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
             Log.i(TAG, "getInfoContents: locationRef is null");
         }
 
-        if (location != null){
-            Log.i(TAG, "getInfoContents: location is not null");
-            binding.nameTextView.setText(location.getName());
-            binding.descriptionTextView.setText(location.getDescription());
-            Log.i(TAG, "getInfoContents: description is : "+ location.getDescription());
-            binding.coordinatesTextView.setText(String.format(Locale.ENGLISH,"Lat : %f - Long : %f",location.getPoint().latitude,location.getPoint().longitude) );
+        if (mapLocation != null){
+            Log.i(TAG, "getInfoContents: mapLocation is not null");
+            binding.nameTextView.setText(mapLocation.getName());
+            binding.descriptionTextView.setText(mapLocation.getDescription());
+            Log.i(TAG, "getInfoContents: description is : "+ mapLocation.getDescription());
+            binding.coordinatesTextView.setText(String.format(Locale.ENGLISH,"Lat : %f - Long : %f", mapLocation.getPoint().latitude, mapLocation.getPoint().longitude) );
             int count =0;
-            Map<String,Service> services = location.getServices();
+            Map<String,Service> services = mapLocation.getServices();
             if (services.containsKey(Service.ELECTRICITY_SERVICE)){
                 Log.i(TAG, "getInfoContents:  instance of electricity service");
                 count++;
@@ -178,10 +168,10 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 box.setChecked(true);
 
             }
-//            location.getServices().forEach((s, service) -> {
+//            mapLocation.getServices().forEach((s, service) -> {
 //                System.out.println(s);
 //            });
-//            location.getServices().forEach((str, service) ->{
+//            mapLocation.getServices().forEach((str, service) ->{
 //                if (service != null) {
 //                    Log.i(TAG, "getInfoContents: service is : " + str);
 //                    if (service instanceof ElectricityService){

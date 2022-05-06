@@ -1,5 +1,7 @@
 package fr.abitbol.service4night.services;
 
+import androidx.annotation.Nullable;
+
 public class ElectricityService extends Service {
     private double price;
     public static final String NAME = "Electricity";
@@ -18,5 +20,16 @@ public class ElectricityService extends Service {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    @Override
+    public boolean matchFilter(Service filter) {
+        return filter instanceof ElectricityService;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        return super.equals(obj);
+
     }
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="map_button_toast">Select a location first (long press)</string>
+    <string name="map_button_toast">Select a Location first (long press)</string>
     <string name="location_add_success">Location successfully added</string>
-    <string name="location_add_fail">Failed to add location</string>
-    <string name="arguments_missing_error">Error : incorrect or missing coordinates.</string>
+    <string name="location_add_fail">Failed to add Location</string>
+    <string name="coordinates_missing_error">Error : incorrect or missing coordinates.</string>
     <string name="price_parsing_error">price input is incorrect</string>
     <string name="price_parsing_error_named">price input is incorrect for </string>
     <string name="empty_description">Description is important !</string>
@@ -17,8 +17,10 @@
     <string name="password_unconfirmed">You must confirm password</string>
     <string name="password_format_wrong">Password doesn\'t match requirements</string>
     <string name="mail_format_wrong">Wrong mail format</string>
-    <string name="not_logged_in">You must be logged in to add a location.</string>
+    <string name="not_logged_in">You must be logged in to add a Location.</string>
     <string name="already_looged_in">You are already logged in.</string>
     <string name="sign_in_failed">Sign in Failed : </string>
     <string name="sign_in_success">Successfully signed in</string>
+    <string name="exceed_pictures_count">You can add three pictures at most</string>
+    <string name="network_error">Connection error</string>
 </resources>

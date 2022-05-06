@@ -28,7 +28,7 @@
                 android:id="@+id/location_add_viewPager"
                 android:layout_height="match_parent"
                 android:layout_width="match_parent"
-                android:orientation="horizontal"
+                android:layout_marginHorizontal="10dp"
                 android:layout_gravity="center"
 
                 />

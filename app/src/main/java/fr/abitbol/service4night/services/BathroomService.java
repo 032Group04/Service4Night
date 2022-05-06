@@ -7,4 +7,9 @@ public class BathroomService extends Service{
         super(NAME);
         shower = _shower;
     }
+
+    @Override
+    public boolean matchFilter(Service filter) {
+        return false;
+    }
 }

@@ -1,61 +1,58 @@
 package fr.abitbol.service4night;
 
-import android.content.ContentResolver;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Parcelable;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.services.Service;
 
-public class Location {
+public class MapLocation {
 
     private String description;
     private String id;
     private String name;
     private LatLng point;
-
+    private List<Uri> pictures;
     private Map<String, Service> services;
     private String user_id;
     private boolean confirmed;
-    private static final String TAG = "Location logging";
+    private static final String TAG = "MapLocation logging";
 
-
-    public Location(double latitude, double longitude, String _description,Map<String,Service> _services, String _user_id,String _name,boolean _confirmed)  {
+    //TODO : créer classe dédiée a la localisation
+    public MapLocation(double latitude, double longitude, String _description, Map<String,Service> _services, String _user_id, String _name,List<Uri> _pictures, boolean _confirmed)  {
         point = new LatLng(latitude, longitude);
         services = _services;
         description = _description;
-        id = String.format(Locale.FRANCE,Double.toString(latitude)+'|'+ longitude);
+        id = String.format(Locale.ENGLISH,Double.toString(latitude)+'|'+ longitude);
         user_id = _user_id;
         name = _name;
+        pictures = _pictures;
         confirmed = _confirmed;
 
     }
 
-    public Location(LatLng _point, String _description, Map<String,Service> _services,String _user_id,String _name,boolean _confirmed) {
+    public MapLocation(LatLng _point, String _description, Map<String,Service> _services, String _user_id, String _name, List<Uri> _pictures, boolean _confirmed) {
         point = _point;
         services = _services;
         user_id = _user_id;
         description = _description;
         id = String.format(Locale.FRANCE,Double.toString(point.latitude)+'|'+ point.longitude);
         name = _name;
+        pictures = _pictures;
         confirmed = _confirmed;
     }
 
@@ -77,8 +74,8 @@ public class Location {
 
     }
 
-    public Service gotService(String label){
-        return services.getOrDefault(label,null);
+    public boolean hasService(String label){
+        return services.containsKey(label);
     }
 
     @Override
@@ -87,11 +84,11 @@ public class Location {
         if (this == obj){
             return true;
         }
-        if (!(obj instanceof Location)){
+        if (!(obj instanceof MapLocation)){
             return false;
         }
         else{
-            return id.equals(((Location) obj).getId());
+            return id.equals(((MapLocation) obj).getId());
         }
 
 
@@ -127,6 +124,18 @@ public class Location {
 //    public Uri getUri(){
 //        return picture;
 //    }
+
+    public List<Uri> getPictures() {
+        return pictures;
+    }
+
+    public void setPictures(List<Uri> pictures) {
+        this.pictures = pictures;
+    }
+
+    public void setServices(Map<String, Service> services) {
+        this.services = services;
+    }
 
     public void setDescription(String description) {
         this.description = description;
@@ -167,15 +176,23 @@ public class Location {
         private static final String TAG = "LocationBuilder logging";
 
 
-        public static Location build(QueryDocumentSnapshot data) throws NullPointerException {
+        public static MapLocation build(Map<String,Object> data) throws NullPointerException {
             //TODO : créer constantes dans DataBase pour noms des données
-            double latitude = data.getDouble("latitude");
+            double latitude = (double) data.get(LocationDAO.LATITUDE_KEY);
             Log.i(TAG, "build: lat  =" + latitude);
-            double longitude = data.getDouble("longitude");
+            double longitude = (double) data.get(LocationDAO.LONGITUDE_KEY);
             Log.i(TAG, "build: lng = " + longitude);
-            String description = data.getString("description");
+            String description = (String) data.get(LocationDAO.DESCRIPTION_KEY);
             Log.i(TAG, "build: description = " + description);
-            Map<String, Map<String, Object>> servicesData = (Map<String, Map<String, Object>>) data.get("services");
+            List<Uri> pictures = null;
+            if(data.containsKey(LocationDAO.PICTURES_URI_KEY)) {
+                Uri[] picturesArray =  (Uri[]) data.get(LocationDAO.PICTURES_URI_KEY);
+                if (picturesArray != null){
+                    pictures = Arrays.asList(picturesArray);
+                }
+            }
+
+            Map<String, Map<String, Object>> servicesData = (Map<String, Map<String, Object>>) data.get(LocationDAO.SERVICES_KEY);
             Map<String, Service> services = null;
             if (servicesData != null) {
                 services = Service.Builder.buildServices(servicesData);
@@ -184,7 +201,7 @@ public class Location {
             }
 
 
-            return new Location(latitude, longitude, description, services, (String) data.get("user_id"), (String) data.get("name"), (boolean) data.get("confirmed"));
+            return new MapLocation(latitude, longitude, description, services, (String) data.get(LocationDAO.USER_ID_KEY), (String) data.get(LocationDAO.LOCATION_NAME_KEY),pictures, (boolean) data.get(LocationDAO.CONFIRMED_KEY));
         }
 
 

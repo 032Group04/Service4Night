@@ -4,14 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <ImageView
+        android:id="@+id/imageView_slider"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/imageView_slider"
         android:layout_centerInParent="true"
-        android:scaleType="center"
-        tools:srcCompat="@tools:sample/backgrounds/scenic"
-        android:src="@drawable/add_picture">
+        android:adjustViewBounds="true"
+        android:layout_marginHorizontal="2dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/add_picture"
+        tools:srcCompat="@tools:sample/backgrounds/scenic">
 
     </ImageView>
 </RelativeLayout>

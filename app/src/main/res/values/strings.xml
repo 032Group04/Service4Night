@@ -4,12 +4,12 @@
     <string name="title_activity_main">MainActivity</string>
     <!-- Strings used for fragments for navigation -->
     <string name="Menu_fragment_label">Service4Night</string>
-    <string name="AddLocation_fragment_label">Add a location</string>
+    <string name="AddLocation_fragment_label">Add a Location</string>
     <string name="Menu_fragment">Menu fragment</string>
     <!--  Strings for labels (buttons, checkboxes, etc...)   -->
-    <string name="add_location">Add a location from map</string>
+    <string name="add_location">Add a Location from map</string>
     <string name="validate">Validate</string>
-    <string name="direct_add_button">Add a location directly</string>
+    <string name="direct_add_button">Add a Location directly</string>
 
     <string name="filter_label">Filters</string>
 
@@ -26,7 +26,7 @@
     <string name="black_water_drain_label">Black water drainage</string>
     <!--             Hints                   -->
 
-    <string name="description_hint">Describe the location here.</string>
+    <string name="description_hint">Describe the Location here.</string>
 
     <!-- Strings used for descriptions -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

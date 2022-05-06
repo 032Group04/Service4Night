@@ -1,12 +1,12 @@
 package fr.abitbol.service4night;
 
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,11 +35,13 @@ import com.google.firebase.auth.FirebaseUser;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+import fr.abitbol.service4night.DAO.DAOFactory;
+import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.DumpService;
@@ -49,22 +51,26 @@ import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
 
-public class LocationAddFragment extends Fragment implements OnCompleteListener<Void> {
+public class LocationAddFragment extends Fragment implements OnCompleteListener<Void>,OnPicturesUploadedListener {
 
     private FragmentAddLocationBinding binding;
 
     private final String TAG = "LocationAddFragment logging";
     private LatLng point;
-    private String description;
     private String name;
-    private Map<String, Service> services;
-    private Bitmap picture;
-    List<SliderItems> images;
-    private Uri uri;
-    private DataBase dataBase;
+    private MapLocation mapLocation;
+    List<SliderItem> images;
+    private Uri userPictureUri;
+    private LocationDAO dataBase;
     private ViewPager2 viewPager;
     //TODO : demander au prof meilleure méthode (re-récupérer user ou passer id en argument)
     private FirebaseUser user;
+    private boolean pictureTaken;
+    private String picTurePath;
+    private String locationId;
+
+    private List<Uri> picturesCloudUris;
+    //TODO: problème écran noir depuis mapActivity quand réseau faible
     private ActivityResultLauncher<Uri> mGetcontent = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
 
 
@@ -75,12 +81,22 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             if (result){
                 //binding.pictureAddLayout.setBackground(null);
                 //binding.imageView.setImageURI(uri);
-                images.remove(0);
+                if(!pictureTaken){
+                    pictureTaken = true;
+                    images.remove(0);
+                }
 
                 try {
-                    picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(),uri);
-                    images.add(new SliderItems(picture));
+                    Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), userPictureUri);
+
+                    //TODO : modifier taille marges si photo portrait
+                    File file = new File(picTurePath);
+                    Log.i(TAG, "onActivityResult: file exists :" + file.exists());
+                    picture = ExifUtil.rotateBitmap(picTurePath,picture);
+                    images.add(new SliderItem(picture,getPictureName()));
+
                     viewPager.setAdapter(new SliderAdapter(images,viewPager));
+
 
                 } catch (IOException e) {
                     Toast.makeText(getContext(), "error while getting bitmap from uri", Toast.LENGTH_LONG).show();
@@ -89,6 +105,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
         }
     });
+    //TODO : ajouter bouton supprimer photo
 
     @Override
     public void onResume() {
@@ -101,7 +118,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState
     ) {
-
+        picturesCloudUris = null;
+        pictureTaken = false;
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null){
             if (!(NavHostFragment.findNavController(LocationAddFragment.this).popBackStack())){
@@ -165,53 +183,63 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         });
 
         viewPager = binding.locationAddViewPager;
-//        images.add(0,new SliderItems(R.drawable.add_picture));
 
-//        List<SliderItems> sliderItems = new ArrayList<>();
-//        images.add(new SliderItems(BitmapFactory.decodeResource(getResources(),R.drawable._0210621_071025)));
-//        images.add(new SliderItems(BitmapFactory.decodeResource(getResources(),R.drawable._0210708_160334)));
+        //TODO: supprimer lignes de test
+        /** test uniquement :*/
+        pictureTaken = true;
+        images.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable._0210708_160334),"0210621_071025.jpg"));
+        images.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable._0210621_071025),"0210621_071025.jpg"));
+        //images.add(0,new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable.test_),getContext().getResources().getDrawable(R.drawable.test_).toString()));
+        Log.i(TAG, "onCreateView: drawable to string : "+ images.get(0).getName());
 
-        images.add(0,new SliderItems(BitmapFactory.decodeResource(getResources(),R.drawable.test_)));
-
-
-//        viewPager.setAdapter(new SliderAdapter(sliderItems,viewPager));
-
+        /**
+         * image normale
+         */
 //        images.add(BitmapFactory.decodeResource(getResources(),R.drawable.ic_search));
-        viewPager.setAdapter(new SliderAdapter(images,viewPager));
+        viewPager.setClipToPadding(false);
+        viewPager.setClipChildren(false);
+        viewPager.setOffscreenPageLimit(2);
+        int offsetPx = Math.round(getResources().getDisplayMetrics().density * 20);
 
+        viewPager.setPadding(offsetPx, 0, offsetPx, 0);
+
+        viewPager.setAdapter(new SliderAdapter(images,viewPager));
         if (savedInstanceState == null) {
 
             Log.i(TAG, "onViewCreated: images size : " + images.size());
-            dataBase = new DataBase();
+            dataBase = DAOFactory.getDAO(LocationAddFragment.this,true);
             if (getArguments() != null) {
                 try {
                     point = ((LatLng)getArguments().getParcelable("point"));
-                    Log.i(TAG, "onCreateView: intent extras: " + point.toString());
-                    binding.locationAddTextviewLatitude.setText(Double.toString(point.latitude));
-                    binding.locationAddTextviewLongitude.setText(Double.toString(point.longitude));
-                    //TODO : ajouter locale au geocoder selon position utilisateur
-                    Geocoder geocoder = new Geocoder(getContext());
-                    List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
-                    Address address = addresses.get(0);
-//                    for (Address address : addresses) {
-//                        Log.i(TAG, "onViewCreated: address lines : " + address.getMaxAddressLineIndex());
-//                        Log.i(TAG, "onViewCreated: adress to string: " + address.toString());
-//                        Log.i(TAG, "onViewCreated: address url : " + address.getUrl());
-//                        Log.i(TAG, "onViewCreated: adress");
-//
-//                        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
-//                            Log.i(TAG, "onViewCreated: adresss Line " + i + " : " + address.getAddressLine(i));
-//
-//                        }
-//                    }
-                    Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
-                    if (address.getFeatureName() != null && address.getFeatureName().length() > 8){
-                        name = address.getFeatureName();
-                        Log.i(TAG, "onViewCreated: adress feature name :" + name);
+                    if (point != null) {
+                        locationId = MapLocation.Builder.generateId(point);
+                        Log.i(TAG, "onCreateView: intent extras: " + point.toString());
+                        binding.locationAddTextviewLatitude.setText(Double.toString(point.latitude));
+                        binding.locationAddTextviewLongitude.setText(Double.toString(point.longitude));
+
+
+                        /*
+                         * récupération du nom du lieu
+                         */
+                        //TODO : ajouter locale au geocoder selon position utilisateur
+                        Geocoder geocoder = new Geocoder(getContext());
+                        List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
+                        Address address = addresses.get(0);
+
+                        Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
+                        if (address.getFeatureName() != null && address.getFeatureName().length() > 8) {
+                            name = address.getFeatureName();
+                            Log.i(TAG, "onViewCreated: adress feature name :" + name);
+                        } else {
+                            name = address.getAddressLine(0);
+                        }
+                    }else{
+                        Toast.makeText(getContext(), getString(R.string.coordinates_missing_error), Toast.LENGTH_SHORT).show();
+                        //TODO re-récupérer nom du lieu si point == null ou getArguments == null (direct add)
                     }
-                    else{
-                        name = address.getAddressLine(0);
-                    }
+                    /*
+                     * modification du titre
+                     */
                     MainActivity mainActivity = (MainActivity) getActivity();
                     if (mainActivity != null){
                         Log.i(TAG, "onViewCreated: main activity not null");
@@ -227,8 +255,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
                 }
                 catch (Exception e){
+                    //TODO : trier les exceptions pour le toast, détecter timeout (exception levée si problème réseau check "grpc failed")
                     Log.e(TAG,e.getMessage());
-                    Toast.makeText(getContext(), getString(R.string.arguments_missing_error), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), getString(R.string.network_error), Toast.LENGTH_LONG).show();
                     NavHostFragment.findNavController(LocationAddFragment.this).popBackStack();
                 }
 
@@ -236,7 +265,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
             else{
                 point = new LatLng(0,0);
-                // récupérer coordonnées utilisateur
+                // TODO : créer classe statique UserLocation qui récupère contexte et localise utilisateur
+                //TODO localiser user et mettre coordonnées
             }
         }
 
@@ -254,10 +284,15 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         binding.takePictureButton.setOnClickListener(button -> {
             //File file = File.createTempFile(name,".jpg");
 //            mGetcontent.launch(location.getUri());
-            try {
-                takePicture(Location.Builder.generateId(point));
-            } catch (IOException e) {
-                Toast.makeText(getContext(),e.getMessage(),Toast.LENGTH_LONG);
+            if (getPicturesCount() > 3){
+                Toast.makeText(getContext(), getString(R.string.exceed_pictures_count), Toast.LENGTH_SHORT).show();
+            }
+            else {
+                try {
+                    takePicture(MapLocation.Builder.generateId(point));
+                } catch (IOException e) {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG);
+                }
             }
         });
 
@@ -268,19 +303,40 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             public void onClick(View view) {
 //                NavHostFragment.findNavController(LocationAddFragment.this)
 //                        .navigate(R.id.action_AddLocationFragment_to_MenuFragment);
-                services = new HashMap<>();
 
 
-                if (processInputs()) {
-                    dataBase.registerLocation(new Location(point, description, services, user.getUid(),name,false), LocationAddFragment.this);
+                mapLocation = processInputs();
+                if (mapLocation != null) {
+                    if (pictureTaken){
+                        uploadPictures(mapLocation.getUser_id(), mapLocation.getId());
+                    }
+                    else{
+
+                        mapLocation.setPictures(null);
+                        dataBase.insert(mapLocation);
+                    }
                 }
             }
         });
     }
-    public boolean processInputs(){
+    private int getPicturesCount(){
+        return (images != null)? images.size() : 0;
+    }
+    private String getPictureName(){return locationId+"_pic#"+getPicturesCount()+".jpg "; }
+    public void uploadPictures(String userId,String locationId){
+        Log.i(TAG, "uploadPictures called, "+images.size()+" pictures to upload");
+        Log.i(TAG, "uploadPictures called thread = " + Thread.currentThread().toString());
+
+        PicturesUploadTask picturesUploadTask = new PicturesUploadTask(images,this);
+        picturesUploadTask.execute(userId,locationId);
+
+    }
+    public MapLocation processInputs(){
+        String description;
+        Map<String, Service> services = new HashMap<>();
         if (binding.addDescriptionEditText.getText().length() < 4){
             Toast.makeText(getContext(), getString(R.string.empty_description), Toast.LENGTH_SHORT).show();
-            return false;
+            return null;
         }
         else{
             description = binding.addDescriptionEditText.getText().toString();
@@ -306,7 +362,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                 }catch (NumberFormatException e){
                     Log.i(TAG, "processInputs: error while parsing price");
                     Toast.makeText(getContext(), "", Toast.LENGTH_SHORT).show();
-                    return false;
+                    return null;
                 }
             }
             if (update){
@@ -332,7 +388,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     price = parsePrice(binding.electricityPriceEditText,"electricity service");
 
                 }catch (NumberFormatException e){
-                    return false;
+                    return null;
                 }
             }
             if (update){
@@ -357,7 +413,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
                     } catch (NumberFormatException e) {
                         Log.i(TAG, "processInputs: " + e.getMessage());
-                        return false;
+                        return null;
                     }
                 }
             }
@@ -409,13 +465,24 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
         //réfléchir a remplir services au coup par coup avec des listener
         if (service) {
-            return true;
+            return new MapLocation(point.latitude,point.longitude,description,services,user.getUid(),name,null,false);
         }
         else{
             Toast.makeText(getContext(), getString(R.string.no_service_selected), Toast.LENGTH_LONG).show();
-            return false;
+            return null;
         }
 
+    }
+    public List<Bitmap> getPictures(){
+        final List<Bitmap> list = new ArrayList<>();
+        if (pictureTaken){
+
+            images.forEach(sliderItems -> {
+                list.add(sliderItems.getImage());
+            });
+            return list;
+        }
+        return null;
     }
     public double parsePrice(EditText editText,String name) throws NumberFormatException{
         double price;
@@ -432,7 +499,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     }
 
     public void takePicture(String name) throws IOException {
-        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
+//        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
+
+        File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
@@ -440,13 +509,15 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
         Log.i(TAG, "takePicture: file path is: "+ mediaStorageDir.getPath());
         // Return the file target for the photo based on filename
-        File file = new File(mediaStorageDir.getPath() + File.separator + name);
-        uri = FileProvider.getUriForFile(getContext(),"fr.abitbol.service4night.fileprovider",file);
 
-        mGetcontent.launch(uri);
+        picTurePath = mediaStorageDir.getPath() + File.separator + getPictureName();
+        File file = new File(picTurePath);
+        userPictureUri = FileProvider.getUriForFile(getContext(),"fr.abitbol.service4night.fileprovider",file);
+
+        mGetcontent.launch(userPictureUri);
     }
-    public void resume(Location location){
-        //TODO : afficher les données de location pour récupérer ajout abandonné
+    public void resume(MapLocation mapLocation){
+        //TODO : afficher les données de mapLocation pour récupérer ajout abandonné
 
     }
 
@@ -470,5 +541,21 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             Toast.makeText(getContext(), getString(R.string.location_add_fail), Toast.LENGTH_SHORT).show();
         }
         NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
+    }
+
+    @Override
+    public void onPicturesUploaded(List<Uri> uris) {
+        if (uris != null && !uris.isEmpty()) {
+            Log.i(TAG, "onPicturesUploaded: pictures successfully uploaded: ");
+            picturesCloudUris = uris;
+            for (Uri uri : picturesCloudUris) {
+                Log.i(TAG, "uploaded : toString: " + uri.toString() + " path :"+uri.getPath());
+            }
+            mapLocation.setPictures(picturesCloudUris);
+            dataBase.insert(mapLocation);
+        }
+        else{
+            Log.i(TAG, "onPicturesUploaded: uri list is null or empty");
+        }
     }
 }

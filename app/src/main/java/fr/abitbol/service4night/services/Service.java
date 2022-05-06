@@ -1,6 +1,5 @@
 package fr.abitbol.service4night.services;
 
-import android.content.res.Resources;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -8,8 +7,6 @@ import androidx.annotation.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import fr.abitbol.service4night.Location;
 
 public abstract class Service {
 
@@ -19,28 +16,33 @@ public abstract class Service {
     public static final String INTERNET_SERVICE = "Internet";
     public static final String DRAINAGE_SERVICE = "Drainage";
     public static final String BATHROOM_SERVICE = "Bathroom";
+    private static final String TAG = "Service logging";
     private String label;
     public Service(String _label){
         label = _label;
-
-
     }
 
     public String getLabel() {
         return label;
     }
+    //TODO : reflechir a une interface Filterable
+    public abstract boolean matchFilter(Service filter);
+
     @Override
     public boolean equals(@Nullable Object obj) {
-
-        if (this == obj){
-            return true;
-        }
-        if (!(obj.getClass().isAssignableFrom(Service.class) )){
+        Log.i(TAG, "equals called in Service class");
+        if (obj == null){
             return false;
         }
-        else{
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj.getClass().isAssignableFrom(Service.class))) {
+            return false;
+        } else {
             return label.equals(((Service) obj).getLabel());
         }
+
 
 
     }
@@ -79,5 +81,6 @@ public abstract class Service {
             return services;
         }
     }
+
 
 }
