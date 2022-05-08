@@ -69,7 +69,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private String picTurePath;
     private String locationId;
 
-    private List<Uri> picturesCloudUris;
+    private List<String> picturesCloudUris;
+    //TODO cacher settings dans menus location
     //TODO: problème écran noir depuis mapActivity quand réseau faible
     private ActivityResultLauncher<Uri> mGetcontent = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
 
@@ -93,7 +94,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     File file = new File(picTurePath);
                     Log.i(TAG, "onActivityResult: file exists :" + file.exists());
                     picture = ExifUtil.rotateBitmap(picTurePath,picture);
-                    images.add(new SliderItem(picture,getPictureName()));
+                    images.add(new SliderItem(picture,MapLocation.generatePictureName(locationId,getPicturesCount())));
 
                     viewPager.setAdapter(new SliderAdapter(images,viewPager));
 
@@ -189,6 +190,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         pictureTaken = true;
         images.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable._0210708_160334),"0210621_071025.jpg"));
         images.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable._0210621_071025),"0210621_071025.jpg"));
+        images.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable.wp_20130616_004),"wp_20130616_004.jpg"));
         //images.add(0,new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable.test_),getContext().getResources().getDrawable(R.drawable.test_).toString()));
         Log.i(TAG, "onCreateView: drawable to string : "+ images.get(0).getName());
 
@@ -196,6 +198,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
          * image normale
          */
 //        images.add(BitmapFactory.decodeResource(getResources(),R.drawable.ic_search));
+
         viewPager.setClipToPadding(false);
         viewPager.setClipChildren(false);
         viewPager.setOffscreenPageLimit(2);
@@ -210,7 +213,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             dataBase = DAOFactory.getDAO(LocationAddFragment.this,true);
             if (getArguments() != null) {
                 try {
-                    point = ((LatLng)getArguments().getParcelable("point"));
+                    point = ((LatLng)getArguments().getParcelable(MapsActivity.MAP_POINT_EXTRA_NAME));
                     if (point != null) {
                         locationId = MapLocation.Builder.generateId(point);
                         Log.i(TAG, "onCreateView: intent extras: " + point.toString());
@@ -322,8 +325,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private int getPicturesCount(){
         return (images != null)? images.size() : 0;
     }
-    private String getPictureName(){return locationId+"_pic#"+getPicturesCount()+".jpg "; }
-    public void uploadPictures(String userId,String locationId){
+    private void uploadPictures(String userId,String locationId){
         Log.i(TAG, "uploadPictures called, "+images.size()+" pictures to upload");
         Log.i(TAG, "uploadPictures called thread = " + Thread.currentThread().toString());
 
@@ -331,7 +333,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         picturesUploadTask.execute(userId,locationId);
 
     }
-    public MapLocation processInputs(){
+    private MapLocation processInputs(){
         String description;
         Map<String, Service> services = new HashMap<>();
         if (binding.addDescriptionEditText.getText().length() < 4){
@@ -484,7 +486,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
         return null;
     }
-    public double parsePrice(EditText editText,String name) throws NumberFormatException{
+    private double parsePrice(EditText editText,String name) throws NumberFormatException{
         double price;
         try{
             price = Float.parseFloat(editText.getText().toString());
@@ -498,7 +500,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         return price;
     }
 
-    public void takePicture(String name) throws IOException {
+    private void takePicture(String name) throws IOException {
 //        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
 
         File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
@@ -510,7 +512,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         Log.i(TAG, "takePicture: file path is: "+ mediaStorageDir.getPath());
         // Return the file target for the photo based on filename
 
-        picTurePath = mediaStorageDir.getPath() + File.separator + getPictureName();
+        picTurePath = mediaStorageDir.getPath() + File.separator + MapLocation.generatePictureName(locationId,getPicturesCount());
         File file = new File(picTurePath);
         userPictureUri = FileProvider.getUriForFile(getContext(),"fr.abitbol.service4night.fileprovider",file);
 
@@ -526,6 +528,29 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         super.onDestroyView();
         Log.i(TAG, "onDestroyView called");
         binding = null;
+    }
+    public void startProgressBar(){
+
+        binding.addFrameLayout.setEnabled(false);
+        binding.addProgressBarContainer.setVisibility(View.VISIBLE);
+        binding.addProgressBarContainer.setEnabled(true);
+        //binding.addProgressBar.animate();
+        binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,getPicturesCount()));
+    }
+    public void stopProgressBar(){
+        binding.addFrameLayout.setEnabled(true);
+        binding.addProgressBarContainer.setVisibility(View.GONE);
+    }
+    public void updateProgressBar(boolean success,int done) {
+        if (success) {
+            Log.i(TAG, "updateProgressBar:  picture upload success");
+            binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format), done, getPicturesCount()));
+        }
+        else {
+            Log.i(TAG, "updateProgressBar: picture upload failed");
+            binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format), done, getPicturesCount()));
+            Toast.makeText(getContext(), String.format(getString(R.string.progressBar_picture_failed),(done-1)), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -544,12 +569,13 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     }
 
     @Override
-    public void onPicturesUploaded(List<Uri> uris) {
+    public void onPicturesUploaded(List<String> uris) {
+        //TODO ne pas quitter si upload raté
         if (uris != null && !uris.isEmpty()) {
             Log.i(TAG, "onPicturesUploaded: pictures successfully uploaded: ");
             picturesCloudUris = uris;
-            for (Uri uri : picturesCloudUris) {
-                Log.i(TAG, "uploaded : toString: " + uri.toString() + " path :"+uri.getPath());
+            for (String uri : picturesCloudUris) {
+                Log.i(TAG, "uploaded : toString: " + uri );
             }
             mapLocation.setPictures(picturesCloudUris);
             dataBase.insert(mapLocation);

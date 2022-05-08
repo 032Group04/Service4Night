@@ -5,6 +5,6 @@ import android.net.Uri;
 import java.util.List;
 
 public interface OnPicturesUploadedListener {
-    public void onPicturesUploaded(List<Uri> uris);
+    public void onPicturesUploaded(List<String> uris);
 
 }

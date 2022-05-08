@@ -62,6 +62,16 @@
     <string name="password_hint">Password</string>
     <string name="password_confirm_hint">Password (confirm)</string>
     <string name="sign_in_title">Sign in</string>
-    <string name="password_requirements">Password must be 8-25 symbols, digits, lower and upper case characters.</string>
+    <string name="password_requirements">Password must be 8–25 symbols, digits, lower and upper case characters.</string>
+    <string name="progressBar_text_format">Uploading picture %d of %d…</string>
+    <string name="progressBar_picture_failed">Picture %d upload failed.</string>
+    <string name="not_drinkable_label">Not drinkable</string>
+    <string name="see_details_label">See details</string>
+    <string name="free_service">Free Service</string>
+    <string name="free_electricity">Free Electricity</string>
+    <string name="free_internet">Free Internet</string>
+    <string name="free_water">Free water</string>
+    <string name="google_maps_itinerary_label">Google Maps Itinerary</string>
+    <string name="search_in_google_label">Search in google</string>
 
 </resources>

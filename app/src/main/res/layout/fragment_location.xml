@@ -1,93 +1,272 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".LocationFragment"
-    android:layout_marginHorizontal="5dp"
-    android:layout_marginVertical="10dp">
+    android:layout_width="match_parent"
+    android:fillViewport="true">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/picture_view_pager"
+    <FrameLayout
+        android:layout_height="match_parent"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:layout_marginHorizontal="10dp"
-
-        app:flow_horizontalAlign="center"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/location_FrameLayout">
 
 
-    <TextView
-        android:id="@+id/textview_latitude"
-        android:layout_width="100dp"
-        android:layout_height="25dp"
-        android:text="@string/latitude"
-        app:layout_constraintBottom_toTopOf="@id/textview_longitude"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.033"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/picture_view_pager"
-        app:layout_constraintVertical_bias="0.611" />
-
-    <TextView
-        android:id="@+id/textview_longitude"
-        android:layout_width="100dp"
-        android:layout_height="25dp"
-        android:layout_marginBottom="20dp"
-        android:text="@string/longitude"
-        app:layout_constraintBottom_toTopOf="@id/description_scroll_view"
-        app:layout_constraintEnd_toEndOf="parent"
-
-        app:layout_constraintHorizontal_bias="0.033"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <ScrollView
-        android:id="@+id/description_scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="165dp"
-
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="8dp"
-        android:background="#DDDDDD"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textview_longitude">
 
         <LinearLayout
+            android:id="@+id/location_mainContainer"
+
+            android:layout_gravity="center"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:paddingTop="10dp"
+            android:paddingHorizontal="5dp"
+            android:focusableInTouchMode="true"
 
-            <EditText
-                android:id="@+id/add_descriptionEditText"
+            android:layout_marginHorizontal="10dp"
+            >
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/location_name_textView"
+                android:textAlignment="center"
+                android:background="@drawable/rounded_corners"
+                android:maxLines="1"/>
+            <FrameLayout
+                android:id="@+id/pictureLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="200dp"
+                android:layout_weight="1"
+                android:layout_margin="2dp"
 
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                >
+
+                <androidx.viewpager2.widget.ViewPager2
+                    android:id="@+id/location_viewPager"
+                    android:layout_height="match_parent"
+                    android:layout_width="match_parent"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_gravity="center"
+
+                    />
 
 
+            </FrameLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="5dp"
+                android:layout_marginHorizontal="2dp"
+                android:rowCount="6"
+                android:columnCount="3"
+
+                >
+
+
+
+                <TextView
+                    android:id="@+id/location_coordinatesTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="0"
+                    android:layout_rowSpan="2"
+                    android:layout_gravity="fill_horizontal"
+                    android:textAlignment="center"
+                    android:layout_column="0"
+
+                    android:layout_columnSpan="3"
+                    />
+
+
+                <CheckBox
+                    android:id="@+id/location_checkBox1_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="2"
+                    android:layout_column="0"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+                <CheckBox
+                    android:id="@+id/location_checkBox1_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="2"
+                    android:layout_column="1"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+                <CheckBox
+                    android:id="@+id/location_checkBox1_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="2"
+                    android:layout_column="2"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+
+                <CheckBox
+                    android:id="@+id/location_checkBox2_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="3"
+                    android:layout_column="2"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+                <CheckBox
+                    android:id="@+id/location_checkBox2_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="3"
+                    android:layout_column="1"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+                <CheckBox
+                    android:id="@+id/location_checkBox2_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="3"
+                    android:layout_column="0"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+                <CheckBox
+                    android:id="@+id/location_checkBox3_3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="4"
+                    android:layout_column="2"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+                <CheckBox
+                    android:id="@+id/location_checkBox3_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="4"
+                    android:layout_column="1"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+                <CheckBox
+                    android:id="@+id/location_checkBox3_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_row="4"
+                    android:layout_column="0"
+                    android:layout_gravity="fill_horizontal"
+                    android:clickable="false"
+                    android:background="@drawable/rounded_corner_thin"
+                    android:textSize="12sp"
+                    android:visibility="invisible" />
+
+
+
+
+            </GridLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/location_descriptionEditText"
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:autofillHints="description"
+                android:gravity="start"
                 android:hint="@string/description_hint"
+                android:minLines="2"
+                android:background="@drawable/rounded_corner_blue_light"
 
-                />
+                android:textAlignment="textStart"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                android:orientation="vertical"
+                android:layout_gravity="center_horizontal">
+            <Button
+                android:id="@+id/buttonItinerary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/google_maps_itinerary_label"
+                android:textSize="11sp"/>
+            <Button
+                android:id="@+id/buttonGoogleView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_gravity="center_horizontal"
+                android:textSize="11sp"
+                android:text="@string/search_in_google_label" />
+            </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
 
         </LinearLayout>
-    </ScrollView>
 
-    <Button
-        android:id="@+id/buttonValidate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/validate"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/description_scroll_view"
-        app:layout_constraintVertical_bias="0.593" />
+        <FrameLayout
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:id="@+id/location_progressBarContainer"
+            android:visibility="gone"
+            android:background="@color/black"
+            android:alpha="0.8"
+            >
 
 
+        </FrameLayout>
+    </FrameLayout>
 
 
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

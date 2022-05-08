@@ -1,14 +1,19 @@
 package fr.abitbol.service4night.services;
 
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public abstract class Service {
+import fr.abitbol.service4night.DAO.LocationDAO;
+
+public abstract class Service implements Parcelable {
 
     public static final String WATER_SERVICE = "Water";
     public static final String ELECTRICITY_SERVICE = "Electricity";
@@ -27,7 +32,8 @@ public abstract class Service {
     }
     //TODO : reflechir a une interface Filterable
     public abstract boolean matchFilter(Service filter);
-
+    public abstract Map<Object,Object> getAsMap();
+    public abstract Bundle getAsBundle();
     @Override
     public boolean equals(@Nullable Object obj) {
         Log.i(TAG, "equals called in Service class");
@@ -77,6 +83,64 @@ public abstract class Service {
             }
             if (map.containsKey(Service.DUMPSTER_SERVICE)){
                 services.put(Service.DUMPSTER_SERVICE,new DumpService());
+            }
+            return services;
+        }
+        public static Map<String,Service> buildServices(Bundle bundle){
+            Log.i(TAG, "buildServices: bundle version called");
+            Map<String,Service> services = new HashMap<>();
+            if (bundle.containsKey(Service.WATER_SERVICE)){
+                Log.i(TAG, "buildServices: building water service'");
+                services.put(Service.WATER_SERVICE,(WaterService)bundle.getParcelable(WATER_SERVICE));
+            }else Log.i(TAG, "buildServices: no water service");
+            if (bundle.containsKey(Service.ELECTRICITY_SERVICE)){
+                Log.i(TAG, "buildServices: building elec service'");
+                services.put(Service.ELECTRICITY_SERVICE,(ElectricityService)bundle.getParcelable(ELECTRICITY_SERVICE));
+            }else Log.i(TAG, "buildServices: no elec service");
+            if (bundle.containsKey(Service.INTERNET_SERVICE)){
+                Log.i(TAG, "buildServices: building internet service'");
+                services.put(Service.INTERNET_SERVICE,(InternetService)bundle.getParcelable(INTERNET_SERVICE));
+            }else Log.i(TAG, "buildServices: no internet service");
+            if (bundle.containsKey(Service.DRAINAGE_SERVICE)){
+                Log.i(TAG, "buildServices: building drain service'");
+
+                services.put(Service.DRAINAGE_SERVICE,(DrainService)bundle.getParcelable(DRAINAGE_SERVICE));
+            }else Log.i(TAG, "buildServices: no drain service");
+            if (bundle.containsKey(Service.DUMPSTER_SERVICE)){
+                Log.i(TAG, "buildServices: building Dumpster service'");
+                services.put(Service.DUMPSTER_SERVICE,new DumpService());
+            }else Log.i(TAG, "buildServices: no dump service");
+            return services;
+        }
+        public static Map<String,Service> buildServices(List<Service> serviceList){
+            Log.i(TAG, "buildServices: List version called");
+            Map<String,Service> services = new HashMap<>();
+            for (Service s : serviceList){
+                if (s instanceof WaterService){
+                    Log.i(TAG, "buildServices: found instance of WaterService");
+                    services.put(s.getLabel(),(WaterService) s);
+                    continue;
+                }
+                if (s instanceof ElectricityService){
+                    Log.i(TAG, "buildServices: found instance of ElectricityService");
+                    services.put(s.getLabel(),(ElectricityService) s);
+                    continue;
+                }
+                if (s instanceof DrainService){
+                    Log.i(TAG, "buildServices: found instance of DrainService");
+                    services.put(s.getLabel(),(DrainService) s);
+                    continue;
+                }
+                if (s instanceof DumpService){
+                    Log.i(TAG, "buildServices: found instance of DumpService");
+                    services.put(s.getLabel(),(DumpService) s);
+                    continue;
+                }
+                if (s instanceof InternetService){
+                    Log.i(TAG, "buildServices: found instance of InternetService");
+                    services.put(s.getLabel(),(InternetService) s);
+
+                }
             }
             return services;
         }

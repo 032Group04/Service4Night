@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
 
-        //TODO : cacher toolBar hors du menu
+        //TODO : cacher toolBar dans la map
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
         

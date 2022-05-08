@@ -17,15 +17,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import fr.abitbol.service4night.databinding.WindowInfoBinding;
 import fr.abitbol.service4night.services.DrainService;
+import fr.abitbol.service4night.services.ElectricityService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
 
-public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
+public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInfoWindowClickListener {
 
     private final String TAG = "InfoWindow logging";
     private WindowInfoBinding binding;
     private AtomicReference<ArrayList<MapLocation>> locationsRef;
+    private MapLocation mapLocation;
     private MapsActivity mapsActivity;
     //private View mContent;
 
@@ -36,6 +38,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
 
         mapsActivity =  context;
         binding = WindowInfoBinding.inflate(mapsActivity.getLayoutInflater());
+
         //mContent = mapsActivity.getLayoutInflater().inflate(R.layout.window_info,null);
     }
 
@@ -87,7 +90,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
             }
         }
         locationsRef = new AtomicReference<>(mapsActivity.getVisibleLocations());
-        MapLocation mapLocation = null;
+
         if (locationsRef.get() != null) {
             for (MapLocation l : locationsRef.get()){
                 if (l.getId().equals(marker.getTitle()) ){
@@ -101,37 +104,54 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
         }
 
         if (mapLocation != null){
+
             Log.i(TAG, "getInfoContents: mapLocation is not null");
             binding.nameTextView.setText(mapLocation.getName());
             binding.descriptionTextView.setText(mapLocation.getDescription());
             Log.i(TAG, "getInfoContents: description is : "+ mapLocation.getDescription());
             binding.coordinatesTextView.setText(String.format(Locale.ENGLISH,"Lat : %f - Long : %f", mapLocation.getPoint().latitude, mapLocation.getPoint().longitude) );
             int count =0;
-            Map<String,Service> services = mapLocation.getServices();
+            Map<String, Service> services = mapLocation.getServices();
+
             if (services.containsKey(Service.ELECTRICITY_SERVICE)){
+                ElectricityService electricityService = (ElectricityService) services.get(Service.ELECTRICITY_SERVICE);
                 Log.i(TAG, "getInfoContents:  instance of electricity service");
                 count++;
                 CheckBox box = getCheckbox(count);
                 box.setText(R.string.electricityLabel);
+                box.setButtonDrawable(R.drawable.ic_service_electricity);
                 box.setVisibility(View.VISIBLE);
-                box.setChecked(true);
+                count++;
+                CheckBox box2 = getCheckbox(count);
+                if (electricityService.getPrice() == 0){
+                    box2.setButtonDrawable(R.drawable.ic_service_free);
+                    box2.setText(R.string.drinkable_label);
+                    box2.setVisibility(View.VISIBLE);
+                }
+
             }
             if (services.containsKey(Service.WATER_SERVICE)){
                 Service waterService = services.get(Service.WATER_SERVICE);
                 Log.i(TAG, "getInfoContents:  instance of water service");
                 count++;
                 CheckBox box = getCheckbox(count);
+                box.setButtonDrawable(R.drawable.ic_service_water);
                 box.setText(R.string.waterLabel);
                 box.setVisibility(View.VISIBLE);
-                box.setChecked(true);
+
+                count++;
+                CheckBox box2 = getCheckbox(count);
                 if (((WaterService)waterService).isDrinkable()) {
-                    count++;
-                    CheckBox box2 = getCheckbox(count);
+
+                    box2.setButtonDrawable(R.drawable.ic_service_drinkable_water);
                     box2.setText(R.string.drinkable_label);
                     box2.setVisibility(View.VISIBLE);
-                    box2.setChecked(true);
 
-
+                }
+                else {
+                    box2.setButtonDrawable(R.drawable.ic_service_not_drinkable_water);
+                    box2.setText(R.string.not_drinkable_label);
+                    box2.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -142,8 +162,8 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 count++;
                 CheckBox box = getCheckbox(count);
                 box.setText(R.string.internet_label);
+                box.setButtonDrawable(R.drawable.ic_service_internet);
                 box.setVisibility(View.VISIBLE);
-                box.setChecked(true);
 
             }
             if (services.containsKey(Service.DUMPSTER_SERVICE)){
@@ -151,8 +171,8 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 count++;
                 CheckBox box = getCheckbox(count);
                 box.setText(R.string.dumpster_label);
+                box.setButtonDrawable(R.drawable.ic_service_dumpster);
                 box.setVisibility(View.VISIBLE);
-                box.setChecked(true);
 
             }
             if (services.containsKey(Service.DRAINAGE_SERVICE)){
@@ -160,57 +180,32 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter {
                 Log.i(TAG, "getInfoContents:  instance of drain service");
                 count++;
                 CheckBox box = getCheckbox(count);
-
-                box.setVisibility(View.VISIBLE);
-
                 box.setText((((DrainService)drainService).isBlackWater())? R.string.black_water_drain_label : R.string.grey_water_drain_label);
-
-                box.setChecked(true);
-
+                box.setButtonDrawable(R.drawable.ic_service_drainage);
+                box.setVisibility(View.VISIBLE);
             }
-//            mapLocation.getServices().forEach((s, service) -> {
-//                System.out.println(s);
-//            });
-//            mapLocation.getServices().forEach((str, service) ->{
-//                if (service != null) {
-//                    Log.i(TAG, "getInfoContents: service is : " + str);
-//                    if (service instanceof ElectricityService){
-//                        Log.i(TAG, "getInfoContents:  instance of electricity service");
-//                        binding.electricityCheckBox.setChecked(true);
-//                    }
-//                    else if (service instanceof WaterService){
-//                        Log.i(TAG, "getInfoContents:  instance of water service");
-//                        binding.waterCheckBox.setChecked(true);
-//                        if (((WaterService) service).isDrinkable()) {
-//                            binding.drinkableCheckBox.setVisibility(VISIBLE);
-//                            binding.drinkableCheckBox.setChecked(true);
-//
-//                        }
-//                    }
-//                    else if (service instanceof InternetService){
-//                        Log.i(TAG, "getInfoContents:  instance of internet service");
-//                        binding.internetCheckBox.setChecked(true);
-//
-//                    }
-//                    else if (service instanceof DumpService){
-//                        Log.i(TAG, "getInfoContents:  instance of dump service");
-//                        binding.dumpsterCheckBox.setChecked(true);
-//
-//                    }
-//                    else if (service instanceof DrainService){
-//                        Log.i(TAG, "getInfoContents:  instance of drain service");
-//
-//                        if (((DrainService) service).isBlackWater()){
-//                            binding.drainCheckBox.setText(R.string.black_water_drain_label);
-//                        }
-//                        binding.drainCheckBox.setChecked(true);
-//
-//                    }
-//
-//                }
-//            });
+            binding.getRoot().invalidate();
+
         }
-        binding.getRoot().invalidate();
+
         return binding.getRoot();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        Log.i(TAG, "finalize called");
+
+    }
+
+    @Override
+    public void onInfoWindowClick(@NonNull Marker marker) {
+        if (mapsActivity!= null && mapLocation != null){
+            mapsActivity.infoWindowClicked(mapLocation);
+            Log.i(TAG, "getInfoContents: listener on infowindow clicked");
+        }
+        else{
+            Log.i(TAG, "onInfoWindowClick: mapsActivity or MapLocation is null");
+        }
     }
 }

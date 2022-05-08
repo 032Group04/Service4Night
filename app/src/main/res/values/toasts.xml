@@ -23,4 +23,5 @@
     <string name="sign_in_success">Successfully signed in</string>
     <string name="exceed_pictures_count">You can add three pictures at most</string>
     <string name="network_error">Connection error</string>
+    <string name="picture_retrieve_error">Error while retrieving picture</string>
 </resources>

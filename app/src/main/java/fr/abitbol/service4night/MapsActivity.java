@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
@@ -50,7 +51,7 @@ import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot>, OnLocationCheckedListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot>, OnLocationCheckedListener, OnInfoWindowClickedAdapter {
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
@@ -65,8 +66,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static final int MAP_TYPE_EXPLORE = 3737;
     public static final int MAP_TYPE_ADD = 7337;
     public static final String MAP_MODE_BUNDLE_NAME = "mapMode";
-    public static final String MAP_POINT_BUNDLE_NAME = "point";
+    public static final String MAP_POINT_EXTRA_NAME = "point";
+    public static final String ACTION_GET_POINT_LATLNG = "point_data";
     private static final int LOCATION_REQUEST_CODE = 8631584;
+    public static final String MAPLOCATION_EXTRA_NAME = "mapLocation";
     private static final int BACKGROUND_LOCATION_REQUEST_CODE = 8631554;
     boolean adding;
     boolean searchStarted;
@@ -376,8 +379,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                 binding.mapActionButton.setOnClickListener(view -> {
+                    //TODO vérifier si la location n'existe pas déja
                     Intent pointIntent = new Intent("point_data");
-                    pointIntent.putExtra(MAP_POINT_BUNDLE_NAME,latLng);
+                    pointIntent.putExtra(MAP_POINT_EXTRA_NAME,latLng);
 //            LocalBroadcastManager.getInstance(this).sendBroadcast(pointIntent);
                     setResult(MAP_TYPE_ADD,pointIntent);
 
@@ -392,8 +396,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 
             //TODO : fermer infowindow si clic sur retour
-            mMap.setInfoWindowAdapter(new InfoWindow(MapsActivity.this));
-
+            InfoWindow infoWindow = new InfoWindow(MapsActivity.this);
+            mMap.setInfoWindowAdapter(infoWindow);
+            mMap.setOnInfoWindowClickListener(infoWindow);
             mMap.setOnMapLongClickListener(latLng -> {
                 Log.i(TAG, "lat : " + latLng.latitude + "\nlong : "+ latLng.longitude);
 
@@ -499,6 +504,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             });
         }
     }
+
+    @Override
+    public void infoWindowClicked(MapLocation location) {
+        Log.i(TAG, "infoWindowClicked called");
+        Intent pointIntent = new Intent(ACTION_GET_POINT_LATLNG);
+
+        pointIntent.putExtra(MAPLOCATION_EXTRA_NAME, (Parcelable) location);
+        setResult(MAP_TYPE_EXPLORE,pointIntent);
+
+        finish();
+    }
+
+
 
 
 

@@ -1,6 +1,11 @@
 package fr.abitbol.service4night;
 
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -11,6 +16,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,20 +26,21 @@ import java.util.Map;
 import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.services.Service;
 
-public class MapLocation {
+public class MapLocation implements Parcelable {
 
     private String description;
     private String id;
     private String name;
     private LatLng point;
-    private List<Uri> pictures;
+    private List<String> pictures;
     private Map<String, Service> services;
     private String user_id;
     private boolean confirmed;
     private static final String TAG = "MapLocation logging";
 
+
     //TODO : créer classe dédiée a la localisation
-    public MapLocation(double latitude, double longitude, String _description, Map<String,Service> _services, String _user_id, String _name,List<Uri> _pictures, boolean _confirmed)  {
+    public MapLocation(double latitude, double longitude, String _description, Map<String,Service> _services, String _user_id, String _name,List<String> _pictures, boolean _confirmed)  {
         point = new LatLng(latitude, longitude);
         services = _services;
         description = _description;
@@ -45,18 +52,35 @@ public class MapLocation {
 
     }
 
-    public MapLocation(LatLng _point, String _description, Map<String,Service> _services, String _user_id, String _name, List<Uri> _pictures, boolean _confirmed) {
+    public MapLocation(LatLng _point, String _description, Map<String,Service> _services, String _user_id, String _name, List<String> _pictures, boolean _confirmed) {
         point = _point;
         services = _services;
         user_id = _user_id;
         description = _description;
-        id = String.format(Locale.FRANCE,Double.toString(point.latitude)+'|'+ point.longitude);
+        id = String.format(Locale.ENGLISH,Double.toString(point.latitude)+'|'+ point.longitude);
         name = _name;
         pictures = _pictures;
         confirmed = _confirmed;
     }
+    protected MapLocation(Parcel parcel){
+        Log.i(TAG, "MapLocation parcel constructor");
+        Bundle bundle = parcel.readBundle(getClass().getClassLoader());
+        point = new LatLng((double)bundle.getDouble(LocationDAO.LATITUDE_KEY),
+                (double)bundle.getDouble(LocationDAO.LONGITUDE_KEY));
+        Log.i(TAG, "MapLocation: parcel constructor : build service reached");
+        services = Service.Builder.buildServices(bundle.getBundle(LocationDAO.SERVICES_KEY));
+        Log.i(TAG, "MapLocation: parcel constructor : build service passed");
+        user_id = (String) bundle.getString(LocationDAO.USER_ID_KEY);
+        description = (String) bundle.getString(LocationDAO.DESCRIPTION_KEY);
+        id = String.format(Locale.ENGLISH,Double.toString(point.latitude)+'|'+ point.longitude);
+        name = (String) bundle.getString(LocationDAO.LOCATION_NAME_KEY);
+        pictures = bundle.getStringArrayList(LocationDAO.PICTURES_URI_KEY);
+        confirmed = (boolean) bundle.getBoolean(LocationDAO.CONFIRMED_KEY);
+    }
 
 
+    public static String generatePictureName(String locationId, int picturesCount){
+        return locationId+"_pic#"+picturesCount+".jpg "; }
 
     public void addService(Service service){
         if (services.containsKey(service.getLabel())){
@@ -72,6 +96,45 @@ public class MapLocation {
         locationMap.put(id,this);
         return locationMap;
 
+    }
+    public Map<Object,Object> getServicesAsMap(){
+        Map<Object,Object> mappedServices = new HashMap<>();
+        services.forEach((s, service) -> {
+           mappedServices.put(service.getLabel(),service.getAsMap());
+        });
+        return mappedServices;
+    }
+    public Bundle getServicesAsBundle(){
+        Bundle bundle = new Bundle();
+        services.forEach(bundle::putParcelable);
+
+        return bundle;
+    }
+    public Map<Object, Object> getAsMap(){
+        Map<Object,Object> mappedLocation = new HashMap<>();
+        mappedLocation.put(LocationDAO.LATITUDE_KEY, point.latitude);
+        mappedLocation.put(LocationDAO.LONGITUDE_KEY, point.longitude);
+        mappedLocation.put(LocationDAO.LOCATION_ID_KEY, id);
+        mappedLocation.put(LocationDAO.DESCRIPTION_KEY, description);
+        mappedLocation.put(LocationDAO.SERVICES_KEY, services);
+        mappedLocation.put(LocationDAO.USER_ID_KEY, user_id);
+        mappedLocation.put(LocationDAO.LOCATION_NAME_KEY, name);
+        if (pictures != null) mappedLocation.put(LocationDAO.PICTURES_URI_KEY,pictures);
+        mappedLocation.put(LocationDAO.CONFIRMED_KEY, confirmed);
+        return mappedLocation;
+    }
+    public Bundle getAsBundle(){
+        Bundle bundle = new Bundle();
+        bundle.putDouble(LocationDAO.LATITUDE_KEY, point.latitude);
+        bundle.putDouble(LocationDAO.LONGITUDE_KEY, point.longitude);
+        bundle.putString(LocationDAO.LOCATION_ID_KEY, id);
+        bundle.putString(LocationDAO.DESCRIPTION_KEY, description);
+        bundle.putBundle(LocationDAO.SERVICES_KEY, getServicesAsBundle());
+        bundle.putString(LocationDAO.USER_ID_KEY, user_id);
+        bundle.putString(LocationDAO.LOCATION_NAME_KEY, name);
+        if (pictures != null) bundle.putStringArrayList(LocationDAO.PICTURES_URI_KEY, (ArrayList<String>) pictures);
+        bundle.putBoolean(LocationDAO.CONFIRMED_KEY, confirmed);
+        return bundle;
     }
 
     public boolean hasService(String label){
@@ -125,11 +188,11 @@ public class MapLocation {
 //        return picture;
 //    }
 
-    public List<Uri> getPictures() {
+    public List<String> getPictures() {
         return pictures;
     }
 
-    public void setPictures(List<Uri> pictures) {
+    public void setPictures(List<String> pictures) {
         this.pictures = pictures;
     }
 
@@ -172,6 +235,30 @@ public class MapLocation {
     public LatLng getPoint() {
         return point;
     }
+
+    //TODO : si temps finir parcelable ici et dans Service
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+    @Override
+    public void writeToParcel(Parcel out, int i) {
+        out.writeBundle(getAsBundle());
+    }
+
+    public static final Parcelable.Creator<MapLocation> CREATOR
+            = new Parcelable.Creator<MapLocation>() {
+        @Override
+        public MapLocation createFromParcel(Parcel parcel) {
+            return new MapLocation(parcel);
+        }
+
+        @Override
+        public MapLocation[] newArray(int i) {
+            return new MapLocation[i];
+        }
+    };
+
     public static class Builder {
         private static final String TAG = "LocationBuilder logging";
 
@@ -184,11 +271,12 @@ public class MapLocation {
             Log.i(TAG, "build: lng = " + longitude);
             String description = (String) data.get(LocationDAO.DESCRIPTION_KEY);
             Log.i(TAG, "build: description = " + description);
-            List<Uri> pictures = null;
+            List<String> pictures = null;
             if(data.containsKey(LocationDAO.PICTURES_URI_KEY)) {
-                Uri[] picturesArray =  (Uri[]) data.get(LocationDAO.PICTURES_URI_KEY);
+                Log.i(TAG, "mapLocation builder: map contains pictures uri key ");
+                List<String> picturesArray = (List<String>) data.get(LocationDAO.PICTURES_URI_KEY);
                 if (picturesArray != null){
-                    pictures = Arrays.asList(picturesArray);
+                    pictures = picturesArray;
                 }
             }
 

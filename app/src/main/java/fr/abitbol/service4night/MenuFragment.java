@@ -42,7 +42,7 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
                                 .navigate(R.id.action_MenuFragment_to_AddLocationFragment, result.getData().getExtras());
                             break;
                         case MapsActivity.MAP_TYPE_EXPLORE:
-
+                            NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_LocationFragment,result.getData().getExtras());
                             break;
                     }
                 }
