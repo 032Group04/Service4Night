@@ -1,11 +1,16 @@
 package fr.abitbol.service4night;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 
 
@@ -43,27 +48,36 @@ import java.util.Arrays;
 import java.util.List;
 
 import fr.abitbol.service4night.databinding.ActivityMainBinding;
+import fr.abitbol.service4night.listeners.OnSettingsNavigation;
 
-public class MainActivity extends AppCompatActivity implements ActivityResultCallback<FirebaseAuthUIAuthenticationResult>, NavController.OnDestinationChangedListener {
+public class MainActivity extends AppCompatActivity implements ActivityResultCallback<FirebaseAuthUIAuthenticationResult>, NavController.OnDestinationChangedListener{
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private FirebaseUser user;
     private FirebaseAuth auth;
-
+    private boolean showSettings;
+    public static final int LOCATION_REQUEST_CODE = 8631584;
+    public static final int FINE_LOCATION_REQUEST_CODE = 8631547;
     private final ActivityResultLauncher<Intent> launcher = registerForActivityResult(
             new FirebaseAuthUIActivityResultContract(),this);
-    private  final String TAG = "MainActivity logging";
-
+    private final String TAG = "MainActivity logging";
+    private static final int menuFragmentId = 2131361800;
     public static boolean prefChanged;
+    boolean askingPermissions;
+    public static boolean coarseLocation = false;
+    public static boolean fineLocation = false;
 
     //TODO: ajouter une note aux locations et un favori pour l'utilisateur
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if(savedInstanceState == null){
+            showSettings = true;
+        }
         Log.i(TAG, "onCreate called");
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-
+        askingPermissions = false;
         auth = FirebaseAuth.getInstance();
         //TODO : gérer comptes anonymes
         //TODO : tester si internet et sinon passer en mode hors ligne
@@ -101,33 +115,121 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
     }
 
+
     @Override
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "onStart called ");
 
 
+        checkLocationAccess();
 
+
+    }
+    private void checkLocationAccess(){
+        Log.i(TAG, "startLocation called");
+
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "startLocation: fine location is granted");
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                Log.i(TAG, "startLocation: gps provider is enabled");
+                fineLocation = true;
+            } else {
+                Log.i(TAG, "startLocation: gps provider is disabled");
+            }
+        }
+        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "startLocation: coarse location is granted");
+            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                Log.i(TAG, "startLocation: network provider is enabled");
+                coarseLocation = true;
+            } else {
+                Log.i(TAG, "startLocation: network provider is disabled");
+            }
+
+        }
+//        listener.onLocationChecked(fineLocation,coarseLocation);
+        if(!fineLocation){
+            if (!askingPermissions) {
+                Log.i(TAG, "onLocationChecked: asking permissions");
+                askingPermissions = true;
+                if (!coarseLocation) {
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
+                }
+                else{
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_REQUEST_CODE);
+
+                }
+            } else {
+                if (!coarseLocation) {
+                    Log.i(TAG, "onLocationChecked: permissions asked : couldn't access location");
+                    Toast.makeText(this, getString(R.string.no_localisation_permissions), Toast.LENGTH_SHORT).show();
+
+                }
+                else{
+                    Log.i(TAG, "checkLocationAccess: coarse location only");
+                    Toast.makeText(this, getString(R.string.coarse_localisation_limit), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+        else{
+            Log.i(TAG, "checkLocationAccess: fine location available");
+        }
+
+
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.i(TAG, "onRequestPermissionsResult called");
+        if (requestCode == LOCATION_REQUEST_CODE){
+            if ( grantResults[0] == PackageManager.PERMISSION_GRANTED || grantResults[1] == PackageManager.PERMISSION_GRANTED){
+                Log.i(TAG, "onRequestPermissionsResult: at least one location permissions was granted");
+                checkLocationAccess();
+
+            }
+            else{
+                Log.i(TAG, "onRequestPermissionsResult: location permissions were declined");
+            }
+        }
+        else if (requestCode == FINE_LOCATION_REQUEST_CODE){
+            if ( grantResults[0] == PackageManager.PERMISSION_GRANTED ){
+                Log.i(TAG, "onRequestPermissionsResult: fine location permission was granted");
+                checkLocationAccess();
+
+            }
+            else{
+                Log.i(TAG, "onRequestPermissionsResult: location permissions were declined");
+            }
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.i(TAG, "onCreateOptionsMenu called");
 
-        if (user != null){
-            Log.i(TAG, "onCreateOptionsMenu: user is valid : " + user.getEmail());
+        if (showSettings) {
+            if (user != null){
+                Log.i(TAG, "onCreateOptionsMenu: user is valid : " + user.getEmail());
 
-            getMenuInflater().inflate(R.menu.menu_logged, menu);
-        }
-        else{
-            Log.i(TAG, "onCreateOptionsMenu: user is null");
-            getMenuInflater().inflate(R.menu.menu_main, menu);
+                getMenuInflater().inflate(R.menu.menu_logged, menu);
+            }
+            else{
+                Log.i(TAG, "onCreateOptionsMenu: user is null");
+                getMenuInflater().inflate(R.menu.menu_main, menu);
+            }
+        } else {
+            Log.i(TAG, "onCreateOptionsMenu: hiding settings");
+            getMenuInflater().inflate(R.menu.menu_empty, menu);
         }
 
 
         return true;
     }
-
+    //TODO : gérer visibilité des menus selon connecté ou non
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         Log.i(TAG, "onOptionsItemSelected called item : "+ item);
@@ -164,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         }
 
         else if (item.getItemId() == R.id.app_settings_item){
+            //TODO ajouter option vider cache images et vider cache sauf favoris
 //            Intent appSettingsIntent = new Intent(getApplicationContext(),SettingsActivity.class);
 //            startActivity(appSettingsIntent);
             Fragment fragment = getVisibleFragment();
@@ -217,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         List<Fragment> fragments = fragment.getChildFragmentManager().getFragments();
         for (Fragment f : fragments){
             if(f!=null && f.isVisible()){
-                Log.i(TAG, "getvisiblefragment returns a fragment");
+                Log.i(TAG, "getvisiblefragment returns a fragment : tostring = " + f.toString()+ " "+f.getId());
                 return f;
             }
         }
@@ -290,9 +393,47 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             }
         }
     }
+    public void manageMenu(){
+        if (getVisibleFragment() instanceof MenuFragment){
+            Log.i(TAG, "manageMenu: visible fragment is the menu fragment");
+            setSettingsVisibility(true);
+        }
+        else{
+            Log.i(TAG, "manageMenu: visible fragment is not the menu fragment");
+        }
+    }
+    //TODO: essayer copmprendre fragment visible
+    public void manageMenu(int id){
+        Fragment fragment = getVisibleFragment();
 
+        if (fragment != null && (getVisibleFragment() instanceof MenuFragment || getVisibleFragment().getId() == menuFragmentId)) {
+            Log.i(TAG, "manageMenu: visible fragment is the menu fragment");
+            setSettingsVisibility(true);
+        }
+        else if (id == menuFragmentId){
+            Log.i(TAG, "manageMenu: destination is menu fragment");
+            setSettingsVisibility(true);
+        }
+        else{
+            Log.i(TAG, "manageMenu: visible fragment is not the menu fragment");
+        }
+
+
+
+
+    }
+    public void setSettingsVisibility(boolean b){
+        Log.i(TAG, "setSettingsVisibility called : "+b);
+        showSettings = b;
+        invalidateOptionsMenu();
+
+    }
+
+    @SuppressLint("ResourceType")
     @Override
     public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
-        Log.i(TAG, "onDestinationChanged called");
+        Log.i(TAG, "onDestinationChanged called :id= "+ destination.getId()+ "name ="+destination.getNavigatorName()+"label = "+destination.getLabel());
+        manageMenu((destination.getLabel()!=null)? destination.getId(): -1);
+
     }
 }

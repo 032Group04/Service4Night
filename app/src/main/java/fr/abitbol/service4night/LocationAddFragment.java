@@ -35,7 +35,6 @@ import com.google.firebase.auth.FirebaseUser;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +42,7 @@ import java.util.Map;
 import fr.abitbol.service4night.DAO.DAOFactory;
 import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
+import fr.abitbol.service4night.listeners.OnPicturesUploadedListener;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.DumpService;
 import fr.abitbol.service4night.services.ElectricityService;
@@ -51,7 +51,7 @@ import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
 
-public class LocationAddFragment extends Fragment implements OnCompleteListener<Void>,OnPicturesUploadedListener {
+public class LocationAddFragment extends Fragment implements OnCompleteListener<Void>, OnPicturesUploadedListener {
 
     private FragmentAddLocationBinding binding;
 
@@ -129,11 +129,52 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                 
             }
         }
+        if (savedInstanceState == null) {
+            binding = FragmentAddLocationBinding.inflate(inflater, container, false);
+
+            images = new ArrayList<>();
+            Log.i(TAG, "onViewCreated: images size : " + images.size());
+            dataBase = DAOFactory.getDAO(LocationAddFragment.this, true);
+            if (getArguments() != null) {
+                Log.i(TAG, "onCreateView: location add started from map");
+                try {
+                    point = ((LatLng) getArguments().getParcelable(MapsActivity.MAP_POINT_EXTRA_NAME));
+                    showLocationDatas();
+
+                } catch (Exception e) {
+                    //TODO : trier les exceptions pour le toast, détecter timeout (exception levée si problème réseau check "grpc failed")
+                    Log.e(TAG, e.getMessage());
+                    Toast.makeText(getContext(), getString(R.string.network_error), Toast.LENGTH_LONG).show();
+                    NavHostFragment.findNavController(LocationAddFragment.this).popBackStack();
+                }
+            } else {
+                Log.i(TAG, "onCreateView: direct location add, locating user...");
+                point = new LatLng(0, 0);
+                new UserLocalisation(getContext()).locateUser(task -> {
+                    Log.i(TAG, "onCreateView: location task received ");
+                    if (task.isSuccessful()) {
+                        Log.i(TAG, "onCreateView: user localisation successful");
+                        point = new LatLng(task.getResult().getLatitude(), task.getResult().getLongitude());
+                        try {
+                            showLocationDatas();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        Log.i(TAG, "onCreateView: failed to locate user");
+                        Toast.makeText(getContext(), getString(R.string.no_localisation_permissions), Toast.LENGTH_SHORT).show();
+                        NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
+                    }
+                });
+                Log.i(TAG, "onCreateView: user location called");
+
+                // TODO : créer classe statique UserLocation qui récupère contexte et localise utilisateur
+                //TODO localiser user et mettre coordonnées
+            }
 
 
 
-        images = new ArrayList<>();
-        binding = FragmentAddLocationBinding.inflate(inflater, container, false);
+        }
         if (binding.addWaterCheckBox.isChecked()){
             binding.addDrinkableCheckBox.setEnabled(true);
         }
@@ -207,75 +248,62 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         viewPager.setPadding(offsetPx, 0, offsetPx, 0);
 
         viewPager.setAdapter(new SliderAdapter(images,viewPager));
-        if (savedInstanceState == null) {
 
-            Log.i(TAG, "onViewCreated: images size : " + images.size());
-            dataBase = DAOFactory.getDAO(LocationAddFragment.this,true);
-            if (getArguments() != null) {
-                try {
-                    point = ((LatLng)getArguments().getParcelable(MapsActivity.MAP_POINT_EXTRA_NAME));
-                    if (point != null) {
-                        locationId = MapLocation.Builder.generateId(point);
-                        Log.i(TAG, "onCreateView: intent extras: " + point.toString());
-                        binding.locationAddTextviewLatitude.setText(Double.toString(point.latitude));
-                        binding.locationAddTextviewLongitude.setText(Double.toString(point.longitude));
-
-
-                        /*
-                         * récupération du nom du lieu
-                         */
-                        //TODO : ajouter locale au geocoder selon position utilisateur
-                        Geocoder geocoder = new Geocoder(getContext());
-                        List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
-                        Address address = addresses.get(0);
-
-                        Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
-                        if (address.getFeatureName() != null && address.getFeatureName().length() > 8) {
-                            name = address.getFeatureName();
-                            Log.i(TAG, "onViewCreated: adress feature name :" + name);
-                        } else {
-                            name = address.getAddressLine(0);
-                        }
-                    }else{
-                        Toast.makeText(getContext(), getString(R.string.coordinates_missing_error), Toast.LENGTH_SHORT).show();
-                        //TODO re-récupérer nom du lieu si point == null ou getArguments == null (direct add)
-                    }
-                    /*
-                     * modification du titre
-                     */
-                    MainActivity mainActivity = (MainActivity) getActivity();
-                    if (mainActivity != null){
-                        Log.i(TAG, "onViewCreated: main activity not null");
-                        ActionBar actionBar = mainActivity.getSupportActionBar();
-                        if (actionBar != null){
-                            Log.i(TAG, "onViewCreated: action bar not null");
-                            actionBar.setTitle(name);
-                        }
-                        else Log.i(TAG, "onViewCreated: action bar is null");
-                    }
-                    else Log.i(TAG, "onViewCreated: mainActivity is null");
-
-
-                }
-                catch (Exception e){
-                    //TODO : trier les exceptions pour le toast, détecter timeout (exception levée si problème réseau check "grpc failed")
-                    Log.e(TAG,e.getMessage());
-                    Toast.makeText(getContext(), getString(R.string.network_error), Toast.LENGTH_LONG).show();
-                    NavHostFragment.findNavController(LocationAddFragment.this).popBackStack();
-                }
-
-
-            }
-            else{
-                point = new LatLng(0,0);
-                // TODO : créer classe statique UserLocation qui récupère contexte et localise utilisateur
-                //TODO localiser user et mettre coordonnées
-            }
-        }
 
         return binding.getRoot();
 
     }
+        private void showLocationDatas() throws Exception{
+            if (point != null) {
+                locationId = MapLocation.Builder.generateId(point);
+                Log.i(TAG, "onCreateView: intent extras: " + point.toString());
+                binding.locationAddTextviewLatitude.setText(Double.toString(point.latitude));
+                binding.locationAddTextviewLongitude.setText(Double.toString(point.longitude));
+
+
+                /*
+                 * récupération du nom du lieu
+                 */
+                //TODO : ajouter locale au geocoder selon position utilisateur
+                Geocoder geocoder = new Geocoder(getContext());
+                List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
+                Address address = addresses.get(0);
+
+                Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
+                if (address.getFeatureName() != null && address.getFeatureName().length() > 8) {
+                    name = address.getFeatureName();
+                    Log.i(TAG, "onViewCreated: adress feature name :" + name);
+                } else {
+                    name = address.getAddressLine(0);
+                }
+            }else{
+                Toast.makeText(getContext(), getString(R.string.coordinates_missing_error), Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
+                //TODO re-récupérer nom du lieu si point == null ou getArguments == null (direct add)
+            }
+            /*
+             * modification du titre
+             */
+            MainActivity mainActivity = (MainActivity) getActivity();
+            if (mainActivity != null){
+                Log.i(TAG, "onViewCreated: main activity not null");
+                ActionBar actionBar = mainActivity.getSupportActionBar();
+                if (actionBar != null){
+                    Log.i(TAG, "onViewCreated: action bar not null");
+                    actionBar.setTitle(name);
+
+                }
+                else{ Log.i(TAG, "onViewCreated: action bar is null");}
+
+                Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
+                mainActivity.setSettingsVisibility(false);
+
+            }
+            else Log.i(TAG, "onViewCreated: mainActivity is null");
+
+
+
+        }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         Log.i(TAG, "onViewCreated: called");
@@ -503,7 +531,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private void takePicture(String name) throws IOException {
 //        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
 
-        File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), TAG);
+        File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), "My pictures");
 
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){

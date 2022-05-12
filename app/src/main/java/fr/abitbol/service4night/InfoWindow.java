@@ -52,6 +52,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
 
     }
     public CheckBox getCheckbox(int count){
+        Log.i(TAG, "getCheckbox: getting box number "+count);
         switch (count){
             case 0 : {
                break;
@@ -72,6 +73,13 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
         }
         return null;
     }
+    public void resetCheckBoxes(){
+        for (int i = 1;i< 7;i++){
+            getCheckbox(i).setVisibility(View.INVISIBLE);
+            getCheckbox(i).setText("");
+            getCheckbox(i).setButtonDrawable(android.R.drawable.checkbox_off_background);
+        }
+    }
 
     @Nullable
     @Override
@@ -84,6 +92,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
     @Override
     public View getInfoContents(@NonNull Marker marker) {
         Log.i(TAG, "getInfoContents called");
+        resetCheckBoxes();
         for (int i = 0; i<= 6 ; i++){
             if (getCheckbox(i) != null){
                 getCheckbox(i).setVisibility(View.INVISIBLE);
@@ -125,7 +134,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
                 CheckBox box2 = getCheckbox(count);
                 if (electricityService.getPrice() == 0){
                     box2.setButtonDrawable(R.drawable.ic_service_free);
-                    box2.setText(R.string.drinkable_label);
+                    box2.setText(R.string.free_electricity);
                     box2.setVisibility(View.VISIBLE);
                 }
 
@@ -139,20 +148,20 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
                 box.setText(R.string.waterLabel);
                 box.setVisibility(View.VISIBLE);
 
-                count++;
-                CheckBox box2 = getCheckbox(count);
-                if (((WaterService)waterService).isDrinkable()) {
 
+                if (((WaterService)waterService).isDrinkable()) {
+                    count++;
+                    CheckBox box2 = getCheckbox(count);
                     box2.setButtonDrawable(R.drawable.ic_service_drinkable_water);
                     box2.setText(R.string.drinkable_label);
                     box2.setVisibility(View.VISIBLE);
 
                 }
-                else {
-                    box2.setButtonDrawable(R.drawable.ic_service_not_drinkable_water);
-                    box2.setText(R.string.not_drinkable_label);
-                    box2.setVisibility(View.VISIBLE);
-                }
+//                else {
+//                    box2.setButtonDrawable(R.drawable.ic_service_not_drinkable_water);
+//                    box2.setText(R.string.not_drinkable_label);
+//                    box2.setVisibility(View.VISIBLE);
+//                }
             }
 
 

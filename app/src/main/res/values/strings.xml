@@ -9,7 +9,7 @@
     <!--  Strings for labels (buttons, checkboxes, etc...)   -->
     <string name="add_location">Add a Location from map</string>
     <string name="validate">Validate</string>
-    <string name="direct_add_button">Add a Location directly</string>
+    <string name="direct_add_button">Register current location</string>
 
     <string name="filter_label">Filters</string>
 
@@ -73,5 +73,10 @@
     <string name="free_water">Free water</string>
     <string name="google_maps_itinerary_label">Google Maps Itinerary</string>
     <string name="search_in_google_label">Search in google</string>
+    <string name="title_activity_full_screen_picture_slide">FullScreenPictureSlideActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="fullscreen_button_content_description">fullscreen button</string>
+    <string name="loading_pictures">loading pictures...</string>
 
 </resources>

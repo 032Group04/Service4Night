@@ -17,6 +17,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Service4Night">
+        <activity
+            android:name=".FullScreenPictureSlideActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
+            android:label="@string/title_activity_full_screen_picture_slide"
+            android:theme="@style/Theme.Service4Night.Fullscreen" />
+
         <service
             android:name=".DatabaseBindService"
             android:exported="false" />
@@ -57,6 +64,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".MapsActivity"
             android:exported="true"

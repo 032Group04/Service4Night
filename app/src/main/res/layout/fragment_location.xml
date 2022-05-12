@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:tag="fragment_location">
 
     <FrameLayout
         android:layout_height="match_parent"
@@ -50,8 +51,23 @@
                     android:layout_width="match_parent"
                     android:layout_marginHorizontal="10dp"
                     android:layout_gravity="center"
+                    android:clickable="true"
 
                     />
+
+                <ImageButton
+                    android:id="@+id/fullscreen_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|right"
+                    android:layout_margin="5dp"
+                    android:alpha="1.0"
+                    android:background="@mipmap/ic_fullscreen_square"
+                    android:clickable="true"
+                    android:contentDescription="@string/fullscreen_button_content_description"
+                    android:foreground="@mipmap/ic_fullscreen_square"
+                    android:scaleX="0.9"
+                    android:scaleY="0.9" />
 
 
             </FrameLayout>
@@ -261,8 +277,33 @@
             android:id="@+id/location_progressBarContainer"
             android:visibility="gone"
             android:background="@color/black"
-            android:alpha="0.8"
+            android:alpha="0.6"
             >
+            <LinearLayout
+
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/rounded_corners"
+                android:alpha="1"
+                android:orientation="vertical"
+                >
+
+                <ProgressBar
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true"
+                    android:id="@+id/location_progressBar" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:maxLines="1"
+                    android:text="@string/loading_pictures"
+                    android:id="@+id/location_progressBarTextView" />
+            </LinearLayout>
 
 
         </FrameLayout>

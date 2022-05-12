@@ -24,4 +24,7 @@
     <string name="exceed_pictures_count">You can add three pictures at most</string>
     <string name="network_error">Connection error</string>
     <string name="picture_retrieve_error">Error while retrieving picture</string>
+    <string name="coarse_localisation_limit">Fine location permission denied: localisation will not be precise</string>
+    <string name="no_localisation_permissions">Localisation is denied, application functionalities will be limited</string>
+    <string name="need_location_permissions">This functionality requires permission to access localisation</string>
 </resources>

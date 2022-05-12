@@ -12,4 +12,9 @@
     <color name="blue_third">#60ABFC</color>
     <color name="grey_light">#B3C0C5</color>
     <color name="blue_light">#D4E9F5</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+    <color name="light_blue_A200">#FF40C4FF</color>
+    <color name="light_blue_A400">#FF00B0FF</color>
+    <color name="black_overlay">#66000000</color>
 </resources>

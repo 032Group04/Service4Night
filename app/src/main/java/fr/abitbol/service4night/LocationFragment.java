@@ -8,29 +8,41 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.databinding.FragmentLocationBinding;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.ElectricityService;
@@ -43,6 +55,8 @@ public class LocationFragment extends Fragment {
 
 
     private static final String TAG = "LocationFragment logging";
+    public static final String EXTRA_PICTURES_PATHS = "picturesPaths";
+    public static final String EXTRA_PICTURES_NAMES = "picturesNames";
     private FragmentLocationBinding binding;
     private LatLng point;
     private String name;
@@ -50,6 +64,8 @@ public class LocationFragment extends Fragment {
     private List<SliderItem> images;
     boolean[][] boxGrid;
     private ViewPager2 viewPager;
+    private ArrayList<String> picturesPaths;
+    private ArrayList<String> picturesNames;
 
     public LocationFragment() {
         // Required empty public constructor
@@ -86,7 +102,29 @@ public class LocationFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
+            picturesNames = null;
+            picturesPaths = null;
             if (mapLocation != null) {
+
+                /*
+                 * modification du titre
+                 */
+                MainActivity mainActivity = (MainActivity) getActivity();
+                if (mainActivity != null){
+                    Log.i(TAG, "onViewCreated: main activity not null");
+                    ActionBar actionBar = mainActivity.getSupportActionBar();
+                    if (actionBar != null){
+                        Log.i(TAG, "onViewCreated: action bar not null");
+                        actionBar.setTitle(mapLocation.getName());
+
+                    }
+                    else{ Log.i(TAG, "onViewCreated: action bar is null");}
+
+                    Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
+                    mainActivity.setSettingsVisibility(false);
+
+                }
+                else Log.i(TAG, "onViewCreated: mainActivity is null");
                 Log.i(TAG, "getInfoContents: mapLocation is not null");
                 binding.locationNameTextView.setText(mapLocation.getName());
                 binding.locationDescriptionEditText.setText(mapLocation.getDescription());
@@ -212,7 +250,8 @@ public class LocationFragment extends Fragment {
                 }
                 if (mapLocation.getPictures() != null && !mapLocation.getPictures().isEmpty()) {
 
-
+                    picturesNames = new ArrayList<>();
+                    picturesPaths = new ArrayList<>();
                     viewPager = binding.locationViewPager;
                     //TODO: transormer List<Uri> en Map et ajouter metadata nom picture
                     getBitmapsFromURL();
@@ -340,7 +379,7 @@ public class LocationFragment extends Fragment {
         return null;
     }
 
-    public void showPictures(){
+    private void showPictures(){
 
 
             viewPager.setClipToPadding(false);
@@ -352,30 +391,100 @@ public class LocationFragment extends Fragment {
 
             viewPager.setAdapter(new SliderAdapter(images, viewPager));
             viewPager.invalidate();
+            ImageButton button = binding.fullscreenButton;
+            button.setOnClickListener(view -> {
+                Log.i(TAG, "showPictures: listener on viewPager called");
+//                Bitmap[] bitmaps = new Bitmap[images.size()];
+//                String[] names = new String[images.size()];
+                Bundle bundle = new Bundle();
+                //TODO rendre SliderItem parcelable
+//                for (int i = 0;i < images.size(); i++){
+//                    bitmaps[i] = images.get(i).getImage();
+//                    names[i] = images.get(i).getName();
+//                }
+                //TODO rendre SliderItem parcelable
+                //TODO changer code une fois que les noms des photos seront dans mapLocation
+
+                Log.i(TAG, "showPictures: putting serializable in bundle");
+                bundle.putStringArrayList(EXTRA_PICTURES_NAMES,picturesNames);
+                bundle.putStringArrayList(EXTRA_PICTURES_PATHS,picturesPaths);
+                Intent intent = new Intent(getContext(),FullScreenPictureSlideActivity.class);
+                intent.putExtras(bundle);
+//                intent.putExtra(LocationDAO.PICTURES_URI_KEY,bitmaps);
+                Log.i(TAG, "showPictures: starting intent");
+                startActivity(intent);
+            });
 
         //TODO : ajouter listener pour montrer images en grand écran
 
 
+    }
+    private void showLoadScreen(){
+        binding.getRoot().setEnabled(false);
+        binding.locationProgressBarContainer.setVisibility(View.VISIBLE);
+    }
+    private void hideLoadScreen(){
+        binding.getRoot().setEnabled(true);
+        binding.locationProgressBarContainer.setVisibility(View.GONE);
     }
     public void getBitmapsFromURL() {
 
         new Thread(() -> {
             try {
                 int i = 1;
+                getActivity().runOnUiThread(this::showLoadScreen);
                 for (String s : mapLocation.getPictures()) {
 
                     if (s != null) {
+                        String pictureName;
+                        String picTurePath;
                         URL url = new URL(s);
                         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                         connection.setDoInput(true);
                         connection.connect();
+
                         InputStream input = connection.getInputStream();
-                        Bitmap myBitmap = BitmapFactory.decodeStream(input);
-                        images.add(new SliderItem(myBitmap,MapLocation.generatePictureName(mapLocation.getId(),i)));
+
+                        File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Locations pictures");
+
+                        // Create the storage directory if it does not exist
+                        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
+                            Log.d(TAG, "failed to create directory");
+                        }
+                        Log.i(TAG, "takePicture: file path is: "+ mediaStorageDir.getPath());
+                        // Return the file target for the photo based on filename
+                        pictureName = MapLocation.generatePictureName(mapLocation.getId(),i);
+                        picTurePath = mediaStorageDir.getPath() + File.separator + pictureName;
+                        File file = new File(picTurePath);
+                        if(!file.exists()) {
+                            Log.i(TAG, "getBitmapsFromURL: picture file does not exist");
+                            file.createNewFile();
+                            BufferedInputStream bufferedInputStream = new BufferedInputStream(input);
+                            FileOutputStream fos = new FileOutputStream(file);
+                            int in = 0;
+                            Log.i(TAG, "getBitmapsFromURL: writing on file...");
+                            while ((in = bufferedInputStream.read()) != -1){
+                                fos.write(in);
+                            }
+                            
+                        }
+                        else{
+                            Log.i(TAG, "getBitmapsFromURL: picture already exists");
+                        }
+                        picturesPaths.add(picTurePath);
+                        picturesNames.add(pictureName);
+
+                        Log.i(TAG, "getBitmapsFromURL: getting Bitmap from file");
+                        Bitmap myBitmap = BitmapFactory.decodeFile(picTurePath);
+                        images.add(new SliderItem(myBitmap,pictureName));
                         i++;
                     }
                 }
-                getActivity().runOnUiThread(this::showPictures);
+
+                getActivity().runOnUiThread(() ->{
+                    showPictures();
+                    hideLoadScreen();
+                });
 
 
 

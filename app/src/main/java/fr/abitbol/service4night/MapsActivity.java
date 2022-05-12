@@ -5,22 +5,15 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -44,6 +37,8 @@ import fr.abitbol.service4night.DAO.DAOFactory;
 import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.databinding.ActivityMapsBinding;
 import fr.abitbol.service4night.databinding.DrawerFilterBinding;
+import fr.abitbol.service4night.listeners.OnCompleteLocalisationListener;
+import fr.abitbol.service4night.listeners.OnInfoWindowClickedAdapter;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.DumpService;
 import fr.abitbol.service4night.services.ElectricityService;
@@ -51,13 +46,12 @@ import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot>, OnLocationCheckedListener, OnInfoWindowClickedAdapter {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot>, OnCompleteLocalisationListener, OnInfoWindowClickedAdapter {
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
     private DrawerFilterBinding drawerBinding;
     private Location userLocation;
-    private FusedLocationProviderClient locationProviderClient;
     private LocationDAO dataBase;
     private ArrayList<MapLocation> visibleLocations;
     private Map<String,Service> servicesFilters;
@@ -68,12 +62,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public static final String MAP_MODE_BUNDLE_NAME = "mapMode";
     public static final String MAP_POINT_EXTRA_NAME = "point";
     public static final String ACTION_GET_POINT_LATLNG = "point_data";
-    private static final int LOCATION_REQUEST_CODE = 8631584;
+    public static final int LOCATION_REQUEST_CODE = 8631584;
     public static final String MAPLOCATION_EXTRA_NAME = "mapLocation";
     private static final int BACKGROUND_LOCATION_REQUEST_CODE = 8631554;
     boolean adding;
     boolean searchStarted;
-    boolean askingPermissions;
 
 
     @Override
@@ -84,8 +77,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (savedInstanceState == null) {
             searchStarted = false;
-            askingPermissions = false;
-            locationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             theme = preferences.getString("theme","unknown");
             if(theme.equals("Light")){
@@ -99,7 +91,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
             //TODO : localiser l'utilisateur pour centrer la map
-            checkLocationAccess(this);
+            Log.i(TAG, "onCreate: starting localisation");
+            new UserLocalisation(this).locateUser(this);
             visibleLocations = null;
             binding = ActivityMapsBinding.inflate(getLayoutInflater());
             switch (getIntent().getIntExtra(MAP_MODE_BUNDLE_NAME,-1)){
@@ -266,60 +259,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
-    public void checkLocationAccess(OnLocationCheckedListener listener){
-        Log.i(TAG, "startLocation called");
-        boolean coarseLocation = false;
-        boolean fineLocation = false;
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "startLocation: fine location is granted");
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                Log.i(TAG, "startLocation: gps provider is enabled");
-                fineLocation = true;
-            } else {
-                Log.i(TAG, "startLocation: gps provider is disabled");
-            }
-        }
-        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "startLocation: coarse location is granted");
-            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                Log.i(TAG, "startLocation: network provider is enabled");
-                coarseLocation = true;
-            } else {
-                Log.i(TAG, "startLocation: network provider is disabled");
-            }
 
-        }
-        listener.onLocationChecked(fineLocation,coarseLocation);
-
-
-
-    }
-
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.i(TAG, "onRequestPermissionsResult called");
-        if (requestCode == LOCATION_REQUEST_CODE){
-            if ( grantResults[0] == PackageManager.PERMISSION_GRANTED || grantResults[1] == PackageManager.PERMISSION_GRANTED){
-                Log.i(TAG, "onRequestPermissionsResult: at least one location permissions was granted");
-                checkLocationAccess(this);
-
-            }
-            else{
-                Log.i(TAG, "onRequestPermissionsResult: location permissions were declined");
-            }
-        }
-//        else if (requestCode == BACKGROUND_LOCATION_REQUEST_CODE){
-//            if ( grantResults[0] == PackageManager.PERMISSION_GRANTED){
-//                Log.i(TAG, "onRequestPermissionsResult: background location granted");
-//                requestLocationPermissions();
-//            }
-//            else Log.i(TAG, "onRequestPermissionsResult: background location denied");
-//        }
-    }
     //TODO: prendre en compte booléen confirmed
     //TODO : ajouter un bouton annuler filtres au drawer
     public void showFilteredLocations(List<MapLocation> mapLocations){
@@ -460,50 +400,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onLocationChecked(boolean fineLocation, boolean coarseLocation) {
-        Log.i(TAG, "onLocationChecked: called");
-        if (!fineLocation && !coarseLocation) {
-            Log.i(TAG, "onLocationChecked: location isn't accessible");
-            if (!askingPermissions) {
-                Log.i(TAG, "onLocationChecked: asking permissions");
-                askingPermissions = true;
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
-            } else {
-                Log.i(TAG, "onLocationChecked: permissions asked : couldn't access location");
-            }
 
-
-        }
-        else{
-            Log.i(TAG, "onLocationChecked: location is accessible");
-            locationProviderClient.getLastLocation().addOnCompleteListener(task -> {
-                if (task.isSuccessful()){
-                    Log.i(TAG, "onLocationChecked: location successfull");
-                    userLocation = task.getResult();
-                    if (userLocation != null ){
-                        if (mMap != null) {
-                            Log.i(TAG, "onLocationChecked: moving camera");
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()),10));
-                        }
-                        else Log.i(TAG, "onLocationChecked: mMap is null");
-                    }
-                    else{
-                        Log.i(TAG, "onLocationChecked: userLocation is null");
-                    }
-                }
-                else{
-                    if (task.getException() != null){
-                        Log.i(TAG, "onLocationChecked: location failure : "+task.getException().getMessage());    
-                    }
-                    else{
-                        Log.i(TAG, "onLocationChecked: location failure");
-                    }
-                }
-            });
-        }
-    }
 
     @Override
     public void infoWindowClicked(MapLocation location) {
@@ -514,6 +411,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setResult(MAP_TYPE_EXPLORE,pointIntent);
 
         finish();
+    }
+
+    @Override
+    public void onCompleteLocation(@NonNull Task<Location> task) {
+        if (task.isSuccessful()){
+            Log.i(TAG, "onLocationChecked: location successfull");
+            userLocation = task.getResult();
+            if (userLocation != null ){
+                if (mMap != null) {
+                    Log.i(TAG, "onLocationChecked: moving camera");
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()),10));
+                }
+                else Log.i(TAG, "onLocationChecked: mMap is null");
+            }
+            else{
+                Log.i(TAG, "onLocationChecked: userLocation is null");
+            }
+        }
+        else{
+            if (task.getException() != null){
+                Log.i(TAG, "onLocationChecked: location failure : "+task.getException().getMessage());
+            }
+            else{
+                Log.i(TAG, "onLocationChecked: location failure");
+            }
+        }
     }
 
 
