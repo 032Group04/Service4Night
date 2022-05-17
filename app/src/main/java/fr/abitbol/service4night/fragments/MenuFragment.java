@@ -1,4 +1,4 @@
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,6 +16,9 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import fr.abitbol.service4night.MainActivity;
+import fr.abitbol.service4night.MapsActivity;
+import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentMenuBinding;
 import fr.abitbol.service4night.listeners.OnSettingsNavigation;
 
@@ -30,6 +33,7 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
                     switch (result.getResultCode()) {
                         case MapsActivity.MAP_TYPE_ADD:
                             //Log.i(TAG, "onActivityResult: map adding point result received : " + result.getData().getBundleExtra(MapsActivity.MAP_POINT_BUNDLE_NAME));
+
                             NavHostFragment.findNavController(MenuFragment.this)
                                 .navigate(R.id.action_MenuFragment_to_AddLocationFragment, result.getData().getExtras());
                             break;
@@ -81,13 +85,13 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
         });
         binding.directAddButton.setOnClickListener(button ->{
             if (MainActivity.fineLocation || MainActivity.coarseLocation){
+
                 NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_AddLocationFragment);
             }
             else{
                 Log.i(TAG, "onViewCreated: no location permissions, direct add unavailable");
                 Toast.makeText(getContext(), getString(R.string.need_location_permissions), Toast.LENGTH_SHORT).show();
-                NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_AddLocationFragment);
-
+                getActivity().recreate();
             }
         });
         binding.exploreButton.setOnClickListener(button -> {

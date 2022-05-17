@@ -1,9 +1,8 @@
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.utils;
 
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 
@@ -16,12 +15,13 @@ import java.util.List;
 import java.util.Queue;
 
 import fr.abitbol.service4night.DAO.CloudStoragePictureDAO;
+import fr.abitbol.service4night.fragments.LocationAddFragment;
 
 public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> implements OnCompleteListener<Uri> {
     private static final String TAG = "PicturesUploadTask logging";
     Queue<SliderItem> bitmapQueue;
     CloudStoragePictureDAO cloudStorage;
-    LocationAddFragment listener;
+    PicturesUploadAdapter listener;
     List<String> uriList;
     String locationId;
     String userId;
@@ -29,14 +29,15 @@ public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> imple
 
 
 
-    public PicturesUploadTask(List<SliderItem> items, LocationAddFragment _listener) {
+    public PicturesUploadTask(List<SliderItem> items, PicturesUploadAdapter _listener) {
         super();
 
         listener = _listener;
         count = 1;
         uriList = new ArrayList<>();
         bitmapQueue = new LinkedList<>();
-        cloudStorage = new CloudStoragePictureDAO(this);
+        cloudStorage = new CloudStoragePictureDAO();
+        cloudStorage.registerInsertListener(this);
         bitmapQueue.addAll(items);
 
 

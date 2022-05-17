@@ -39,7 +39,7 @@ public class MapLocation implements Parcelable {
     private static final String TAG = "MapLocation logging";
 
 
-    //TODO : créer classe dédiée a la localisation
+
     public MapLocation(double latitude, double longitude, String _description, Map<String,Service> _services, String _user_id, String _name,List<String> _pictures, boolean _confirmed)  {
         point = new LatLng(latitude, longitude);
         services = _services;

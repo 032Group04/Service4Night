@@ -45,18 +45,35 @@
                     android:layout_width="match_parent"
                     android:layout_marginHorizontal="10dp"
                     android:layout_gravity="center"
+                    android:clickable="true"
+                    >
 
-                    />
+
+
+                </androidx.viewpager2.widget.ViewPager2>
+
+                <ImageButton
+                    android:id="@+id/deleteButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="10dp"
+                    android:background="@mipmap/ic_delete_picture"
+                    android:scaleX="0.9"
+                    android:scaleY="0.9"
+                    android:visibility="gone"/>
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/take_picture_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|right"
-                    android:layout_margin="5dp"
+                    android:layout_margin="10dp"
                     android:alpha="1.0"
                     android:clickable="true"
                     android:contentDescription="@string/image_add_button_description"
+                    android:scaleX="0.8"
+                    android:scaleY="0.8"
                     android:src="@android:drawable/ic_menu_camera" />
             </FrameLayout>
 
@@ -74,12 +91,10 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <EditText
+                <TextView
                     android:id="@+id/location_add_textview_latitude"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:hint="@string/latitude"
-                    android:inputType="numberDecimal"
                     android:textSize="10sp" />
 
                 <Space
@@ -87,12 +102,10 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1" />
 
-                <EditText
+                <TextView
                     android:id="@+id/location_add_textview_longitude"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-
-                    android:hint="@string/longitude"
                     android:textSize="10sp" />
 
                 <Space

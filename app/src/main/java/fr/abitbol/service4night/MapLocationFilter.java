@@ -37,5 +37,9 @@ public class MapLocationFilter {
         });
         return mapLocations;
     }
+    public static List<MapLocation> filterByUser(String userId, List<MapLocation> mapLocations){
+        mapLocations.removeIf(mapLocation -> !(mapLocation.getUser_id().equals(userId)));
+        return mapLocations;
+    }
 
 }

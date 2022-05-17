@@ -17,11 +17,12 @@ import android.view.View;
 import android.view.WindowInsets;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.databinding.ActivityFullScreenPictureSlideBinding;
+import fr.abitbol.service4night.fragments.LocationFragment;
+import fr.abitbol.service4night.utils.SliderAdapter;
+import fr.abitbol.service4night.utils.SliderItem;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -122,22 +123,26 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
         viewPager = binding.fullscreenViewPager;
         if (getIntent() != null && getIntent().getExtras()!=null){
             Log.i(TAG, "onCreate: intent and extras are valid");
-            List<SliderItem> pictures = new ArrayList<>();
+            
 
             Bundle extras = getIntent().getExtras();
+
             ArrayList<String> paths = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_PATHS);
             ArrayList<String> names = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_NAMES);
+
+            ArrayList<SliderItem> images = new ArrayList<>();
             for (int i = 0;i < paths.size();i++){
                 Bitmap bitmap = BitmapFactory.decodeFile(paths.get(i));
                 if (bitmap != null){
                     Log.i(TAG, "onCreate: bitmap "+ names.get(i) + "successfully created");
-                    pictures.add(new SliderItem(bitmap,names.get(i)));
+                    images.add(new SliderItem(bitmap,names.get(i)));
 
                 }
                 else Log.i(TAG, "onCreate: bitmap "+ names.get(i) + " creation failed");
             }
 
-            viewPager.setAdapter(new SliderAdapter(pictures,viewPager));
+
+            viewPager.setAdapter(new SliderAdapter(images,viewPager));
 
 
         }

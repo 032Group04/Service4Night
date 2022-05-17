@@ -1,4 +1,4 @@
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.utils;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,10 +11,12 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.List;
 
+import fr.abitbol.service4night.R;
+
 public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderViewHolder> {
     private List<SliderItem> sliderItems;
     private ViewPager2 viewPager2;
-    SliderAdapter(List<SliderItem> _sliderItems, ViewPager2 _viewPager2) {
+    public SliderAdapter(List<SliderItem> _sliderItems, ViewPager2 _viewPager2) {
         this.sliderItems = _sliderItems;
         this.viewPager2 = _viewPager2;
     }
@@ -26,6 +28,9 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
                         R.layout.image_view_container, parent, false
                 ) );
     }
+    public SliderItem getSliderItem(int position){
+        return sliderItems.get(position);
+    }
     @Override
     public void onBindViewHolder(@NonNull SliderViewHolder holder, int position) {
         holder.setImage(sliderItems.get(position));
@@ -33,6 +38,7 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
 //            viewPager2.post(runnable);
 //        }
     }
+
     @Override
     public int getItemCount() {
         return sliderItems.size();

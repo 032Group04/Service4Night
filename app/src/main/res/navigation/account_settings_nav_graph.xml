@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/account_settings_nav_graph"
+    app:startDestination="@id/accountSettingsMenuFragment">
+    <fragment
+        android:id="@+id/accountSettingsMenuFragment"
+        android:name="fr.abitbol.service4night.settings.AccountSettingsMenuFragment"
+        android:label="fragment_account_settings_menu"
+        tools:layout="@layout/fragment_account_settings_menu" >
+        <action
+            android:id="@+id/action_accountSettingsMenuFragment_to_userLocationsFragment"
+            app:destination="@id/userLocationsFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+    </fragment>
+    <fragment
+        android:id="@+id/userLocationsFragment"
+        android:name="fr.abitbol.service4night.settings.UserLocationsFragment"
+        android:label="fragment_user_locations_list"
+        tools:layout="@layout/fragment_user_locations_list" >
+        <action
+            android:id="@+id/action_userLocationsFragment_to_locationUpdateFragment"
+            app:destination="@id/locationUpdateFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+    </fragment>
+    <fragment
+        android:id="@+id/locationUpdateFragment"
+        android:name="fr.abitbol.service4night.fragments.LocationUpdateFragment"
+        android:label="fragment_location_update"
+        tools:layout="@layout/fragment_location_update" />
+</navigation>

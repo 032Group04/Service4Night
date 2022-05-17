@@ -2,6 +2,7 @@
     <string name="app_name">Service4Night</string>
     <string name="title_activity_maps">MapsActivity</string>
     <string name="title_activity_main">MainActivity</string>
+
     <!-- Strings used for fragments for navigation -->
     <string name="Menu_fragment_label">Service4Night</string>
     <string name="AddLocation_fragment_label">Add a Location</string>
@@ -37,12 +38,20 @@
     <string name="private_network_label">Private network</string>
     <string name="account_settings_title">Account settings</string>
     <string name="application_settings_title">Application Settings</string>
+    <string name="theme_settings_title">Theme</string>
+    <string name="language_settings_title">Language</string>
 
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="language_english">English</string>
+    <string name="language_french">French</string>
     <string name="log_in_menu_item">Log in</string>
 
     <string-array name="themeList">
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+    </string-array>
+    <string-array name="languageList">
         <item>@string/theme_light</item>
         <item>@string/theme_dark</item>
     </string-array>
@@ -74,9 +83,14 @@
     <string name="google_maps_itinerary_label">Google Maps Itinerary</string>
     <string name="search_in_google_label">Search in google</string>
     <string name="title_activity_full_screen_picture_slide">FullScreenPictureSlideActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+
     <string name="fullscreen_button_content_description">fullscreen button</string>
     <string name="loading_pictures">loading pictures...</string>
-
+    <string name="delete_picture_title">Delete picture</string>
+    <string name="add_picture_title">Add a picture</string>
+    <string name="confirm_delete_picture">Are you sure ? deleting pictures can\'t be undone.</string>
+    <string name="picture_select_type">How do you want to add picture</string>
+    <string name="modify_my_locations">Modify my locations</string>
+    <string name="take_a_picture">Take a picture</string>
+    <string name="pick_a_picture">Pick in storage</string>
 </resources>

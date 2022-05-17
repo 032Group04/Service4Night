@@ -1,4 +1,4 @@
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
+import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.listeners.OnCompleteLocalisationListener;
 
 public class UserLocalisation  {

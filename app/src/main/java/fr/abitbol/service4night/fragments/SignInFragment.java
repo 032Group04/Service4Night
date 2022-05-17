@@ -1,4 +1,4 @@
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.fragments;
 
 import android.os.Bundle;
 
@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
+import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentSignInBinding;
 
 

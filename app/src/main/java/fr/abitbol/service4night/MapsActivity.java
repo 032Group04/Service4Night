@@ -45,6 +45,7 @@ import fr.abitbol.service4night.services.ElectricityService;
 import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
+import fr.abitbol.service4night.utils.UserLocalisation;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot>, OnCompleteLocalisationListener, OnInfoWindowClickedAdapter {
 
@@ -79,12 +80,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             searchStarted = false;
 
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            theme = preferences.getString("theme","unknown");
-            if(theme.equals("Light")){
+            theme = preferences.getString(MainActivity.PREFERENCE_THEME_KEY,MainActivity.PREFERENCE_THEME_DEFAULT);
+            if(theme.equals(MainActivity.PREFERENCE_THEME_LIGHT)){
                 Log.i(TAG,"theme preference is :" + theme);
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             }
-            else if (theme.equals("Dark")){
+            else if (theme.equals(MainActivity.PREFERENCE_THEME_DARK)){
                 Log.i(TAG,"theme preference is :" + theme);
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             }
@@ -103,7 +104,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     break;
                 case  MAP_TYPE_EXPLORE:
                     adding = false;
-                    dataBase = DAOFactory.getDAO(MapsActivity.this);
+                    dataBase = DAOFactory.getLocationDAOReadOnly(MapsActivity.this);
 
 
                     binding.mapActionButton.setImageResource(R.drawable.ic_search);
@@ -353,7 +354,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             binding.mapActionButton.setOnClickListener(view -> {
                 Log.i(TAG, "onMapReady: map search button clicked");
-                DatabaseBindService.startService(MapsActivity.this);
+                DatabaseBindService.startService(MapsActivity.this,this);
 
                 //TODO : show dialog during locations fetch
             });

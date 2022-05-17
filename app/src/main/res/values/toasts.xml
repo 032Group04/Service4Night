@@ -2,12 +2,15 @@
 <resources>
     <string name="map_button_toast">Select a Location first (long press)</string>
     <string name="location_add_success">Location successfully added</string>
+    <string name="picture_delete_success">Picture successfully deleted</string>
+    <string name="picture_delete_fail">Picture deletion failed</string>
     <string name="location_add_fail">Failed to add Location</string>
     <string name="coordinates_missing_error">Error : incorrect or missing coordinates.</string>
     <string name="price_parsing_error">price input is incorrect</string>
     <string name="price_parsing_error_named">price input is incorrect for </string>
     <string name="empty_description">Description is important !</string>
     <string name="no_service_selected">You must select at least one service</string>
+    <string name="update_no_service_selected">No services selected, changes were not made</string>
     <string name="log_in_failed">Log in failed : </string>
     <string name="log_in_success">Logged in successfully</string>
     <string name="log_out_failed">Log out failed : </string>
@@ -17,14 +20,18 @@
     <string name="password_unconfirmed">You must confirm password</string>
     <string name="password_format_wrong">Password doesn\'t match requirements</string>
     <string name="mail_format_wrong">Wrong mail format</string>
-    <string name="not_logged_in">You must be logged in to add a Location.</string>
+    <string name="not_logged_in">You are not logged in.</string>
     <string name="already_looged_in">You are already logged in.</string>
     <string name="sign_in_failed">Sign in Failed : </string>
     <string name="sign_in_success">Successfully signed in</string>
     <string name="exceed_pictures_count">You can add three pictures at most</string>
     <string name="network_error">Connection error</string>
     <string name="picture_retrieve_error">Error while retrieving picture</string>
+    <string name="location_retrieve_error">Failed to retrieve location data</string>
+    <string name="upload_picture_success">Picture successfully uploaded</string>
+    <string name="upload_picture_fail">Picture upload failed</string>
     <string name="coarse_localisation_limit">Fine location permission denied: localisation will not be precise</string>
     <string name="no_localisation_permissions">Localisation is denied, application functionalities will be limited</string>
     <string name="need_location_permissions">This functionality requires permission to access localisation</string>
+
 </resources>

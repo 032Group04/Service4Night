@@ -9,18 +9,23 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-public class SettingsActivity extends AppCompatActivity {
+import fr.abitbol.service4night.databinding.ActivityApplicationSettingsBinding;
 
-    private final String TAG = "SettingsActivity logging";
+
+public class ApplicationSettingsActivity extends AppCompatActivity {
+
+    private final String TAG = "ApplicationSettingsActivity logging";
     public static final String THEME_PREFERENCE_KEY = "theme";
     public static final String THEME_DARK ="Dark";
     public static final String THEME_LIGHT ="Light";
+    private ActivityApplicationSettingsBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate called");
-        setContentView(R.layout.activity_settings);
-
+        binding =ActivityApplicationSettingsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         if (savedInstanceState == null){
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.settingsContainer,new SettingsFragment())
@@ -30,12 +35,12 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat{
-        private final String TAG = "SettingsFragment logging";
+        private final String TAG = "ApplicationSettingsFragment logging";
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             Log.i(TAG, "onCreatePreferences called");
-            addPreferencesFromResource(R.xml.preferences);
+            addPreferencesFromResource(R.xml.preferences_application);
         }
 
         @Override
@@ -83,6 +88,6 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        Log.i("SettingsActivity call","onDestroy called");
+        Log.i("ApplicationSettingsActivity call","onDestroy called");
     }
 }

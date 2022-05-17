@@ -13,6 +13,7 @@ import java.util.Map;
 public class WaterService extends Service {
     private boolean drinkable;
     private double price;
+    //TODO si temps remplacer drinkable par enum drinkable, not_drinkable, unknown
     public static final String NAME = "Water";
     public static final String ATTRIBUTE_1_NAME = "price";
     public static final Class<?> ATTRIBUTE_1_TYPE = Double.TYPE;

@@ -1,6 +1,7 @@
 package fr.abitbol.service4night;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
@@ -14,7 +15,7 @@ public class DatabaseBindService extends IntentService {
 
     private static final String TAG = "DataBaseBindService logging";
 //    private IBinder binderInterface;
-    private static MapsActivity mapsActivity;
+    private static OnCompleteListener<QuerySnapshot> listener;
     public static final String ACTION_GET_LOCATIONS = "getLocations";
 
 
@@ -33,8 +34,8 @@ public class DatabaseBindService extends IntentService {
 //        return binderInterface;
 //    }
 
-    public static void startService(MapsActivity context){
-        mapsActivity = context;
+    public static void startService(Context context, OnCompleteListener<QuerySnapshot> _listener){
+        listener = _listener;
         Intent getLocationsIntent = new Intent(context, DatabaseBindService.class);
         getLocationsIntent.setAction(DatabaseBindService.ACTION_GET_LOCATIONS);
         context.startService(getLocationsIntent);
@@ -52,9 +53,9 @@ public class DatabaseBindService extends IntentService {
                 Log.i(TAG, "onHandleIntent: action is get locations");
                 final String collection = intent.getStringExtra(EXTRA_COLLECTION_NAME);
 
-                if (mapsActivity != null) {
+                if (listener != null) {
                     Log.i(TAG, "onHandleIntent: context is valid");
-                    getLocations(mapsActivity);
+                    getLocations(listener);
                 }
                 else{
                     Log.i(TAG, "onHandleIntent: mapsActivity is null");
@@ -76,7 +77,7 @@ public class DatabaseBindService extends IntentService {
 
     public void getLocations(OnCompleteListener<QuerySnapshot> caller) {
         Log.i(TAG, "getLocations called");
-        DAOFactory.getDAO(caller).selectAll();
+        DAOFactory.getLocationDAOReadOnly(caller).selectAll();
     }
 //    public class ServiceBinder extends Binder {
 //        public DatabaseBindService getBoundService(OnCompleteListener<QuerySnapshot> caller){

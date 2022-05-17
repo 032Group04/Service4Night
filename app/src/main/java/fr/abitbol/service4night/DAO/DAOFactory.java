@@ -7,13 +7,14 @@ public class DAOFactory {
     private DAOFactory(){
 
     }
-    public static LocationDAO getDAO(OnCompleteListener<QuerySnapshot> context){
+
+    public static LocationDAO getLocationDAOReadOnly(OnCompleteListener<QuerySnapshot> context){
         // TODO : gérer hors ligne ici
 
         return new FirestoreLocationDAO(context);
     }
 
-    public static LocationDAO getDAO(OnCompleteListener<Void> context, boolean listened){
+    public static LocationDAO getLocationDAOReadAndWrite(OnCompleteListener<Void> context, boolean listened){
         return new FirestoreLocationDAO(context,listened);
     }
 }

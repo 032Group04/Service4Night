@@ -18,6 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Service4Night">
         <activity
+            android:name=".settings.AccountSettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".FullScreenPictureSlideActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
@@ -64,7 +67,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".MapsActivity"
             android:exported="true"
@@ -73,7 +75,7 @@
                 <action android:name="android.intent.action.MAPLAUNCH" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingsActivity" />
+        <activity android:name=".ApplicationSettingsActivity" />
     </application>
 
 </manifest>

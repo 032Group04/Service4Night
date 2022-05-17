@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/MenuFragment"
-        android:name="fr.abitbol.service4night.MenuFragment"
+        android:name="fr.abitbol.service4night.fragments.MenuFragment"
         android:label="@string/Menu_fragment_label"
         tools:layout="@layout/fragment_menu">
 
@@ -39,10 +39,13 @@
             android:id="@+id/action_MenuFragment_to_settingsActivity"
             app:destination="@id/settingsActivity"
             app:popUpTo="@id/MenuFragment" />
+        <action
+            android:id="@+id/action_MenuFragment_to_account_settings_nav_graph"
+            app:destination="@id/account_settings_nav_graph" />
     </fragment>
     <fragment
         android:id="@+id/AddLocationFragment"
-        android:name="fr.abitbol.service4night.LocationAddFragment"
+        android:name="fr.abitbol.service4night.fragments.LocationAddFragment"
         android:label="@string/AddLocation_fragment_label"
         tools:layout="@layout/fragment_add_location">
 
@@ -52,7 +55,7 @@
     </fragment>
     <fragment
         android:id="@+id/LocationFragment"
-        android:name="fr.abitbol.service4night.LocationFragment"
+        android:name="fr.abitbol.service4night.fragments.LocationFragment"
         android:label=""
         tools:layout="@layout/fragment_location">
         <action
@@ -66,7 +69,7 @@
         tools:layout="@layout/activity_maps" />
     <fragment
         android:id="@+id/signInFragment"
-        android:name="fr.abitbol.service4night.SignInFragment"
+        android:name="fr.abitbol.service4night.fragments.SignInFragment"
         android:label="fragment_sign_in"
         tools:layout="@layout/fragment_sign_in" >
         <action
@@ -76,7 +79,8 @@
     </fragment>
     <activity
         android:id="@+id/settingsActivity"
-        android:name="fr.abitbol.service4night.SettingsActivity"
+        android:name="fr.abitbol.service4night.ApplicationSettingsActivity"
         android:label="activity_settings"
-        tools:layout="@layout/activity_settings" />
+        tools:layout="@layout/activity_application_settings" />
+    <include app:graph="@navigation/account_settings_nav_graph" />
 </navigation>

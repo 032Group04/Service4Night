@@ -33,6 +33,7 @@ public class FirestoreLocationDAO implements LocationDAO {
         onCompleteListener = context;
         dataBase = FirebaseFirestore.getInstance();
     }
+    //TODO supprimer listened et créer listeners locaux
     public FirestoreLocationDAO(OnCompleteListener<Void> context,boolean _listened){
         onCompleteListener = context;
         listened = _listened;

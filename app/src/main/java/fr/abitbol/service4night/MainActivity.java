@@ -48,6 +48,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import fr.abitbol.service4night.databinding.ActivityMainBinding;
+import fr.abitbol.service4night.fragments.LocationAddFragment;
+import fr.abitbol.service4night.fragments.MenuFragment;
 import fr.abitbol.service4night.listeners.OnSettingsNavigation;
 
 public class MainActivity extends AppCompatActivity implements ActivityResultCallback<FirebaseAuthUIAuthenticationResult>, NavController.OnDestinationChangedListener{
@@ -59,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     private boolean showSettings;
     public static final int LOCATION_REQUEST_CODE = 8631584;
     public static final int FINE_LOCATION_REQUEST_CODE = 8631547;
+    public static final String PREFERENCE_THEME_KEY= "theme";
+    public static final String PREFERENCE_THEME_LIGHT= "Light";
+    public static final String PREFERENCE_THEME_DARK= "Dark";
+    public static final String PREFERENCE_THEME_DEFAULT= "Default";
     private final ActivityResultLauncher<Intent> launcher = registerForActivityResult(
             new FirebaseAuthUIActivityResultContract(),this);
     private final String TAG = "MainActivity logging";
@@ -84,13 +90,13 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         user = auth.getCurrentUser();
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String theme = preferences.getString("theme","unknown");
+        String theme = preferences.getString(PREFERENCE_THEME_KEY,PREFERENCE_THEME_DEFAULT);
 
-        if(theme.equals("Light")){
+        if(theme.equals(PREFERENCE_THEME_LIGHT)){
             Log.i(TAG,"theme preference is :" + theme);
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
-        else if (theme.equals("Dark")){
+        else if (theme.equals(PREFERENCE_THEME_DARK)){
             Log.i(TAG,"theme preference is :" + theme);
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }
@@ -116,13 +122,15 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     }
 
 
+
     @Override
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "onStart called ");
 
-
-        checkLocationAccess();
+        if (!fineLocation &&!coarseLocation) {
+            checkLocationAccess();
+        }
 
 
     }
@@ -236,7 +244,16 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         // TODO : ajouter modification du compte
 
         if(item.getItemId() == R.id.account_settings_item){
-            
+            if (user != null) {
+                Fragment fragment = getVisibleFragment();
+                if (fragment instanceof OnSettingsNavigation) {
+                    Log.i(TAG, "onOptionsItemSelected: fragment does implements OnSettingsNavigation");
+                    NavHostFragment.findNavController(fragment).navigate(R.id.action_MenuFragment_to_account_settings_nav_graph);
+                }
+            }
+            else{
+                Toast.makeText(this, getString(R.string.not_logged_in), Toast.LENGTH_SHORT).show();
+            }
         }
         else if (item.getItemId() == android.R.id.home){
             Log.i(TAG, "onOptionsItemSelected: home button clicked");
@@ -267,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
         else if (item.getItemId() == R.id.app_settings_item){
             //TODO ajouter option vider cache images et vider cache sauf favoris
-//            Intent appSettingsIntent = new Intent(getApplicationContext(),SettingsActivity.class);
+//            Intent appSettingsIntent = new Intent(getApplicationContext(),ApplicationSettingsActivity.class);
 //            startActivity(appSettingsIntent);
             Fragment fragment = getVisibleFragment();
             if (fragment instanceof OnSettingsNavigation) {
@@ -359,14 +376,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     }
 
 
-    public void lockScreen(){
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
-    }
-    public void unlockScreen(){
-//        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-    }
+
 
     @Override
     public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {

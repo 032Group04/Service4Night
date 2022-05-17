@@ -1,4 +1,4 @@
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
@@ -24,6 +25,31 @@ public class ExifUtil {
     /**
      *  http://sylvana.net/jpegcrop/exif_orientation.html
      */
+
+    public static Bitmap resizeBitmap(Bitmap bitmap){
+        //TODO : a modifier selon blocage orientation photos
+        Log.i(TAG, "resizeBitmap: untouched bytes = "+ bitmap.getByteCount());
+        if (bitmap.getHeight() > bitmap.getWidth()){
+            Log.i(TAG, "resizeBitmap: height is bigger");
+        }
+        else{ Log.i(TAG, "resizeBitmap: width is bigger");}
+        
+        if (bitmap.getWidth() > 800 ){
+            Log.i(TAG, "resizeBitmap: width > 800");
+            Matrix matrix = new Matrix();
+            float scale= (float) 800 /(float)bitmap.getWidth();
+
+            matrix.setScale(scale,scale);
+            Bitmap resized = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            bitmap.recycle();
+            Log.i(TAG, "resizeBitmap: new width = "+resized.getWidth()+" new height = "+resized.getHeight()+ "byte count = "+resized.getByteCount());
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//            bitmap.compress(Bitmap.CompressFormat.JPEG,60,outputStream);
+//            BitmapFactory.
+            return resized;
+        }
+        else return bitmap;
+    }
     public static Bitmap rotateBitmap(String src, Bitmap bitmap) {
         try {
             int orientation = getExifOrientation(src);
@@ -55,6 +81,11 @@ public class ExifUtil {
             case 6:
                 Log.i(TAG, "rotateBitmap: orientation is ROTATE 90");
                 matrix.setRotate(90);
+                float scaleX= (float) bitmap.getWidth() /(float)bitmap.getHeight();
+                float scaleY = (float) bitmap.getWidth()/(float)bitmap.getHeight();
+                Log.i(TAG, "rotateBitmap: scaleX = "+scaleX+" scaleY = "+scaleY);
+                Log.i(TAG, "rotateBitmap: new dimension expected: x = " + (bitmap.getWidth()*scaleX)+" y = "+(bitmap.getHeight()*scaleY));
+                matrix.postScale( scaleX,scaleY);
                 break;
             case 7:
                 Log.i(TAG, "rotateBitmap: orientation is TRANSVERSE");
@@ -72,6 +103,8 @@ public class ExifUtil {
             try {
                 Bitmap oriented = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
                 bitmap.recycle();
+
+                Log.i(TAG, "rotateBitmap: new dimension returned : x = "+oriented.getWidth()+" y = "+oriented.getHeight());
                 return oriented;
             } catch (OutOfMemoryError e) {
                 e.printStackTrace();
@@ -84,7 +117,7 @@ public class ExifUtil {
         return bitmap;
     }
     
-    private static int getExifOrientation(String src) throws IOException {
+    public static int getExifOrientation(String src) throws IOException {
         int orientation = 1;
         
         try {

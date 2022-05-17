@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="Paramètres">
+    <PreferenceCategory android:title="@string/application_settings_title">
         <ListPreference
             android:title="Theme"
             android:entries="@array/themeList"
             android:entryValues="@array/themeList"
             android:defaultValue="@string/theme_light"
             android:key="theme"
+            android:summary="%s"/>
+        <ListPreference
+            android:title="Language"
+            android:entries="@array/languageList"
+            android:entryValues="@array/languageList"
+            android:defaultValue="@string/language_english"
+            android:key="language"
             android:summary="%s"/>
 
     </PreferenceCategory>
