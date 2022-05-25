@@ -34,5 +34,5 @@
         android:id="@+id/locationUpdateFragment"
         android:name="fr.abitbol.service4night.fragments.LocationUpdateFragment"
         android:label="fragment_location_update"
-        tools:layout="@layout/fragment_location_update" />
+        tools:layout="@layout/fragment_add_location" />
 </navigation>

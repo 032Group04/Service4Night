@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -47,6 +46,7 @@ import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.MapLocation;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
+import fr.abitbol.service4night.listeners.OnPictureDeleteListener;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.DumpService;
@@ -55,13 +55,15 @@ import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 import fr.abitbol.service4night.utils.ExifUtil;
+import fr.abitbol.service4night.utils.PictureDeleteTask;
 import fr.abitbol.service4night.utils.PictureDownloader;
+import fr.abitbol.service4night.utils.PicturesDeleteAdapter;
 import fr.abitbol.service4night.utils.PicturesUploadAdapter;
 import fr.abitbol.service4night.utils.SliderAdapter;
 import fr.abitbol.service4night.utils.SliderItem;
 
 
-public class LocationUpdateFragment extends Fragment implements OnCompleteListener<Void>, OnPictureDownloadListener,PicturesUploadAdapter {
+public class LocationUpdateFragment extends Fragment implements OnCompleteListener<Void>, OnPictureDownloadListener,PicturesUploadAdapter, PicturesDeleteAdapter {
 
 
 
@@ -71,7 +73,10 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     private static final String PICTURE_TAKEN_NAME = "pictureTaken";
 
     public static final String MAPLOCATION_NAME = "mapLocation";
-
+    private static final String CURRENT_PICTURE_NAME = "currentPictureName";
+    private static final String CURRENT_PICTURE_PATH = "currentPicturePath";
+    private static final String CURRENT_PICTURE_URI = "currentPictureUri";
+    private static final String CURRENT_PICTURE_SPACE = "currentPictureSpace";
     private MapLocation mapLocation;
     ArrayList<SliderItem> images;
     private Uri currentPictureUri;
@@ -99,19 +104,27 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
 
                 try {
-                    unlockScreen();
-                    Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), currentPictureUri);
-                    pictureTaken = true;
-                    File file = new File(currentPicTurePath);
-                    Log.i(TAG, "onActivityResult: file exists :" + file.exists());
-                    picture = ExifUtil.rotateBitmap(currentPicTurePath,picture);
-                    picture = ExifUtil.resizeBitmap(picture);
-                    images.add(new SliderItem(picture,currentPictureName, currentPicTurePath));
-                    showPictures();
-                    updatePicture(currentPictureSpace,picture);
 
-                    enablePictureDelete(true);
+                    if (currentPictureName != null && currentPicTurePath != null && currentPictureUri != null) {
+                        if (currentPictureSpace == null){
+                            Log.i(TAG, "onActivityResult: currentPictureSpacze is null");
+                            currentPictureSpace = getPictureSpace();
+                        }
+                        Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), currentPictureUri);
+                        pictureTaken = true;
+                        File file = new File(currentPicTurePath);
+                        Log.i(TAG, "onActivityResult: file exists :" + file.exists());
+                        picture = ExifUtil.rotateBitmap(currentPicTurePath,picture);
+                        picture = ExifUtil.resizeBitmap(picture);
+                        images.add(new SliderItem(picture,currentPictureName, currentPicTurePath));
+                        showPictures();
+                        updatePicture(currentPictureSpace,picture);
 
+                        enablePictureDelete(true);
+                    } else {
+                        Log.i(TAG, "onActivityResult: picture uri, name or path has been lost");
+                        Toast.makeText(getContext(), getString(R.string.picture_retrieve_error), Toast.LENGTH_SHORT).show();
+                    }
 
 
                 } catch (IOException e) {
@@ -124,37 +137,41 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     private ActivityResultLauncher<String> pickPictureContract = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
         @Override
         public void onActivityResult(Uri result) {
-            try {
-                Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), result);
-                pictureTaken = true;
-                currentPicTurePath =result.toString();
+            if (currentPictureName != null && currentPicTurePath != null) {
+                try {
+                    Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), result);
+                    pictureTaken = true;
+                    currentPicTurePath =result.toString();
 
-                Log.i(TAG, "onActivityResult: result to string = "+ result.toString());
-                File file = new File(currentPicTurePath);
-                if (!file.exists()){
-                    Log.i(TAG, "onActivityResult pick: uri path file doesn't exist");
+                    Log.i(TAG, "onActivityResult: result to string = "+ result.toString());
+                    File file = new File(currentPicTurePath);
+                    if (!file.exists()){
+                        Log.i(TAG, "onActivityResult pick: uri path file doesn't exist");
 
 
+                    }
+                    else{
+                        Log.i(TAG, "onActivityResult pick: file from uri.toString exist");
+                        picture = ExifUtil.rotateBitmap(currentPicTurePath,picture);
+                    }
+                    Log.i(TAG, "onActivityResult pick: file exists :" + file.exists());
+
+                    picture = ExifUtil.resizeBitmap(picture);
+                    currentPictureName = MapLocation.generatePictureName(mapLocation.getId(), getPictureSpace() + 1);
+                    images.add(new SliderItem(picture,currentPictureName, currentPicTurePath));
+                    showPictures();
+                    updatePicture(getPictureSpace(),picture);
+
+                    enablePictureDelete(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                else{
-                    Log.i(TAG, "onActivityResult pick: file from uri.toString exist");
-                    picture = ExifUtil.rotateBitmap(currentPicTurePath,picture);
-                }
-                Log.i(TAG, "onActivityResult pick: file exists :" + file.exists());
-
-                picture = ExifUtil.resizeBitmap(picture);
-                currentPictureName = MapLocation.generatePictureName(mapLocation.getId(), getPictureSpace() + 1);
-                images.add(new SliderItem(picture,currentPictureName, currentPicTurePath));
-                showPictures();
-                updatePicture(getPictureSpace(),picture);
-
-                enablePictureDelete(true);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } else {
+                Log.i(TAG, "onActivityResult: picture name or path has been lost");
+                Toast.makeText(getContext(), getString(R.string.picture_retrieve_error), Toast.LENGTH_SHORT).show();
             }
         }
     });
-    //TODO : ajouter bouton supprimer photo
     public synchronized void updatePicture(int index,Bitmap bitmap){
         Log.i(TAG, "updatePicture: index : " + index);
         CloudStoragePictureDAO pictureDAO = new CloudStoragePictureDAO();
@@ -171,12 +188,12 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
                 currentPicTurePath = null;
                 currentPictureUri = null;
                 currentPictureSpace = null;
-                getActivity().runOnUiThread(this::stopProgressBar);
-                getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.upload_picture_success), Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(this::stopProgressBar);
+                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.upload_picture_success), Toast.LENGTH_SHORT).show());
             }
             else{
-                getActivity().runOnUiThread(this::stopProgressBar);
-                getActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.upload_picture_fail), Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(this::stopProgressBar);
+                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), getString(R.string.upload_picture_fail), Toast.LENGTH_SHORT).show());
             }
         });
         startProgressBar();
@@ -206,7 +223,18 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
         outState.putBoolean(PICTURE_TAKEN_NAME,pictureTaken);
 
-
+        if (currentPictureName != null){
+            outState.putString(CURRENT_PICTURE_NAME,currentPictureName);
+        }
+        if (currentPicTurePath != null){
+            outState.putString(CURRENT_PICTURE_PATH,currentPicTurePath);
+        }
+        if (currentPictureUri != null){
+            outState.putParcelable(CURRENT_PICTURE_URI, currentPictureUri);
+        }
+        if (currentPictureSpace != null){
+            outState.putInt(CURRENT_PICTURE_SPACE, currentPictureSpace);
+        }
 
 
         if (mapLocation != null) {
@@ -240,10 +268,10 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
 
         }
-        dataBase = DAOFactory.getLocationDAOReadAndWrite(LocationUpdateFragment.this, true);
+        dataBase = DAOFactory.getLocationDAOOnline();
 
         binding = FragmentAddLocationBinding.inflate(inflater, container, false);
-
+        binding.buttonDelete.setVisibility(View.VISIBLE);
         images = new ArrayList<>();
 
 
@@ -268,6 +296,22 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             else{
                 Toast.makeText(getContext(), getString(R.string.location_retrieve_error), Toast.LENGTH_SHORT).show();
                 NavHostFragment.findNavController(LocationUpdateFragment.this).popBackStack();
+            }
+            if (savedInstanceState.containsKey(CURRENT_PICTURE_URI)){
+                Log.i(TAG, "onCreateView: savedInstanceState contains currentPictureUri");
+                currentPictureUri = savedInstanceState.getParcelable(CURRENT_PICTURE_URI);
+            }
+            if (savedInstanceState.containsKey(CURRENT_PICTURE_NAME)){
+                Log.i(TAG, "onCreateView: savedInstanceState contains currentPictureName");
+                currentPictureName = savedInstanceState.getString(CURRENT_PICTURE_NAME);
+            }
+            if (savedInstanceState.containsKey(CURRENT_PICTURE_PATH)){
+                Log.i(TAG, "onCreateView: savedInstanceState contains currentPicturePath");
+                currentPicTurePath = savedInstanceState.getString(CURRENT_PICTURE_PATH);
+            }
+            if (savedInstanceState.containsKey(CURRENT_PICTURE_SPACE)){
+                Log.i(TAG, "onCreateView: savedInstanceState contains currentPictureSpace");
+                currentPictureSpace = savedInstanceState.getInt(CURRENT_PICTURE_SPACE);
             }
 
             Log.i(TAG, "onCreateView: savedinstancestate is not null");
@@ -329,6 +373,13 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         } else {
             binding.addDrinkableCheckBox.setEnabled(false);
         }
+        if (binding.addInternetCheckBox.isChecked()){
+            binding.addInternetTypeRadioGroup.setVisibility(View.VISIBLE);
+        }
+        else{
+            binding.addInternetTypeRadioGroup.setVisibility(View.INVISIBLE);
+        }
+
         if (binding.addPrivateNetworkRadioButton.isChecked()) {
             binding.addInternetPriceLabel.setVisibility(View.VISIBLE);
             binding.internetPriceEditText.setVisibility(View.VISIBLE);
@@ -346,6 +397,14 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
                 binding.addDrinkableCheckBox.setEnabled(true);
             } else {
                 binding.addDrinkableCheckBox.setEnabled(false);
+            }
+        });
+
+        binding.addInternetCheckBox.setOnClickListener(view -> {
+            if (((CheckBox) view).isChecked()) {
+                binding.addInternetTypeRadioGroup.setVisibility(View.VISIBLE);
+            } else {
+                binding.addInternetTypeRadioGroup.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -372,28 +431,24 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
     private void loadPictures(){
         if (mapLocation.getPictures()!= null && mapLocation.getPictures().size() > 0) {
+            showLoadScreen();
             PictureDownloader.getBitmapsFromURL(mapLocation,new ArrayList<String>(),new ArrayList<String>(),getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES),this);
         } else {
             Log.i(TAG, "loadPictures: no pictures in mapLocation");
         }
     }
     private void loadInputs(){
-        binding.locationAddTextviewLatitude.setText(String.valueOf(mapLocation.getPoint().latitude));
-        binding.locationAddTextviewLongitude.setText(String.valueOf(mapLocation.getPoint().longitude));
+        binding.locationAddTextviewCoordinates.setText(mapLocation.getPoint().toString());
+
         binding.addDescriptionEditText.setText(mapLocation.getDescription());
         Map<String, Service> services = mapLocation.getServices();
 
         if (services.containsKey(Service.WATER_SERVICE)) {
+            Log.i(TAG, "loadInputs: location contains service water");
             WaterService waterService = (WaterService) services.get(Service.WATER_SERVICE);
             binding.addWaterCheckBox.setChecked(true);
             binding.addWaterPriceEditText.setText(String.valueOf(waterService.getPrice()));
-            if (waterService.isDrinkable()) {
-
-                binding.addDrinkableCheckBox.setChecked(true);
-
-            } else {
-                binding.addDrinkableCheckBox.setChecked(false);
-            }
+            binding.addDrinkableCheckBox.setChecked(waterService.isDrinkable());
 
 
 
@@ -401,20 +456,24 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         }
 
         if (services.containsKey(Service.ELECTRICITY_SERVICE)) {
+            Log.i(TAG, "loadInputs: location contains service electricity");
             ElectricityService electricityService = (ElectricityService) services.get(Service.ELECTRICITY_SERVICE);
             binding.addElectricityCheckBox.setChecked(true);
             binding.electricityPriceEditText.setText(String.valueOf(electricityService.getPrice()));
 
         }
         if (services.containsKey(Service.DUMPSTER_SERVICE)) {
+            Log.i(TAG, "loadInputs: location contains service dumpster");
             binding.addDumpsterCheckBox.setChecked(true);
 
         }
 
         if (services.containsKey(Service.INTERNET_SERVICE)) {
+            Log.i(TAG, "loadInputs: location contains service internet");
             InternetService internetService = (InternetService) services.get(Service.INTERNET_SERVICE);
             Log.i(TAG, "getInfoContents:  instance of internet service");
-
+            binding.addInternetCheckBox.setChecked(true);
+            binding.addInternetTypeRadioGroup.setVisibility(View.VISIBLE);
             if (internetService.getConnectionType().equals(InternetService.ConnectionType.public_wifi)) {
 
                 binding.addPublicWifiRadioButton.setChecked(true);
@@ -432,15 +491,11 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         }
 
         if (services.containsKey(Service.DRAINAGE_SERVICE)) {
+            Log.i(TAG, "loadInputs: location contains service drainage");
             DrainService drainService = (DrainService) services.get(Service.DRAINAGE_SERVICE);
             Log.i(TAG, "getInfoContents:  instance of drain service");
             binding.addDrainageCheckbox.setChecked(true);
-            if (drainService.isBlackWater()){
-                binding.addDarkWaterCheckBox.setChecked(true);
-            }
-            else{
-                binding.addDarkWaterCheckBox.setChecked(false);
-            }
+            binding.addDarkWaterCheckBox.setChecked(drainService.isBlackWater());
         }
 
     }
@@ -454,8 +509,8 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     }
     private void enablePictureDelete(boolean enabled){
         if (enabled){
-            binding.deleteButton.setVisibility(View.VISIBLE);
-            binding.deleteButton.setOnClickListener(view ->{
+            binding.pictureDeleteButton.setVisibility(View.VISIBLE);
+            binding.pictureDeleteButton.setOnClickListener(view ->{
 
                 new AlertDialog.Builder(getContext())
                         .setTitle(getString(R.string.delete_picture_title))
@@ -467,34 +522,48 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
                                 Log.i(TAG, "onCreateView: viewPager item = "+ item);
                                 if (item < images.size()){
                                     CloudStoragePictureDAO pictureDAO = new CloudStoragePictureDAO();
-                                    if(pictureDAO.delete(mapLocation.getPictures().get(item))){
-                                        Log.i(TAG, "enablePictureDelete: picture successfully deleted");
-                                        images.remove(item);
-                                        String tmp = mapLocation.getPictures().get(item);
-                                        mapLocation.getPictures().set(item,PictureDownloader.DELETED_PICTURES_VALUE);
-                                        viewPager.setAdapter(new SliderAdapter(images, viewPager));
-                                        Log.i(TAG, "picture delete: onClick: picture space freed :"+item);
-                                        LocationDAO locationDAO = DAOFactory.getLocationDAOReadAndWrite(task -> {
-                                            if (task.isSuccessful()){
-                                                Toast.makeText(getContext(), getString(R.string.picture_delete_success), Toast.LENGTH_SHORT).show();
+                                    pictureDAO.registerDeleteListener(new OnPictureDeleteListener() {
+                                        @Override
+                                        public void onPictureDelete(boolean result) {
+                                            if (result){
+                                                Log.i(TAG, "enablePictureDelete: picture successfully deleted");
+                                                images.remove(item);
+                                                String tmp = mapLocation.getPictures().get(item);
+                                                mapLocation.getPictures().set(item, PictureDownloader.DELETED_PICTURES_VALUE);
+                                                viewPager.setAdapter(new SliderAdapter(images, viewPager));
+                                                Log.i(TAG, "picture delete: onClick: picture space freed :" + item);
+                                                dataBase.update(mapLocation.getId(), mapLocation, new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if (task.isSuccessful()) {
+                                                            Log.i(TAG, "onComplete: picture url successfully deleted from database");
+                                                            Toast.makeText(getContext(), getString(R.string.picture_delete_success), Toast.LENGTH_SHORT).show();
 
+                                                        } else {
+                                                            Log.i(TAG, "onClick: failed to modify picture status in database");
+                                                            Toast.makeText(getContext(), getString(R.string.picture_delete_fail), Toast.LENGTH_SHORT).show();
+
+
+                                                        }
+                                                    }
+                                                });
                                             }
                                             else{
-                                                Log.i(TAG, "onClick: failed to modify picture status in database");
+                                                Log.i(TAG, "onClick: picture delete failed");
                                                 Toast.makeText(getContext(), getString(R.string.picture_delete_fail), Toast.LENGTH_SHORT).show();
 
-
                                             }
-                                        },true);
-                                    }
+                                        }
+                                    });
+                                    if(pictureDAO.delete(mapLocation.getPictures().get(item))) {
+                                        Log.i(TAG, "onClick: delete picture boolean array returns true");
+                                    }   
                                     else{
-                                        Log.i(TAG, "onClick: picture delete failed");
-                                        Toast.makeText(getContext(), getString(R.string.picture_delete_fail), Toast.LENGTH_SHORT).show();
-
+                                        Log.i(TAG, "onClick: delete picture boolean array returns false");
                                     }
 
                                     if (images.isEmpty()){
-                                        binding.deleteButton.setVisibility(View.GONE);
+                                        binding.pictureDeleteButton.setVisibility(View.GONE);
                                         mapLocation.setPictures(null);
                                         pictureTaken = false;
                                     }
@@ -513,7 +582,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             });
         }
         else{
-            binding.deleteButton.setVisibility(View.GONE);
+            binding.pictureDeleteButton.setVisibility(View.GONE);
         }
     }
     private void setTitle() {
@@ -575,7 +644,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
                     .setNegativeButton(R.string.pick_a_picture, (dialogInterface, i) -> {
                         pickPicture();
                     })
-                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setIcon(R.mipmap.ic_picture_add_mode)
                     .show();
             } else {
                 Toast.makeText(getContext(), getString(R.string.exceed_pictures_count), Toast.LENGTH_SHORT).show();
@@ -584,22 +653,72 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
         });
 
-        //TODO : ajouter possibilité de selectionner une photo dans le téléphone
 
         binding.buttonValidate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 if(processInputs()) {
-                    dataBase.insert(mapLocation);
+                    dataBase.update(mapLocation.getId(),mapLocation,LocationUpdateFragment.this);
                 }
 
 
             }
         });
+        binding.buttonDelete.setOnClickListener(v ->{
+            new AlertDialog.Builder(getContext())
+                    .setTitle(getString(R.string.delete_location))
+                    .setMessage(getString(R.string.confirm_delete_location))
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            Log.i(TAG, "onCreateView: delete button clicked, images size = "+ images.size());
+                            if (images.size() > 0){
+                                Log.i(TAG, "onClick: starting pictures deletion");
+                                PictureDeleteTask deleteTask = new PictureDeleteTask(mapLocation.getPictures(),LocationUpdateFragment.this);
+                                deleteTask.execute("continue");
+
+                            }
+                            else{
+                                Log.i(TAG, "onClick: no pictures to delete, deleting location");
+                                dataBase.remove(mapLocation.getId(),task -> {
+                                    if (task.isSuccessful()) {
+                                        Log.i(TAG, "onPictureDelete: location succesfully deleted");
+                                        Toast.makeText(getContext(), getString(R.string.location_delete_success), Toast.LENGTH_SHORT).show();
+
+                                    }
+                                    else {
+                                        Log.i(TAG, "onPictureDelete: failed to delete location");
+                                        if (task.getException() != null) {
+                                            Log.i(TAG, "delete task :" + task.getException().getMessage());
+                                        }
+
+                                        Toast.makeText(getContext(), getString(R.string.location_delete_fail), Toast.LENGTH_SHORT).show();
+                                    }
+                                    NavHostFragment.findNavController(LocationUpdateFragment.this).popBackStack();
+                                });
+                            }
+
+                        }
+                    })
+
+                    // A null listener allows the button to dismiss the dialog and take no further action.
+                    .setNegativeButton(android.R.string.no, null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+
+
+
+        });
+
     }
     private Integer getPictureSpace(){
+        Log.i(TAG, "getPictureSpace called");
+        if (mapLocation.getPictures() == null){
+            Log.i(TAG, "getPictureSpace: location has no pictures");
+            mapLocation.setPictures(new ArrayList<>());
+        }
         if(mapLocation.getPictures().size() < 3 ){
+            Log.i(TAG, "getPictureSpace: maximum pics count has not been reached");
             return ((mapLocation.getPictures().size()));
         }
         else{
@@ -770,7 +889,6 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             currentPictureUri = FileProvider.getUriForFile(getContext(),"fr.abitbol.service4night.fileprovider",file);
 
             takePictureContract.launch(currentPictureUri);
-            lockScreen();
         }
         else{
             Toast.makeText(getContext(), getString(R.string.exceed_pictures_count), Toast.LENGTH_SHORT).show();
@@ -779,16 +897,68 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
 
     }
-    public void resume(MapLocation mapLocation){
-        //TODO : afficher les données de mapLocation pour récupérer ajout abandonné
 
-    }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         Log.i(TAG, "onDestroyView called");
         binding = null;
+    }
+
+
+    private void showLoadScreen(){
+        binding.addFrameLayout.setEnabled(false);
+        binding.addProgressBarContainer.setVisibility(View.VISIBLE);
+        binding.addProgressBarTextView.setText(R.string.loading_pictures);
+    }
+    private void hideLoadScreen(){
+        binding.addFrameLayout.setEnabled(true);
+        binding.addProgressBarContainer.setVisibility(View.GONE);
+    }
+    private void showPictures(){
+
+        Log.i(TAG, "showPictures called");
+        viewPager.setClipToPadding(false);
+        viewPager.setClipChildren(false);
+        viewPager.setOffscreenPageLimit(2);
+        int offsetPx = Math.round(getResources().getDisplayMetrics().density * 20);
+
+        viewPager.setPadding(offsetPx, 0, offsetPx, 0);
+
+        viewPager.setAdapter(new SliderAdapter(images, viewPager));
+        enablePictureDelete(true);
+        Log.i(TAG, "showPictures: ready to show");
+        viewPager.invalidate();
+
+    }
+
+    @Override
+    public void onComplete(@NonNull Task task) {
+        if (task.isSuccessful()){
+            Log.i(TAG, "onComplete: location successfully written. ");
+            Toast.makeText(getContext(), getString(R.string.location_update_success), Toast.LENGTH_SHORT).show();
+            NavHostFragment.findNavController(LocationUpdateFragment.this).popBackStack();
+        }
+        else{
+            Log.i(TAG, "onComplete: location failed to be written");
+            Log.i(TAG, "onComplete: task to string : " + task.toString());
+            Log.i(TAG, "onComplete: task get Exception : "+ task.getException());
+            Toast.makeText(getContext(), getString(R.string.location_update_fail), Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+
+
+    @Override
+    public void onPictureDownload(ArrayList<SliderItem> _images) {
+        if (_images != null) {
+            Log.i(TAG, "onPictureDownload: download complete : "+ _images.size()+ " images");
+            images = _images;
+            getActivity().runOnUiThread(this::showPictures);
+            getActivity().runOnUiThread(this::hideLoadScreen);
+        }
     }
     @Override
     public void startProgressBar(){
@@ -816,61 +986,64 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             Toast.makeText(getContext(), String.format(getString(R.string.progressBar_picture_failed),(done-1)), Toast.LENGTH_SHORT).show();
         }
     }
-    private void showLoadScreen(){
-        binding.addFrameLayout.setEnabled(false);
-        binding.addProgressBarContainer.setVisibility(View.VISIBLE);
-        binding.addProgressBarTextView.setText(R.string.loading_pictures);
-    }
-    private void hideLoadScreen(){
-        binding.addFrameLayout.setEnabled(true);
-        binding.addProgressBarContainer.setVisibility(View.GONE);
-    }
-    private void showPictures(){
-
-
-        viewPager.setClipToPadding(false);
-        viewPager.setClipChildren(false);
-        viewPager.setOffscreenPageLimit(2);
-        int offsetPx = Math.round(getResources().getDisplayMetrics().density * 20);
-
-        viewPager.setPadding(offsetPx, 0, offsetPx, 0);
-
-        viewPager.setAdapter(new SliderAdapter(images, viewPager));
-        enablePictureDelete(true);
-        viewPager.invalidate();
-
-    }
-
-    @Override
-    public void onComplete(@NonNull Task task) {
-        if (task.isSuccessful()){
-            Log.i(TAG, "onComplete: location successfully written. ");
-            Toast.makeText(getContext(), getString(R.string.location_add_success), Toast.LENGTH_SHORT).show();
-            NavHostFragment.findNavController(LocationUpdateFragment.this).popBackStack();
-        }
-        else{
-            Log.i(TAG, "onComplete: location failed to be written");
-            Log.i(TAG, "onComplete: task to string : " + task.toString());
-            Log.i(TAG, "onComplete: task get Exception : "+ task.getException());
-            Toast.makeText(getContext(), getString(R.string.location_add_fail), Toast.LENGTH_SHORT).show();
-        }
-
-    }
-
-
-
-    @Override
-    public void onPictureDownload(ArrayList<SliderItem> _images) {
-        if (_images != null) {
-            Log.i(TAG, "onPictureDownload: download complete : "+ _images.size()+ " images");
-            images = _images;
-            getActivity().runOnUiThread(this::showPictures);
-            getActivity().runOnUiThread(this::hideLoadScreen);
-        }
-    }
 
     @Override
     public void onPicturesUploaded(List<String> uris) {
+
+    }
+
+    @Override
+    public void startDeleteBar() {
+        binding.addFrameLayout.setEnabled(false);
+        binding.addProgressBarContainer.setVisibility(View.VISIBLE);
+        binding.addProgressBarContainer.setEnabled(true);
+        //binding.addProgressBar.animate();
+        binding.addProgressBarTextView.setText(String.format(getString(R.string.deleteBar_text_format),1,images.size()));
+    }
+
+    @Override
+    public void stopDeleteBar() {
+        binding.addFrameLayout.setEnabled(true);
+        binding.addProgressBarContainer.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void updateDeleteBar(boolean success, int done) {
+        if (success) {
+            Log.i(TAG, "updateProgressBar:  picture delete success");
+            binding.addProgressBarTextView.setText(String.format(getString(R.string.deleteBar_text_format), done, images.size()));
+        }
+        else {
+            Log.i(TAG, "updateProgressBar: picture delete failed");
+            binding.addProgressBarTextView.setText(String.format(getString(R.string.deleteBar_text_format), done, images.size()));
+            Toast.makeText(getContext(), String.format(getString(R.string.deleteBar_picture_failed),(done-1)), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onPictureDelete(boolean result) {
+        if (result){
+            Log.i(TAG, "onPictureDelete: pictures successfully deleted");
+        }
+        else{
+            Log.i(TAG, "onClick: not all pictures were deleted");
+            Toast.makeText(getContext(), getString(R.string.picture_delete_fail), Toast.LENGTH_SHORT).show();
+            //TODO : gérer cohérence données
+        }
+        dataBase.remove(mapLocation.getId(),task -> {
+            if (task.isSuccessful()) {
+                Log.i(TAG, "onPictureDelete: location succesfully deleted");
+                Toast.makeText(getContext(), getString(R.string.location_delete_success), Toast.LENGTH_SHORT).show();
+
+            }
+            else {
+                Log.i(TAG, "onPictureDelete: failed to delete location");
+                Toast.makeText(getContext(), getString(R.string.location_delete_fail), Toast.LENGTH_SHORT).show();
+            }
+            NavHostFragment.findNavController(LocationUpdateFragment.this).popBackStack();
+        });
+
+
 
     }
 }

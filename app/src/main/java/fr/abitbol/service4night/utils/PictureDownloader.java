@@ -49,42 +49,48 @@ public class PictureDownloader {
                             connection.setDoInput(true);
                             connection.connect();
 
-                            InputStream input = connection.getInputStream();
+                            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                                Log.i(TAG, "getBitmapsFromURL: connection is ok");
+                                InputStream input = connection.getInputStream();
 
-                            File mediaStorageDir = new File(externalFilesDir, PictureDownloader.PICTURES_LOCAL_FOLDER);
+                                File mediaStorageDir = new File(externalFilesDir, PictureDownloader.PICTURES_LOCAL_FOLDER);
 
-                            // Create the storage directory if it does not exist
-                            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-                                Log.d(TAG, "failed to create directory");
-                                listener.onPictureDownload(null);
-                            }
-                            Log.i(TAG, "takePicture: file path is: " + mediaStorageDir.getPath());
-                            // Return the file target for the photo based on filename
-                            pictureName = MapLocation.generatePictureName(mapLocation.getId(), i);
-                            picTurePath = mediaStorageDir.getPath() + File.separator + pictureName;
-                            File file = new File(picTurePath);
-                            if (!file.exists()) {
-                                Log.i(TAG, "getBitmapsFromURL: picture file does not exist");
-                                file.createNewFile();
-                                BufferedInputStream bufferedInputStream = new BufferedInputStream(input);
-                                FileOutputStream fos = new FileOutputStream(file);
-                                int in = 0;
-                                Log.i(TAG, "getBitmapsFromURL: writing on file...");
-                                while ((in = bufferedInputStream.read()) != -1) {
-                                    fos.write(in);
+                                // Create the storage directory if it does not exist
+                                if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+                                    Log.d(TAG, "failed to create directory");
+                                    listener.onPictureDownload(null);
                                 }
+                                Log.i(TAG, "takePicture: file path is: " + mediaStorageDir.getPath());
+                                // Return the file target for the photo based on filename
+                                pictureName = MapLocation.generatePictureName(mapLocation.getId(), i);
+                                picTurePath = mediaStorageDir.getPath() + File.separator + pictureName;
+                                File file = new File(picTurePath);
+                                if (!file.exists()) {
+                                    Log.i(TAG, "getBitmapsFromURL: picture file does not exist");
+                                    file.createNewFile();
+                                    BufferedInputStream bufferedInputStream = new BufferedInputStream(input);
+                                    FileOutputStream fos = new FileOutputStream(file);
+                                    int in = 0;
+                                    Log.i(TAG, "getBitmapsFromURL: writing on file...");
+                                    while ((in = bufferedInputStream.read()) != -1) {
+                                        fos.write(in);
+                                    }
 
+                                } else {
+                                    Log.i(TAG, "getBitmapsFromURL: picture already exists");
+                                }
+                                picturesPaths.add(picTurePath);
+                                picturesNames.add(pictureName);
+
+                                Log.i(TAG, "getBitmapsFromURL: getting Bitmap from file");
+                                Bitmap myBitmap = BitmapFactory.decodeFile(picTurePath);
+                                myBitmap = ExifUtil.rotateBitmap(picTurePath, myBitmap);
+                                Log.i(TAG, "getBitmapsFromURL: bitmap width : " + myBitmap.getWidth() + " height : " + myBitmap.getHeight());
+                                images.add(new SliderItem(myBitmap, pictureName));
                             } else {
-                                Log.i(TAG, "getBitmapsFromURL: picture already exists");
-                            }
-                            picturesPaths.add(picTurePath);
-                            picturesNames.add(pictureName);
+                                Log.i(TAG, "getBitmapsFromURL: connection failed");
 
-                            Log.i(TAG, "getBitmapsFromURL: getting Bitmap from file");
-                            Bitmap myBitmap = BitmapFactory.decodeFile(picTurePath);
-                            myBitmap = ExifUtil.rotateBitmap(picTurePath, myBitmap);
-                            Log.i(TAG, "getBitmapsFromURL: bitmap width : " + myBitmap.getWidth() + " height : " + myBitmap.getHeight());
-                            images.add(new SliderItem(myBitmap, pictureName));
+                            }
 
                         }
                         i++;

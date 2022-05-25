@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import fr.abitbol.service4night.databinding.WindowInfoBinding;
+import fr.abitbol.service4night.fragments.MapsFragment;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.ElectricityService;
 import fr.abitbol.service4night.services.Service;
@@ -28,10 +29,10 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
     private WindowInfoBinding binding;
     private AtomicReference<ArrayList<MapLocation>> locationsRef;
     private MapLocation mapLocation;
-    private MapsActivity mapsActivity;
+    private MapsFragment mapsActivity;
     //private View mContent;
 
-    public InfoWindow(MapsActivity context){
+    public InfoWindow(MapsFragment context){
         Log.i(TAG, "InfoWindow: constructor called");
         //LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         //mContent = inflater.inflate(R.layout.window_info,null);

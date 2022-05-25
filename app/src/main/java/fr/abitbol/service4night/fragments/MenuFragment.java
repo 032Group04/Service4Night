@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import fr.abitbol.service4night.MainActivity;
-import fr.abitbol.service4night.MapsActivity;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentMenuBinding;
 import fr.abitbol.service4night.listeners.OnSettingsNavigation;
@@ -26,32 +25,7 @@ import fr.abitbol.service4night.listeners.OnSettingsNavigation;
 public class MenuFragment extends Fragment implements OnSettingsNavigation {
     private final String TAG = "MenuFragment logging";
     private FragmentMenuBinding binding;
-    private final ActivityResultLauncher<Intent> mGetContent = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    switch (result.getResultCode()) {
-                        case MapsActivity.MAP_TYPE_ADD:
-                            //Log.i(TAG, "onActivityResult: map adding point result received : " + result.getData().getBundleExtra(MapsActivity.MAP_POINT_BUNDLE_NAME));
 
-                            NavHostFragment.findNavController(MenuFragment.this)
-                                .navigate(R.id.action_MenuFragment_to_AddLocationFragment, result.getData().getExtras());
-                            break;
-                        case MapsActivity.MAP_TYPE_EXPLORE:
-                            NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_LocationFragment,result.getData().getExtras());
-                            break;
-                    }
-                }
-            });
-
-//    private BroadcastReceiver PointReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            Log.i(TAG, "onReceive: activity : " + getActivity().getLocalClassName());
-//
-//
-//        }
-//    };
 
     @Override
     public View onCreateView(
@@ -74,16 +48,19 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
             public void onClick(View view) {
 //
                 Bundle arg = new Bundle();
-                arg.putInt(MapsActivity.MAP_MODE_BUNDLE_NAME,MapsActivity.MAP_TYPE_ADD);
-                Intent intent = new Intent(getContext(),MapsActivity.class);
-                intent.putExtras(arg);
-
-                mGetContent.launch(intent);
+                arg.putInt(MapsFragment.MAP_MODE_BUNDLE_NAME,MapsFragment.MAP_TYPE_ADD);
+//                Intent intent = new Intent(getContext(),MapsFragment.class);
+//                intent.putExtras(arg);
+//
+//                mGetContent.launch(intent);
+                NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_mapsFragment,arg);
 
 
             }
         });
         binding.directAddButton.setOnClickListener(button ->{
+            //TODO vérifier si la location n'existe pas déja
+
             if (MainActivity.fineLocation || MainActivity.coarseLocation){
 
                 NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_AddLocationFragment);
@@ -95,13 +72,9 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
             }
         });
         binding.exploreButton.setOnClickListener(button -> {
-//            Bundle arg = new Bundle();
-//            arg.putInt(MapsActivity.MAP_MODE_KEY,MapsActivity.MAP_TYPE_EXPLORE);
-//            LocalBroadcastManager.getInstance(getContext()).registerReceiver(PointReceiver,new IntentFilter("point_event"));
-            Intent intent = new Intent(getContext(),MapsActivity.class);
-            intent.putExtra(MapsActivity.MAP_MODE_BUNDLE_NAME,MapsActivity.MAP_TYPE_EXPLORE);
-            //startActivityForResult(intent,37);
-            mGetContent.launch(intent);
+            Bundle arg = new Bundle();
+            arg.putInt(MapsFragment.MAP_MODE_BUNDLE_NAME,MapsFragment.MAP_TYPE_EXPLORE);
+            NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_mapsFragment,arg);
 
         });
     }

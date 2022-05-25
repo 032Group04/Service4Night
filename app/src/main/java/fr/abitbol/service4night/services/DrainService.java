@@ -62,7 +62,7 @@ public class DrainService extends Service {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeMap(getAsMap());
+        parcel.writeBundle(getAsBundle());
     }
     public static final Parcelable.Creator<DrainService> CREATOR
             = new Parcelable.Creator<DrainService>() {

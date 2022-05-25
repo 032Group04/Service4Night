@@ -15,30 +15,28 @@ import java.util.List;
 import java.util.Queue;
 
 import fr.abitbol.service4night.DAO.CloudStoragePictureDAO;
-import fr.abitbol.service4night.fragments.LocationAddFragment;
+import fr.abitbol.service4night.listeners.OnPictureDeleteListener;
 
-public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> implements OnCompleteListener<Uri> {
-    private static final String TAG = "PicturesUploadTask logging";
-    Queue<SliderItem> bitmapQueue;
+public class PictureDeleteTask extends AsyncTask<String,Integer, Boolean> implements OnPictureDeleteListener {
+    private static final String TAG = "PicturesDeleteTask logging";
+    Queue<String> urlQueue;
     CloudStoragePictureDAO cloudStorage;
-    PicturesUploadAdapter listener;
-    List<String> uriList;
-    String locationId;
-    String userId;
+    PicturesDeleteAdapter listener;
+    int total;
+
     int count;
 
 
 
-    public PicturesUploadTask(List<SliderItem> items, PicturesUploadAdapter _listener) {
+    public PictureDeleteTask(List<String> items, PicturesDeleteAdapter _listener) {
         super();
-
+        total = items.size();
         listener = _listener;
         count = 1;
-        uriList = new ArrayList<>();
-        bitmapQueue = new LinkedList<>();
+        urlQueue = new LinkedList<>();
         cloudStorage = new CloudStoragePictureDAO();
-        cloudStorage.registerInsertListener(this);
-        bitmapQueue.addAll(items);
+        cloudStorage.registerDeleteListener(this);
+        urlQueue.addAll(items);
 
 
     }
@@ -46,22 +44,17 @@ public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> imple
     @Override
     protected Boolean doInBackground(String... strings) {
 
-        if (strings.length == 2) {
-            Log.i(TAG, "doInBackground called from execute() : thread =" + Thread.currentThread().toString());
 
-            userId = strings[0];
-            locationId = strings[1];
-        }
         if (strings.length > 0 && strings.length < 3) {
             if (strings[0].equals("continue")) Log.i(TAG, "doInBackground called from within asyncTask : thread =" + Thread.currentThread().toString());
 
-            if (bitmapQueue.peek() != null) {
-                Log.i(TAG, "doInBackground: bitmap queue isn't empty");
+            if (urlQueue.peek() != null) {
+                Log.i(TAG, "doInBackground: url queue isn't empty");
 
-                SliderItem s = bitmapQueue.remove();
+                String s = urlQueue.remove();
 
-                cloudStorage.insert(s.getName(), userId, locationId, s.getImage());
-            } else Log.i(TAG, "doInBackground: bitmap queue is empty");
+                cloudStorage.delete(s);
+            } else Log.i(TAG, "doInBackground: url queue is empty");
             return true;
         }
         else{
@@ -77,7 +70,7 @@ public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> imple
     protected void onPreExecute() {
         super.onPreExecute();
         Log.i(TAG, "onPreExecute called thread =" + Thread.currentThread().toString());
-        listener.startProgressBar();
+        listener.startDeleteBar();
 
     }
 
@@ -92,10 +85,10 @@ public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> imple
         super.onProgressUpdate(values);
         Log.i(TAG, "onProgressUpdate called");
         if (values[0] == 1) {
-            listener.updateProgressBar(true,values[1]);
+            listener.updateDeleteBar(true,values[1]);
         }
         else if (values[0] == 0){
-            listener.updateProgressBar(false,values[1]);
+            listener.updateDeleteBar(false,values[1]);
         }
     }
 
@@ -105,44 +98,28 @@ public class PicturesUploadTask extends AsyncTask<String,Integer, Boolean> imple
         super.onCancelled(result);
     }
 
+
+
     @Override
-    public void onComplete(@NonNull Task<Uri> task) {
+    public void onPictureDelete(boolean result) {
         count++;
-        if (task.isSuccessful()){
-            Log.i(TAG, "onComplete called - task is successful");
 
-            if (task.getResult() != null) {
-                Log.i(TAG, "onComplete: picture uploaded, uri = "+task.getResult());
-                Log.i(TAG, "onComplete: picture uploaded, uri.path = "+task.getResult().getPath());
-                uriList.add(task.getResult().toString());
-                if (bitmapQueue.peek() != null) {
-                    publishProgress(1,count);
-                    Log.i(TAG, String.format("onComplete: %d of %d pictures uploaded",uriList.size(), (uriList.size() + bitmapQueue.size() )));
-                    doInBackground("continue");
-                }
-                else{
-                    listener.stopProgressBar();
-                    Log.i(TAG, "onComplete in asyncTask : upload done");
-                    listener.onPicturesUploaded(uriList);
-                }
-            } else {
-                publishProgress(0,count);
-                Log.i(TAG, "onComplete in asyncTask result is null ");
-            }
+        if (result){
+            publishProgress(1,count);
+            Log.i(TAG, String.format("onPictureDelete: %d of %d pictures deleted",(total - urlQueue.size()), total));
         }
-
         else{
-            Log.i(TAG, "onComplete called - task failed");
+            Log.i(TAG, "onPictureDelete called - task failed");
+            publishProgress(0,count);
+        }
+        if (urlQueue.peek() != null) {
 
-            if (bitmapQueue.peek() != null) {
-                publishProgress(0,count);
-                doInBackground("continue");
-            }
-            else{
-                listener.stopProgressBar();
-                Log.i(TAG, "onComplete in asyncTask : upload done");
-                listener.onPicturesUploaded(uriList);
-            }
+            doInBackground("continue");
+        }
+        else{
+            listener.stopDeleteBar();
+            Log.i(TAG, "onPictureDelete in asyncTask : delete done");
+            listener.onPictureDelete(result);
         }
     }
 

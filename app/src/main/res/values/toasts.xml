@@ -2,9 +2,13 @@
 <resources>
     <string name="map_button_toast">Select a Location first (long press)</string>
     <string name="location_add_success">Location successfully added</string>
+    <string name="location_update_success">Location successfully modified</string>
+    <string name="location_delete_success">Location successfully deleted</string>
     <string name="picture_delete_success">Picture successfully deleted</string>
     <string name="picture_delete_fail">Picture deletion failed</string>
-    <string name="location_add_fail">Failed to add Location</string>
+    <string name="location_add_fail">Failed to add location</string>
+    <string name="location_delete_fail">Failed to delete location</string>
+    <string name="location_update_fail">Failed to update location</string>
     <string name="coordinates_missing_error">Error : incorrect or missing coordinates.</string>
     <string name="price_parsing_error">price input is incorrect</string>
     <string name="price_parsing_error_named">price input is incorrect for </string>
@@ -33,5 +37,7 @@
     <string name="coarse_localisation_limit">Fine location permission denied: localisation will not be precise</string>
     <string name="no_localisation_permissions">Localisation is denied, application functionalities will be limited</string>
     <string name="need_location_permissions">This functionality requires permission to access localisation</string>
-
+    <string name="mapsActivity_open_mode_missing">Error : Map opening mode missing</string>
+    <string name="location_filter_no_result">No matching locations found</string>
+    <string name="location_added_no_pictures">Pictures upload failed, you can add some later using \"account options\" from main menu</string>
 </resources>

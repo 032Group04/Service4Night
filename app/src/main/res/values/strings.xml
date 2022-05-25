@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name">Service4Night</string>
-    <string name="title_activity_maps">MapsActivity</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_maps" translatable="false">MapsActivity</string>
+    <string name="title_activity_main" translatable="false">MainActivity</string>
 
     <!-- Strings used for fragments for navigation -->
-    <string name="Menu_fragment_label">Service4Night</string>
+    <string name="Menu_fragment_label" translatable="false">Service4Night</string>
     <string name="AddLocation_fragment_label">Add a Location</string>
-    <string name="Menu_fragment">Menu fragment</string>
+    <string name="Menu_fragment" translatable="false">Main menu</string>
     <!--  Strings for labels (buttons, checkboxes, etc...)   -->
     <string name="add_location">Add a Location from map</string>
     <string name="validate">Validate</string>
@@ -30,7 +30,7 @@
     <string name="description_hint">Describe the Location here.</string>
 
     <!-- Strings used for descriptions -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
     <string name="map_button_description">map button</string>
     <string name="image_add_button_description">button to add pictures</string>
     <string name="price_label">Price</string>
@@ -38,32 +38,27 @@
     <string name="private_network_label">Private network</string>
     <string name="account_settings_title">Account settings</string>
     <string name="application_settings_title">Application Settings</string>
-    <string name="theme_settings_title">Theme</string>
-    <string name="language_settings_title">Language</string>
+    <string name="theme_settings_title" translatable="false">Theme</string>
+    <string name="language_settings_title" translatable="false">Language</string>
 
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="language_english">English</string>
-    <string name="language_french">French</string>
+
     <string name="log_in_menu_item">Log in</string>
 
     <string-array name="themeList">
         <item>@string/theme_light</item>
         <item>@string/theme_dark</item>
     </string-array>
-    <string-array name="languageList">
-        <item>@string/theme_light</item>
-        <item>@string/theme_dark</item>
-    </string-array>
+
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
-    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in">Sign-in or Log-in</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="welcome">"Welcome!"</string>
     <string name="invalid_username">Not a valid username</string>
-    <string name="invalid_password">Password must be >5 characters</string>
-    <string name="login_failed">"Login failed"</string>
+    <string name="invalid_password">Password must be at least 5 characters</string>
     <string name="public_wifi_label">public Wifi</string>
     <string name="sign_in_menu_item">Sign in</string>
     <string name="log_out_menu_item">Log out</string>
@@ -74,6 +69,8 @@
     <string name="password_requirements">Password must be 8–25 symbols, digits, lower and upper case characters.</string>
     <string name="progressBar_text_format">Uploading picture %d of %d…</string>
     <string name="progressBar_picture_failed">Picture %d upload failed.</string>
+    <string name="deleteBar_text_format">Deleting picture %d of %d…</string>
+    <string name="deleteBar_picture_failed">Picture %d delete failed.</string>
     <string name="not_drinkable_label">Not drinkable</string>
     <string name="see_details_label">See details</string>
     <string name="free_service">Free Service</string>
@@ -82,15 +79,23 @@
     <string name="free_water">Free water</string>
     <string name="google_maps_itinerary_label">Google Maps Itinerary</string>
     <string name="search_in_google_label">Search in google</string>
-    <string name="title_activity_full_screen_picture_slide">FullScreenPictureSlideActivity</string>
+    <string name="title_activity_full_screen_picture_slide" translatable="false">FullScreenPictureSlideActivity</string>
 
     <string name="fullscreen_button_content_description">fullscreen button</string>
-    <string name="loading_pictures">loading pictures...</string>
+    <string name="loading_pictures">loading pictures…</string>
     <string name="delete_picture_title">Delete picture</string>
+    <string name="location_proximity_title">Location in proximity</string>
+    <string name="location_proximity_message">There is already a location registered nearby,\n are you sur this is not a duplicate ?</string>
+    <string name="location_proximity_option_continue">Yes, continue.</string>
+    <string name="location_proximity_option_cancel">No, cancel.</string>
     <string name="add_picture_title">Add a picture</string>
+    <string name="confirm_delete_location">Are you sure ? deleting locations can\'t be undone.</string>
     <string name="confirm_delete_picture">Are you sure ? deleting pictures can\'t be undone.</string>
     <string name="picture_select_type">How do you want to add picture</string>
     <string name="modify_my_locations">Modify my locations</string>
     <string name="take_a_picture">Take a picture</string>
     <string name="pick_a_picture">Pick in storage</string>
+    <string name="explore_map">Explore map</string>
+    <string name="delete_location">Delete location</string>
+
 </resources>

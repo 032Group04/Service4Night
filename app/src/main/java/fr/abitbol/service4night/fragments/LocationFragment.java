@@ -36,7 +36,7 @@ import java.util.Map;
 import fr.abitbol.service4night.FullScreenPictureSlideActivity;
 import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.MapsActivity;
+
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
 import fr.abitbol.service4night.utils.ExifUtil;
@@ -62,6 +62,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
     public static final String POINT_NAME = "point";
     public static final String PICTURE_PATH_NAME = "picturePath";
     public static final String PICTURE_URI_NAME = "userPictureUri";
+    private  static final String ILLUSTRATION_PICTURE_NAME = "no_picture";
     private FragmentLocationBinding binding;
 
     private MapLocation mapLocation;
@@ -130,7 +131,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
                 picturesPaths = savedInstanceState.getStringArrayList(EXTRA_PICTURES_PATHS);
                 if (picturesPaths == null|| picturesNames == null){
                     Log.i(TAG, "onCreateView: unparceled images datas is null");
-                    //TODO gérer problème images
+                    //TODO si temps : gérer problème images
                 }
                 else{
                     for (int i = 0; i < picturesPaths.size(); i++){
@@ -149,7 +150,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         else {
             if (getArguments() != null) {
                 try {
-                    mapLocation = ((MapLocation) getArguments().getParcelable(MapsActivity.MAPLOCATION_EXTRA_NAME));
+                    mapLocation = ((MapLocation) getArguments().getParcelable(MapsFragment.MAPLOCATION_EXTRA_NAME));
                     if (mapLocation != null) {
                         Log.i(TAG, "onCreateView: maplocation parcelable is not null");
                     }
@@ -187,6 +188,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 
             } else {
                 Log.i(TAG, "onViewCreated: action bar is null");
+
             }
 
             Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
@@ -196,7 +198,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 
 
         Log.i(TAG, "getInfoContents: mapLocation is not null");
-        binding.locationNameTextView.setText(mapLocation.getName());
+//        binding.locationNameTextView.setText(mapLocation.getName());
         binding.locationDescriptionEditText.setText(mapLocation.getDescription());
         Log.i(TAG, "getInfoContents: description is : " + mapLocation.getDescription());
         binding.locationCoordinatesTextView.setText(String.format(Locale.ENGLISH, "Lat : %f - Long : %f", mapLocation.getPoint().latitude, mapLocation.getPoint().longitude));
@@ -207,13 +209,15 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         else {
 
             if (mapLocation.getPictures() != null && !mapLocation.getPictures().isEmpty()) {
-                //TODO: transormer List<Uri> en Map et ajouter metadata nom picture
                 //getBitmapsFromURL();
                 downloadPictures();
             }
             else{
                 Log.i(TAG, "onCreateView: location without pictures");
-                //TODO : ajouter image d'illustration
+                binding.fullscreenButton.setVisibility(View.GONE);
+                images.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable.no_picture),ILLUSTRATION_PICTURE_NAME));
+                showPictures();
+
             }
         }
         showServices();
@@ -222,7 +226,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 
         return binding.getRoot();
     }
-    //TODO: bouton street view
+    //TODO si temps: bouton street view
 
     private void showServices() {
         Map<String, Service> services = mapLocation.getServices();
@@ -499,7 +503,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 //                    names[i] = images.get(i).getName();
 //                }
 
-                //TODO remplacer sauvegarde des photos par url en sauvegarde par noms et passer par DAO cloud storage pour récupérer photos+ metadata (pour ne pas recréer un nom)
+                //TODO si temps : remplacer sauvegarde des photos par url en sauvegarde par noms et passer par DAO cloud storage pour récupérer photos+ metadata (pour ne pas recréer un nom)
 
                 Log.i(TAG, "showPictures: putting serializable in bundle");
                 bundle.putStringArrayList(EXTRA_PICTURES_NAMES,picturesNames);
@@ -512,7 +516,6 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
                 startActivity(intent);
             });
 
-        //TODO : ajouter listener pour montrer images en grand écran
 
 
     }

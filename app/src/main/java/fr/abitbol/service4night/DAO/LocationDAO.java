@@ -1,6 +1,9 @@
 package fr.abitbol.service4night.DAO;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.List;
 
@@ -17,10 +20,15 @@ public interface LocationDAO {
     public static final String LOCATION_ID_KEY = "id";
     public static final String PICTURES_URI_KEY = "pictures";
 
-    public abstract List<MapLocation> selectAll();
-    public abstract MapLocation select(String id);
-    public abstract boolean remove(String id);
-    public abstract boolean update(String id,MapLocation obj);
-    public abstract boolean insert(MapLocation obj);
 
+    List<MapLocation> selectAll(OnCompleteListener<QuerySnapshot> listener);
+
+    MapLocation select(String id, OnCompleteListener<DocumentSnapshot> listener);
+
+    public boolean remove(String id, OnCompleteListener<Void> listener);
+
+    boolean update(String id, MapLocation obj, OnCompleteListener<Void> listener);
+
+
+    boolean insert(MapLocation obj, OnCompleteListener<Void> listener);
 }

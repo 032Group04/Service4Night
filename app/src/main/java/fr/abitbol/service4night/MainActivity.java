@@ -363,6 +363,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             prefChanged = false;
             recreate();
         }
+        invalidateOptionsMenu();
 
 
 
@@ -431,6 +432,9 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
 
 
+    }
+    public void setTitle(String title) throws NullPointerException{
+        binding.toolbar.setTitle(title);
     }
     public void setSettingsVisibility(boolean b){
         Log.i(TAG, "setSettingsVisibility called : "+b);

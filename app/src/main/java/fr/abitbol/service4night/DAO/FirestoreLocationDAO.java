@@ -22,43 +22,29 @@ public class FirestoreLocationDAO implements LocationDAO {
     private final String TAG = "FirestoreLocationDAO logging";
 
     private final FirebaseFirestore dataBase;
-    private final OnCompleteListener<?> onCompleteListener;
-    private enum Type { select, insert}
-    private Type type;
-    private boolean listened;
-    //TODO voir transformer en singleton
-    public FirestoreLocationDAO(OnCompleteListener<QuerySnapshot> context){
-        Log.i(TAG, "FirestoreLocationDAO: select constructor called");
-        type = Type.select;
-        onCompleteListener = context;
-        dataBase = FirebaseFirestore.getInstance();
-    }
-    //TODO supprimer listened et créer listeners locaux
-    public FirestoreLocationDAO(OnCompleteListener<Void> context,boolean _listened){
-        onCompleteListener = context;
-        listened = _listened;
-        type =Type.insert;
-        if ( onCompleteListener == null){
-            listened = false;
-        }
-        Log.i(TAG, "FirestoreLocationDAO: insert constructor called , listened is : "+listened);
-        dataBase = FirebaseFirestore.getInstance();
 
 
+    private FirestoreLocationDAO(){
+
+
+
+        dataBase = FirebaseFirestore.getInstance();
     }
+    public static FirestoreLocationDAO getInstance(){
+        return Holder.instance;
+    }
+
     @Override
-    public List<MapLocation> selectAll() {
+    public List<MapLocation> selectAll(OnCompleteListener<QuerySnapshot> listener) {
 
-
-        switch (type){
-            case select:{
+            if (listener != null){
 
                 dataBase.collection(collection)
                         .get()
-                        .addOnCompleteListener((OnCompleteListener<QuerySnapshot>) onCompleteListener);
+                        .addOnCompleteListener(listener);
 
-            }break;
-            case insert:{
+            }else{
+
                 List<MapLocation> visibleLocations = new ArrayList<>();
                 dataBase.collection(collection)
                         .get()
@@ -77,38 +63,53 @@ public class FirestoreLocationDAO implements LocationDAO {
                         });
                 return visibleLocations;
             }
-        }
+
         return null;
 
     }
 
-
     @Override
-    public MapLocation select(String id) {
-
-        AtomicReference<DocumentSnapshot> result = new AtomicReference<>();
-        dataBase.collection(collection).document(id).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()){
-                if(task.getResult() != null) {
-                    String description = (String) task.getResult().getData().get("description");
-                    Log.i(TAG, "getData: String description value :" + description);
-                    result.set(task.getResult());
+    public MapLocation select(String id, OnCompleteListener<DocumentSnapshot> listener) {
+        if (listener == null) {
+            AtomicReference<DocumentSnapshot> result = new AtomicReference<>();
+            dataBase.collection(collection).document(id).get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    if (task.getResult() != null) {
+                        String description = (String) task.getResult().getData().get("description");
+                        Log.i(TAG, "getData: String description value :" + description);
+                        result.set(task.getResult());
+                    }
                 }
-            }
-        });
+            });
 
-        return MapLocation.Builder.build(result.get().getData());
+            return MapLocation.Builder.build(result.get().getData());
+        }
+        else{
+            dataBase.collection(collection).document(id).get().addOnCompleteListener(listener);
+        }
+        return null;
     }
 
 
+
     @Override
-    public boolean remove(String id) {
+    public boolean remove(String id, OnCompleteListener<Void> listener) {
+        if (listener != null) {
+            Log.i(TAG, "remove: listener is valid");
+            dataBase.collection(collection).document(id).delete().addOnCompleteListener(listener);
+        }
+        else {
+            Log.i(TAG, "remove: no listener");
+            //TODO hors ligne
+        }
         return false;
     }
 
+
+
     @Override
-    public boolean update(String id, MapLocation obj) {
-        if (type == Type.insert && listened) {
+    public boolean update(String id, MapLocation obj, OnCompleteListener<Void> listener) {
+            if (listener != null){
 
             Map<String,Object> mappedLocation = new HashMap<>();
             mappedLocation.put(LocationDAO.LATITUDE_KEY, obj.getPoint().latitude);
@@ -120,7 +121,7 @@ public class FirestoreLocationDAO implements LocationDAO {
             mappedLocation.put(LocationDAO.LOCATION_NAME_KEY, obj.getName());
             if (obj.getPictures() != null) mappedLocation.put(LocationDAO.PICTURES_URI_KEY,obj.getPictures());
             mappedLocation.put(LocationDAO.CONFIRMED_KEY, obj.isConfirmed());
-            dataBase.collection(collection).document(id).update(mappedLocation).addOnCompleteListener((OnCompleteListener<Void>) onCompleteListener);
+            dataBase.collection(collection).document(id).update(mappedLocation).addOnCompleteListener(listener);
 
         } else {
             AtomicBoolean success = new AtomicBoolean(false);
@@ -149,13 +150,11 @@ public class FirestoreLocationDAO implements LocationDAO {
         }
         return false;
     }
-    public void update(String id, MapLocation obj, OnCompleteListener<Void> listener) {
 
 
-    }
 
     @Override
-    public boolean insert(MapLocation obj) {
+    public boolean insert(MapLocation obj, OnCompleteListener<Void> listener) {
         Map<String,Object> mappedLocation = new HashMap<>();
         mappedLocation.put(LocationDAO.LATITUDE_KEY, obj.getPoint().latitude);
         mappedLocation.put(LocationDAO.LONGITUDE_KEY, obj.getPoint().longitude);
@@ -166,13 +165,13 @@ public class FirestoreLocationDAO implements LocationDAO {
         mappedLocation.put(LocationDAO.LOCATION_NAME_KEY, obj.getName());
         if (obj.getPictures() != null) mappedLocation.put(LocationDAO.PICTURES_URI_KEY,obj.getPictures());
         mappedLocation.put(LocationDAO.CONFIRMED_KEY, obj.isConfirmed());
-        if (type == Type.insert && listened) {
+        if (listener != null) {
             Log.i(TAG, "insert: listened insert");
 
             // voir firestore storage pour les photos et checker quelles classes sont serialisables
             dataBase.collection("locations").document(obj.getId())
                     .set(mappedLocation)
-                    .addOnCompleteListener((OnCompleteListener<Void>) onCompleteListener);
+                    .addOnCompleteListener(listener);
         }
         else {
             Log.i(TAG, "insert: not listened insert");
@@ -194,6 +193,9 @@ public class FirestoreLocationDAO implements LocationDAO {
             return success.get();
         }
         return false;
+    }
+    private static class Holder{
+        private final static FirestoreLocationDAO instance = new FirestoreLocationDAO();
     }
 
 }

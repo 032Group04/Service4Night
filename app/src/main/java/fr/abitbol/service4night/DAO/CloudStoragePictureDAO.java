@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.auth.api.signin.internal.Storage;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -15,8 +16,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+
+import fr.abitbol.service4night.listeners.OnPictureDeleteListener;
 
 public class CloudStoragePictureDAO implements PicturesDAO {
     private final String TAG = "CloudStoragPictureDAO logging";
@@ -24,18 +25,23 @@ public class CloudStoragePictureDAO implements PicturesDAO {
     private FirebaseStorage storage;
     public static final String USER_ID_METADATA = "user_id";
     private OnCompleteListener<Uri> insertAndSelectListener;
+    private OnPictureDeleteListener deleteListener;
     public CloudStoragePictureDAO(){
+        deleteListener = null;
         storage = FirebaseStorage.getInstance();
         insertAndSelectListener = null;
     }
     public void registerInsertListener(OnCompleteListener<Uri> listener){
         insertAndSelectListener = listener;
     }
+    public void registerDeleteListener(OnPictureDeleteListener _listener){
+        deleteListener = _listener;
+    }
 
 
     @Override
     public void insert(String pictureName, String userId, String locationId, Bitmap picture) {
-        String refPath = PICTURES_ROOT_FOLDER +"/"+userId+"/"+ pictureName;
+        String refPath = PICTURES_ROOT_FOLDER +"/"+userId+"/"+locationId+"/"+ pictureName;
         Log.i(TAG, "insert: path : "+refPath);
         StorageReference storageReference = storage.getReference(refPath);
 
@@ -94,15 +100,46 @@ public class CloudStoragePictureDAO implements PicturesDAO {
 
 
     }
+    public void deleteFolder(String userId, String locationId){
+
+        String refPath = PICTURES_ROOT_FOLDER +"/"+userId+"/"+locationId+"/";
+        StorageReference storageReference = storage.getReference(refPath);
+
+            storageReference.delete().addOnCompleteListener(task -> {
+                if (task.isSuccessful()){
+                    Log.i(TAG, "deleteFolder: pictures folder succesfully deleted");
+
+                }
+                else{
+                    if (task.getException() != null) {
+                        Log.i(TAG, "delete folder task :" + task.getException().getMessage());
+                    } else {
+                        Log.i(TAG, "then: delete folder task failed");
+                    }
+
+                }
+                if (deleteListener != null) {
+                    deleteListener.onPictureDelete(task.isSuccessful());
+                }
+            });    
+
+
+        
+    }
 
     @Override
-    public boolean delete(String url) {
-        AtomicBoolean success = new AtomicBoolean(false);
+    public Boolean delete(String url) {
+        Boolean[] success = {false};
         Log.i(TAG, "delete: path : "+url);
         StorageReference storageReference = storage.getReferenceFromUrl(url);
         storageReference.delete().addOnCompleteListener(task -> {
            if (task.isSuccessful()){
-               success.set(true);
+               Log.i(TAG, "delete: success");
+               if (deleteListener == null) {
+                   success[0] = true;
+               } else {
+                   deleteListener.onPictureDelete(true);
+               }
            }
            else{
                if (task.getException() != null) {
@@ -111,14 +148,17 @@ public class CloudStoragePictureDAO implements PicturesDAO {
                else{
                    Log.i(TAG, "then: delete picture task failed");
                }
+               if (deleteListener != null){
+                   deleteListener.onPictureDelete(false);
+               }
            }
         });
-        return success.get();
+        return success[0];
     }
 
     @Override
-    public String select(String pictureName, String userId) {
-        String refPath = PICTURES_ROOT_FOLDER +"/"+userId+"/"+ pictureName;
+    public String select(String pictureName, String userId, String locationId) {
+        String refPath = PICTURES_ROOT_FOLDER +"/"+userId+"/"+locationId+"/"+ pictureName;
         Log.i(TAG, "select: path : "+refPath);
         StorageReference storageReference = storage.getReference(refPath);
         Task<Uri> selectTask = storageReference.getDownloadUrl();

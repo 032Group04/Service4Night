@@ -8,13 +8,7 @@
             android:defaultValue="@string/theme_light"
             android:key="theme"
             android:summary="%s"/>
-        <ListPreference
-            android:title="Language"
-            android:entries="@array/languageList"
-            android:entryValues="@array/languageList"
-            android:defaultValue="@string/language_english"
-            android:key="language"
-            android:summary="%s"/>
+
 
     </PreferenceCategory>
 
