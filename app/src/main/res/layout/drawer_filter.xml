@@ -23,10 +23,10 @@
             android:layout_width="wrap_content"
 
             android:layout_height="wrap_content"
-            android:background="@mipmap/ic_filter"
+            android:background="@mipmap/ic_filter_alt"
             android:contentDescription="@string/filter_label"
-            android:drawableTop="@mipmap/ic_filter"
-            android:foreground="@mipmap/ic_filter"
+            android:drawableTop="@mipmap/ic_filter_alt"
+            android:foreground="@mipmap/ic_filter_alt"
             android:foregroundGravity="fill_horizontal|fill_vertical"
             android:gravity="top"
 

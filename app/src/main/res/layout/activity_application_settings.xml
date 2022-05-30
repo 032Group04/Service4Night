@@ -5,7 +5,7 @@
     android:id="@+id/settingsContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="fr.abitbol.service4night.ApplicationSettingsActivity">
+    tools:context="fr.abitbol.service4night.settings.ApplicationSettingsActivity">
 
 
 

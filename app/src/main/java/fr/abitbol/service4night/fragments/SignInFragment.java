@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : SignInFragment
+ *
+ * Description   : fragment d'inscription.
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.fragments;
 
 import android.os.Bundle;
@@ -49,6 +62,7 @@ public class SignInFragment extends Fragment implements OnCompleteListener<AuthR
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        //affiche les prérequis du mot de passe
         binding.signInPassword.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
@@ -90,9 +104,9 @@ public class SignInFragment extends Fragment implements OnCompleteListener<AuthR
         return false;
     }
     public boolean checkPassword(){
-        if (binding.signInPassword.getText().equals(binding.signInPasswordConfirm.getText())){
+        if (binding.signInPassword.getText().toString().equals(binding.signInPasswordConfirm.getText().toString())){
             Log.i(TAG, "checkPassword: confirm ok");
-            if (binding.signInPassword.getText().toString().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#/$.%&])(?=.{8,25})")){
+            if (binding.signInPassword.getText().toString().matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,25}$")){
                 Log.i(TAG, "checkPassword: regex passed");
                 return true;
             }

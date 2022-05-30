@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : InfoWindow
+ *
+ * Description   : vue de prévisualisation d'un lieu (clic sur un Marker google maps)
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night;
 
 import android.util.Log;
@@ -29,29 +42,16 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
     private WindowInfoBinding binding;
     private AtomicReference<ArrayList<MapLocation>> locationsRef;
     private MapLocation mapLocation;
-    private MapsFragment mapsActivity;
-    //private View mContent;
+    private MapsFragment mapsFragment;
 
     public InfoWindow(MapsFragment context){
         Log.i(TAG, "InfoWindow: constructor called");
-        //LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        //mContent = inflater.inflate(R.layout.window_info,null);
-
-        mapsActivity =  context;
-        binding = WindowInfoBinding.inflate(mapsActivity.getLayoutInflater());
-
-        //mContent = mapsActivity.getLayoutInflater().inflate(R.layout.window_info,null);
-    }
-
-    private void init(){
-        Log.i(TAG, "init() called");
-
-//        binding.getRoot().setOnClickListener(view -> {
-//            Log.i(TAG, "init: infoWindow clicked");
-//        });
-
+        mapsFragment =  context;
+        binding = WindowInfoBinding.inflate(mapsFragment.getLayoutInflater());
 
     }
+
+    // renvoie la checkbox correspondant à l'indice passé en paramètre
     public CheckBox getCheckbox(int count){
         Log.i(TAG, "getCheckbox: getting box number "+count);
         switch (count){
@@ -74,6 +74,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
         }
         return null;
     }
+    // remet les checkbox dans leur état initial vide
     public void resetCheckBoxes(){
         for (int i = 1;i< 7;i++){
             getCheckbox(i).setVisibility(View.INVISIBLE);
@@ -93,14 +94,18 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
     @Override
     public View getInfoContents(@NonNull Marker marker) {
         Log.i(TAG, "getInfoContents called");
+        // enregistre le point comme le dernier selectionné
+        mapsFragment.setLastInfoWindowMarker(marker);
         resetCheckBoxes();
         for (int i = 0; i<= 6 ; i++){
             if (getCheckbox(i) != null){
                 getCheckbox(i).setVisibility(View.INVISIBLE);
             }
         }
-        locationsRef = new AtomicReference<>(mapsActivity.getVisibleLocations());
+        // référence sur les lieux trouvés via la carte
+        locationsRef = new AtomicReference<>(mapsFragment.getLocations());
 
+        // récupération du lieu correspondant au point choisi
         if (locationsRef.get() != null) {
             for (MapLocation l : locationsRef.get()){
                 if (l.getId().equals(marker.getTitle()) ){
@@ -112,7 +117,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
         else{
             Log.i(TAG, "getInfoContents: locationRef is null");
         }
-
+        // remplissage de l'infoWindow
         if (mapLocation != null){
 
             Log.i(TAG, "getInfoContents: mapLocation is not null");
@@ -158,11 +163,7 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
                     box2.setVisibility(View.VISIBLE);
 
                 }
-//                else {
-//                    box2.setButtonDrawable(R.drawable.ic_service_not_drinkable_water);
-//                    box2.setText(R.string.not_drinkable_label);
-//                    box2.setVisibility(View.VISIBLE);
-//                }
+
             }
 
 
@@ -207,11 +208,11 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
         Log.i(TAG, "finalize called");
 
     }
-
+    // callback enregistré sur la map pour le clic sur une infoWindow ouverte
     @Override
     public void onInfoWindowClick(@NonNull Marker marker) {
-        if (mapsActivity!= null && mapLocation != null){
-            mapsActivity.infoWindowClicked(mapLocation);
+        if (mapsFragment != null && mapLocation != null){
+            mapsFragment.infoWindowClicked(mapLocation);
             Log.i(TAG, "getInfoContents: listener on infowindow clicked");
         }
         else{

@@ -1,17 +1,21 @@
+/*
+ * Nom d'interface' : OnPictureDownloadListener
+ *
+ * Description   : interface fonctionelle sur le téléchargement d'une photo
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.listeners;
 
-import android.graphics.Bitmap;
-
-import androidx.annotation.NonNull;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.storage.FileDownloadTask;
-
-import java.io.File;
 import java.util.ArrayList;
 
-import fr.abitbol.service4night.utils.SliderItem;
+import fr.abitbol.service4night.pictures.SliderItem;
 
 public interface OnPictureDownloadListener {
 

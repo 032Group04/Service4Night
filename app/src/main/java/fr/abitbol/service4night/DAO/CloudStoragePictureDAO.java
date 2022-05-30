@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : CloudStoragePictureDAO
+ *
+ * Description   : implémentation cloud storage de picturesDAO
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.DAO;
 
 import android.graphics.Bitmap;
@@ -100,32 +113,7 @@ public class CloudStoragePictureDAO implements PicturesDAO {
 
 
     }
-    public void deleteFolder(String userId, String locationId){
 
-        String refPath = PICTURES_ROOT_FOLDER +"/"+userId+"/"+locationId+"/";
-        StorageReference storageReference = storage.getReference(refPath);
-
-            storageReference.delete().addOnCompleteListener(task -> {
-                if (task.isSuccessful()){
-                    Log.i(TAG, "deleteFolder: pictures folder succesfully deleted");
-
-                }
-                else{
-                    if (task.getException() != null) {
-                        Log.i(TAG, "delete folder task :" + task.getException().getMessage());
-                    } else {
-                        Log.i(TAG, "then: delete folder task failed");
-                    }
-
-                }
-                if (deleteListener != null) {
-                    deleteListener.onPictureDelete(task.isSuccessful());
-                }
-            });    
-
-
-        
-    }
 
     @Override
     public Boolean delete(String url) {
@@ -185,13 +173,7 @@ public class CloudStoragePictureDAO implements PicturesDAO {
         return null;
     }
 
-    @Override
-    public String update(String url, String pictureName, String userId, String locationId, Bitmap picture) {
-        Log.i(TAG, "delete: path : "+url);
-        StorageReference storageReference = storage.getReferenceFromUrl(url);
 
-        return null;
-    }
 
 
 }

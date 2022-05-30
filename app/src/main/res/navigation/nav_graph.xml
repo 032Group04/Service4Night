@@ -38,10 +38,10 @@
         <action
             android:id="@+id/action_MenuFragment_to_mapsFragment"
             app:destination="@id/mapsFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/AddLocationFragment"
@@ -51,7 +51,9 @@
 
         <action
             android:id="@+id/action_AddLocationFragment_to_MenuFragment"
-            app:destination="@id/MenuFragment" />
+            app:destination="@id/MenuFragment"
+            app:popUpTo="@id/MenuFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/LocationFragment"
@@ -60,7 +62,9 @@
         tools:layout="@layout/fragment_location">
         <action
             android:id="@+id/action_LocationFragment_to_MenuFragment"
-            app:destination="@id/MenuFragment"/>
+            app:destination="@id/MenuFragment"
+            app:popUpTo="@id/MenuFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/signInFragment"
@@ -74,7 +78,7 @@
     </fragment>
     <activity
         android:id="@+id/settingsActivity"
-        android:name="fr.abitbol.service4night.ApplicationSettingsActivity"
+        android:name="fr.abitbol.service4night.settings.ApplicationSettingsActivity"
         android:label="activity_settings"
         tools:layout="@layout/activity_application_settings" />
     <include app:graph="@navigation/account_settings_nav_graph" />
@@ -94,9 +98,9 @@
         <action
             android:id="@+id/action_mapsFragment_to_AddLocationFragment"
             app:destination="@id/AddLocationFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@animator/nav_default_pop_exit_anim" />
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
 </navigation>

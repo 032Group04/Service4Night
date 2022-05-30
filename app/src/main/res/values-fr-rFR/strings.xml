@@ -38,8 +38,14 @@
     <string name="location_retrieve_error">Erreur lors de la récupération des données du lieu</string>
     <string name="upload_picture_success">Photo sauvegardée</string>
     <string name="upload_picture_fail">Echec de la sauvegarde de la photo</string>
-    <string name="coarse_localisation_limit">Localisation précise non autorisée, la localisation sera imprécise</string>
-    <string name="no_localisation_permissions">Accès à la localisation refusé, l\'application sera limitée</string>
+    <string name="coarse_localisation_limit">Localisation précise non autorisée, l\'application sera limitée</string>
+    <string name="no_localisation_permissions">Accès à la localisation refusé, fermeture de l\'application.</string>
+    <string name="no_localisation_and_network_permissions">Permissions localisation et état du réseau refusées,\nfermeture de l\'application</string>
+    <string name="no_network_permission">Accès à l\'état du réseau refusé, fermeture de l\'application</string>
+    <string name="network_error_message">Accès internet indisponible, en attente de reconnexion…</string>
+    <string name="network_error_title">Erreur réseau</string>
+    <string name="network_error_quit_option">Quitter l\'application</string>
+    <string name="network_error_wait_option">Attendre</string>
     <string name="need_location_permissions">Cette fonctionnalité nécessite l\'accès à la localisation</string>
     <string name="add_location">Ajouter depuis la carte</string>
     <string name="validate">Valider</string>
@@ -104,6 +110,8 @@
     <string name="add_picture_title">Ajouter une photo</string>
     <string name="confirm_delete_location">Êtes vous sûr(e) ? la suppression du lieu est définitive.</string>
     <string name="location_added_no_pictures">Echec de l\'upload des photos, vous pouvez en ajouter via \"options du compte\" depuis le menu principal</string>
+    <string name="loading_locations">Chargement des lieux…</string>
+    <string name="progressBar_coordinates_checking">Vérification des coordonnées…</string>
 
     <string name="confirm_delete_picture">Êtes vous sûr(e) ? la suppression est définitive.</string>
     <string name="picture_select_type">Méthode d\'ajout de la photo</string>

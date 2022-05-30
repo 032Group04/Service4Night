@@ -1,21 +1,28 @@
+/*
+ * Nom de classe : MenuFragment
+ *
+ * Description   : fragment affichant le menu principal.
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
+
 package fr.abitbol.service4night.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
-
 import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentMenuBinding;
@@ -42,7 +49,7 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //TODO : ajouter un message sur les modes de connexion
+        // ajouter un lieu depuis la carte
         binding.addLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,10 +65,11 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
 
             }
         });
-        binding.directAddButton.setOnClickListener(button ->{
-            //TODO vérifier si la location n'existe pas déja
 
-            if (MainActivity.fineLocation || MainActivity.coarseLocation){
+        // ajout de la position de l'utilisateur
+        binding.directAddButton.setOnClickListener(button ->{
+
+            if (MainActivity.fineLocation ){
 
                 NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_AddLocationFragment);
             }
@@ -71,6 +79,8 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
                 getActivity().recreate();
             }
         });
+
+        // explorer la carte
         binding.exploreButton.setOnClickListener(button -> {
             Bundle arg = new Bundle();
             arg.putInt(MapsFragment.MAP_MODE_BUNDLE_NAME,MapsFragment.MAP_TYPE_EXPLORE);
@@ -79,14 +89,7 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
         });
     }
 
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (resultCode == 42){
-//            Log.i(TAG, "onActivityResult: "+ data.getExtras().getParcelable("point").toString());
-//            NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_AddLocationFragment,data.getExtras());
-//        }
-//    }
+    // ouverture du menu connexion
     public void navigateToSignIn(){
         NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_signInFragment);
     }
@@ -96,7 +99,7 @@ public class MenuFragment extends Fragment implements OnSettingsNavigation {
         binding = null;
     }
 
-
+    // ouverture du menu options de l'application
     @Override
     public void navigateToSettingsActivity() {
         NavHostFragment.findNavController(MenuFragment.this).navigate(R.id.action_MenuFragment_to_settingsActivity);

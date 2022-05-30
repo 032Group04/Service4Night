@@ -1,12 +1,23 @@
-package fr.abitbol.service4night.utils;
+/*
+ * Nom de classe : SliderAdapter
+ *
+ * Description   : items pour le viewPager
+ *
+ * Auteur        : Olivier Baylac, modification du code de Golap Gunjan Barman (https://medium.com/swlh/android-infinite-auto-image-slider-using-view-pager-2-android-studio-java-a0e450dec071)
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
+package fr.abitbol.service4night.pictures;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
-
-import fr.abitbol.service4night.MapLocation;
 
 public class SliderItem implements Parcelable {
     private static final String TAG = "SliderItem logging";

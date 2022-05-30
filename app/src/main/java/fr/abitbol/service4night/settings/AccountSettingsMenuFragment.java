@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : AccountsettingsMenuFragment
+ *
+ * Description   : fragment des options du compte
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.settings;
 
 import android.os.Bundle;
@@ -18,16 +31,11 @@ import fr.abitbol.service4night.databinding.FragmentAccountSettingsMenuBinding;
 
 public class AccountSettingsMenuFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+
     private static final String TAG = "AccountSettingsMenuFragment logging";
     private FragmentAccountSettingsMenuBinding binding;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+
 
     public AccountSettingsMenuFragment() {
 

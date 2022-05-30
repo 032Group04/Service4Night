@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : LocationAddFragment
+ *
+ * Description   : fragment servant à ajouter un lieu, soit directement, soit depuis la carte.
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.fragments;
 
 import android.app.AlertDialog;
@@ -29,29 +42,35 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import fr.abitbol.service4night.DAO.DAOFactory;
 import fr.abitbol.service4night.DAO.LocationDAO;
-import fr.abitbol.service4night.utils.ExifUtil;
+import fr.abitbol.service4night.utils.DatabaseService;
+import fr.abitbol.service4night.pictures.ExifUtil;
 import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.utils.PictureDownloader;
-import fr.abitbol.service4night.utils.PicturesUploadAdapter;
-import fr.abitbol.service4night.utils.PicturesUploadTask;
+import fr.abitbol.service4night.pictures.PictureDownloader;
+import fr.abitbol.service4night.pictures.PicturesUploader;
+import fr.abitbol.service4night.pictures.PicturesUploadTask;
 import fr.abitbol.service4night.R;
-import fr.abitbol.service4night.utils.SliderAdapter;
-import fr.abitbol.service4night.utils.SliderItem;
+import fr.abitbol.service4night.pictures.SliderAdapter;
+import fr.abitbol.service4night.pictures.SliderItem;
 import fr.abitbol.service4night.utils.UserLocalisation;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
 import fr.abitbol.service4night.services.DrainService;
@@ -62,16 +81,18 @@ import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
 
 
-public class LocationAddFragment extends Fragment implements OnCompleteListener<Void>, PicturesUploadAdapter {
+public class LocationAddFragment extends Fragment implements OnCompleteListener<Void>, PicturesUploader {
 
     private FragmentAddLocationBinding binding;
     //TODO si temps créer interface contenant méthodes et constantes communes LocationAdd et LocationUpdate
+    //TODO : si temps remplacer numérotation des photos par date/heure
     private final String TAG = "LocationAddFragment logging";
     private static final String PICTURE_TAKEN_NAME = "pictureTaken";
     private static final String PICTURES_PATHS_LIST_NAME = "picturesPaths";
+    private static final String PICTURES_NAMES_LIST_NAME = "picturesNames";
     private static final String MAPLOCATION_NAME = "mapLocation";
     private static final String POINT_NAME = "point";
-    private static final String PICTURES_NAMES_LIST_NAME = "picturesNames";
+
     private static final String EMPTY_VIEWPAGER_PICTURE_NAME = "add_picture.png";
     private static final String CURRENT_PICTURE_NAME = "currentPictureName";
     private static final String CURRENT_PICTURE_PATH = "currentPicturePath";
@@ -108,7 +129,11 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             Log.i(TAG, "onPageScrollStateChanged: state = "+ (((state ==ViewPager2.SCROLL_STATE_SETTLING)? "settling":"dragging : " + state)));
         }
     };
-    private ActivityResultLauncher<Uri> mGetcontent = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
+
+    /*
+     * Activity contract de prise de photo
+     */
+    private ActivityResultLauncher<Uri> takePictureContract = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
 
 
 
@@ -116,23 +141,24 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         public void onActivityResult(Boolean result) {
             Log.i(TAG, "onActivityResult: picture result : "+result);
             if (result){
-                //binding.pictureAddLayout.setBackground(null);
-                //binding.imageView.setImageURI(uri);
+
                 if(!pictureTaken){
                     pictureTaken = true;
 
-                    if (images.get(0).getName().equals(EMPTY_VIEWPAGER_PICTURE_NAME)) {
-                        images.remove(0);
-                    }
+//                    if (images.get(0).getName().equals(EMPTY_VIEWPAGER_PICTURE_NAME)) {
+//                        images.remove(0);
+//                    }
 
                     viewPager.registerOnPageChangeCallback(onPageChangeCallback);
                 }
 
                 try {
                     Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), currentPictureUri);
-
+                    int pictureNum = getPictureNumber();
                     File file = new File(currentPicTurePath);
                     Log.i(TAG, "onActivityResult: file exists :" + file.exists());
+
+                    // correction de l'orientation et de la taille de la photo
                     picture = ExifUtil.rotateBitmap(currentPicTurePath,picture);
                     picture = ExifUtil.resizeBitmap(picture);
                     int orientation = ExifUtil.getExifOrientation(currentPicTurePath);
@@ -142,7 +168,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
 
                     showPictures();
-                    freePictureSpace[(getPicturesCount()-1)] = false;
+                    //reservation du numéro de la photo
+                    freePictureSpace[(pictureNum-1)] = false;
                     currentPicTurePath = null;
                     currentPictureName = null;
                     currentPictureUri = null;
@@ -160,6 +187,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
         }
     });
+    /*
+     * activity contract de choix de photo sur le téléphone
+     */
     private ActivityResultLauncher<String> pickPictureContract = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
         @Override
         public void onActivityResult(Uri result) {
@@ -169,9 +199,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     if(!pictureTaken){
                         pictureTaken = true;
     
-                        if (images.get(0).getName().equals(EMPTY_VIEWPAGER_PICTURE_NAME)) {
-                            images.remove(0);
-                        }
+//                        if (images.get(0).getName().equals(EMPTY_VIEWPAGER_PICTURE_NAME)) {
+//                            images.remove(0);
+//                        }
     
                         viewPager.registerOnPageChangeCallback(onPageChangeCallback);
                     }
@@ -192,8 +222,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     
                     picture = ExifUtil.resizeBitmap(picture);
                     //TODO:si temps  accepter uniquement formaat paysage
-                    int pictureNum = getPicturesCount();
-                    currentPictureName = MapLocation.generatePictureName(mapLocation.getId(), pictureNum);
+                    //TODO: créer méthode générant numéro puis enrgistre image puis marque le numéro comme étant réservé
+                    int pictureNum = getPictureNumber();
+                    currentPictureName = MapLocation.generatePictureName(locationId, pictureNum);
                     images.add(new SliderItem(picture,currentPictureName, currentPicTurePath));
                     showPictures();
                     freePictureSpace[(pictureNum-1)] = false;
@@ -216,12 +247,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
 
 
-    @Override
-    public void onResume() {
-        Log.i(TAG, "onResume called ");
-        super.onResume();
 
-    }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -259,11 +285,6 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-
-    }
 
     @Override
     public View onCreateView(
@@ -271,6 +292,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             Bundle savedInstanceState
     ) {
         Log.i(TAG, "onCreateView: called");
+
+        // vérifier que l'utilisateur est connecté
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null){
             if (!(NavHostFragment.findNavController(LocationAddFragment.this).popBackStack())){
@@ -291,9 +314,11 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         picturesNames = new ArrayList<>();
         picturesCloudUris = new ArrayList<>();
         pictureTaken = false;
+        freePictureSpace = new boolean[3];
+        Arrays.fill(freePictureSpace,true);
         viewPager = binding.locationAddViewPager;
 
-
+        // reconstruction du layout et des attributs sauvegardés
         if (savedInstanceState != null) {
 
                 Log.i(TAG, "onCreateView: savedinstancestate is not null");
@@ -319,7 +344,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     }
                     else{
                         for (int i = 0; i < picturesPaths.size(); i++){
-
+                            freePictureSpace[i] = false;
                             images.add(new SliderItem(BitmapFactory.decodeFile(picturesPaths.get(i)),picturesNames.get(i),picturesPaths.get(i)));
                         }
                         showPictures();
@@ -333,7 +358,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
 
                 }
-                if (savedInstanceState.containsKey(POINT_NAME)){
+                else if (savedInstanceState.containsKey(POINT_NAME)){
                     Log.i(TAG, "onCreateView: rebuilding point");
                     point = (LatLng) savedInstanceState.getParcelable(POINT_NAME);
                     try {
@@ -342,13 +367,17 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                         e.printStackTrace();
                     }
                 }
+                else{
+                    Toast.makeText(getContext(), getString(R.string.location_retrieve_error), Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(LocationAddFragment.this).popBackStack();
+                }
 
 
         }
         else{
             Log.i(TAG, "onCreateView: savedinstancestate is null");
 
-
+            // premier appel de onCreateView
             if (getArguments() != null) {
 
 
@@ -363,7 +392,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     NavHostFragment.findNavController(LocationAddFragment.this).popBackStack();
                 }
 
-            } else {
+            } else { // ajout direct de la position de l'utilisateur
 
                 Log.i(TAG, "onCreateView: direct location add, locating user...");
                 point = new LatLng(0, 0);
@@ -371,12 +400,78 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     Log.i(TAG, "onCreateView: location task received ");
                     if (task.isSuccessful()) {
                         Log.i(TAG, "onCreateView: user localisation successful");
-                        point = new LatLng(task.getResult().getLatitude(), task.getResult().getLongitude());
-                        try {
-                            showLocationDatas();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+
+                        // formatage des coordonnées pour uniformiser les coordonnées sur le format des coordonnées les moins précises
+                        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+                        dfs.setDecimalSeparator('.');
+                        double trimmedLat = Double.parseDouble(new DecimalFormat("##.0000000",dfs).format(task.getResult().getLatitude()));
+                        double trimmedLng = Double.parseDouble(new DecimalFormat("##.0000000",dfs).format(task.getResult().getLongitude()));
+                        point = new LatLng(trimmedLat,trimmedLng );
+                        LatLngBounds bounds = new LatLngBounds(new LatLng(
+                                (point.latitude - 0.003),
+                                (point.longitude - 0.003)),
+                                new LatLng((point.latitude + 0.003),
+                                        (point.longitude + 0.003))
+                        );
+
+                        // appel à la base de donnée pour vérifier que le lieu ajouté n'est pas un doublon
+                        DatabaseService.startService(getContext(),locationTask -> {
+
+                            if (locationTask.isSuccessful()) {
+                                for (QueryDocumentSnapshot doc : locationTask.getResult()){
+
+                                    if (doc.contains(LocationDAO.LATITUDE_KEY) && doc.contains(LocationDAO.LONGITUDE_KEY)) {
+                                        Log.i(TAG, "id : "+doc.getId() + "\ndata : "+ doc.getData());
+                                        try {
+                                            LatLng point = new LatLng(doc.getDouble(LocationDAO.LATITUDE_KEY),doc.getDouble(LocationDAO.LONGITUDE_KEY));
+                                            if (bounds.contains(point)){
+
+                                                //boite de dialogue signalant un éventuel doublon
+                                                new AlertDialog.Builder(getContext())
+                                                        .setTitle(getString(R.string.location_proximity_title))
+                                                        .setMessage(getString(R.string.location_proximity_message))
+                                                        .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                                                            try {
+                                                                showLocationDatas();
+                                                            } catch (IOException e) {
+                                                                Log.e(TAG, "onCreateView: ", e);
+                                                            }
+
+                                                        })
+
+                                                        // A null listener allows the button to dismiss the dialog and take no further action.
+                                                        .setNegativeButton(android.R.string.no, (dialogInterface, i) -> NavHostFragment.findNavController(LocationAddFragment.this).popBackStack())
+                                                        .setIcon(android.R.drawable.ic_dialog_alert)
+                                                        .show();
+                                                hideLoadScreen();
+                                                break;
+
+                                            }
+
+                                        } catch (NullPointerException e) {
+                                            Log.e(TAG, "onCreateView: couldn't get coordinates for location duplicate check", e);
+
+                                        }
+
+                                    }
+                                    else Log.i(TAG, "onCreateView: couldn't get coordinates for locations :" + doc.getId());
+
+                                }
+                                hideLoadScreen();
+                            }
+                            else{
+                                Log.i(TAG, "onCreateView: task failed, couldn't check duplicate");
+                                try {
+                                    showLocationDatas();
+                                } catch (IOException e) {
+                                    Log.e(TAG, "onCreateView: ", e);
+                                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                        showLoadScreen();
+
+
                     } else {
                         Log.i(TAG, "onCreateView: failed to locate user");
                         Toast.makeText(getContext(), getString(R.string.no_localisation_permissions), Toast.LENGTH_SHORT).show();
@@ -406,13 +501,14 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
              * fin partie test
              */
         }
-
+        // active la suppression d'images si des photos sont affichées
         if (pictureTaken && !images.isEmpty()){
             enablePictureDelete(true);
         }
         else{
             showIllustrationPicture();
         }
+        // gestion des checkbox service
         if (binding.addWaterCheckBox.isChecked()) {
             binding.addDrinkableCheckBox.setEnabled(true);
         } else {
@@ -470,15 +566,94 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         return binding.getRoot();
 
     }
+
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        Log.i(TAG, "onViewCreated: called");
+        super.onViewCreated(view, savedInstanceState);
+
+
+        // bouton ajout de photo
+        binding.takePictureButton.setOnClickListener(button -> {
+            //File file = File.createTempFile(name,".jpg");
+//            mGetcontent.launch(location.getUri());
+
+
+            if (images.size() < 3) {
+                new AlertDialog.Builder(getContext())
+                        .setTitle(getString(R.string.add_picture_title))
+                        .setMessage(getString(R.string.picture_select_type))
+                        .setPositiveButton(R.string.take_a_picture, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                try {
+                                    takePicture();
+                                } catch (IOException e) {
+                                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG);
+                                }
+                            }
+                        })
+
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setNegativeButton(R.string.pick_a_picture, (dialogInterface, i) -> {
+                            pickPicture();
+                        })
+                        .setIcon(R.mipmap.ic_picture_add_mode)
+                        .show();
+            } else {
+                Toast.makeText(getContext(), getString(R.string.exceed_pictures_count), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        // bouton valider
+        binding.buttonValidate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+//                NavHostFragment.findNavController(LocationAddFragment.this)
+//                        .navigate(R.id.action_AddLocationFragment_to_MenuFragment);
+
+
+                mapLocation = processInputs();
+                if (mapLocation != null) {
+                    if (pictureTaken) {
+                        uploadPictures(mapLocation.getUser_id(), mapLocation.getId());
+                    } else {
+
+                        mapLocation.setPictures(null);
+                        dataBase.insert(mapLocation,LocationAddFragment.this);
+                    }
+                }
+
+            }
+        });
+    }
+    @Override
+    public void onResume() {
+        Log.i(TAG, "onResume called ");
+        super.onResume();
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+    }
+
+    /*
+     * affiche l'image d'illustration (si aucune photo n'a été ajoutée)
+     */
     private void showIllustrationPicture(){
         if (!pictureTaken && images.isEmpty()) {
             Log.i(TAG, "onCreateView: adding illustration picture");
-            images.add(new SliderItem(BitmapFactory.decodeResource(getResources(), R.drawable.add_picture), EMPTY_VIEWPAGER_PICTURE_NAME));
-
+            ArrayList<SliderItem> illustration = new ArrayList<>();
+            illustration.add(new SliderItem(BitmapFactory.decodeResource(getResources(), R.drawable.add_picture), EMPTY_VIEWPAGER_PICTURE_NAME));
+            viewPager.setAdapter(new SliderAdapter(illustration,viewPager));
         }
-        viewPager.setAdapter(new SliderAdapter(images,viewPager));
-    }
 
+    }
+    /*
+     * active la fonctionnalité suppression des images
+     */
     private void enablePictureDelete(boolean enabled){
         if (enabled){
             binding.pictureDeleteButton.setVisibility(View.VISIBLE);
@@ -506,7 +681,10 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             binding.pictureDeleteButton.setVisibility(View.GONE);
         }
     }
-    private void showLocationDatas() throws Exception{
+    /*
+     * met en place les éléments dynamiques du layout.
+     */
+    private void showLocationDatas() throws IOException {
         if (point != null) {
             locationId = MapLocation.Builder.generateId(point);
             Log.i(TAG, "onCreateView: intent extras: " + point.toString());
@@ -556,68 +734,12 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
     }
 
-    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        Log.i(TAG, "onViewCreated: called");
-        super.onViewCreated(view, savedInstanceState);
-
-//        getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-
-        binding.takePictureButton.setOnClickListener(button -> {
-            //File file = File.createTempFile(name,".jpg");
-//            mGetcontent.launch(location.getUri());
-
-
-            if (images.size() < 3) {
-                new AlertDialog.Builder(getContext())
-                        .setTitle(getString(R.string.add_picture_title))
-                        .setMessage(getString(R.string.picture_select_type))
-                        .setPositiveButton(R.string.take_a_picture, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    takePicture();
-                                } catch (IOException e) {
-                                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG);
-                                }
-                            }
-                        })
-
-                        // A null listener allows the button to dismiss the dialog and take no further action.
-                        .setNegativeButton(R.string.pick_a_picture, (dialogInterface, i) -> {
-                            pickPicture();
-                        })
-                        .setIcon(R.mipmap.ic_picture_add_mode)
-                        .show();
-            } else {
-                Toast.makeText(getContext(), getString(R.string.exceed_pictures_count), Toast.LENGTH_SHORT).show();
-
-            }
-        });
-
-
-        binding.buttonValidate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                NavHostFragment.findNavController(LocationAddFragment.this)
-//                        .navigate(R.id.action_AddLocationFragment_to_MenuFragment);
-
-
-                mapLocation = processInputs();
-                if (mapLocation != null) {
-                    if (pictureTaken) {
-                        uploadPictures(mapLocation.getUser_id(), mapLocation.getId());
-                    } else {
-
-                        mapLocation.setPictures(null);
-                        dataBase.insert(mapLocation,LocationAddFragment.this);
-                    }
-                }
-
-            }
-        });
-    }
-    private int getPicturesCount(){
+    /*
+     * renvoie un espace photo libre sur les 3 disponibles
+     */
+    private int getPictureNumber(){
         if (images != null){
+            
             if (images.isEmpty()){
                 return 1;
             }
@@ -628,8 +750,14 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             }
 
         }
+        else{
+            Log.i(TAG, "getPictureNumber: images is null");
+        }
         return -1;
     }
+    /*
+     * sauvegarde les photos
+     */
     private void uploadPictures(String userId,String locationId){
         Log.i(TAG, "uploadPictures called, "+images.size()+" pictures to upload");
         Log.i(TAG, "uploadPictures called thread = " + Thread.currentThread().toString());
@@ -638,6 +766,10 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         picturesUploadTask.execute(userId,locationId);
 
     }
+
+    /*
+     * récupère les services sélectionnés par les utilisateurs
+     */
     private MapLocation processInputs(){
         String description;
         Map<String, Service> services = new HashMap<>();
@@ -779,7 +911,10 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
 
     }
-    public List<Bitmap> getPictures(){
+    /*
+     * renvoie les photos sous forme de bitmaps
+     */
+    public List<Bitmap> getPicturesBitmaps(){
         final List<Bitmap> list = new ArrayList<>();
         if (pictureTaken){
 
@@ -790,6 +925,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
         return null;
     }
+    /*
+     * extrait un double des prix saisis
+     */
     private double parsePrice(EditText editText,String name) throws NumberFormatException{
         double price;
         try{
@@ -803,32 +941,36 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
         return price;
     }
+    /*
+     * lance la selection de photo dans le téléphone
+     */
     private void pickPicture(){
         pickPictureContract.launch("image/*");
     }
 
-
+    /*
+     * lance la prise de photo
+     */
     private void takePicture() throws IOException {
 //        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
 
         File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), PictureDownloader.PICTURES_LOCAL_FOLDER);
 
-        // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
             Log.d(TAG, "failed to create directory");
         }
         Log.i(TAG, "takePicture: file path is: "+ mediaStorageDir.getPath());
-        // Return the file target for the photo based on filename
         int pictureCount;
-        if ((pictureCount = getPicturesCount()) != -1){
+        if ((pictureCount = getPictureNumber()) != -1){
             currentPictureName = MapLocation.generatePictureName(locationId, pictureCount);
             currentPicTurePath = mediaStorageDir.getPath() + File.separator + currentPictureName;
             File file = new File(currentPicTurePath);
             currentPictureUri = FileProvider.getUriForFile(getContext(), "fr.abitbol.service4night.fileprovider", file);
 
-            mGetcontent.launch(currentPictureUri);
+            takePictureContract.launch(currentPictureUri);
         }
         else{
+            Log.i(TAG, "takePicture: maximum pictures count exceed");
             Toast.makeText(getContext(), getString(R.string.exceed_pictures_count), Toast.LENGTH_SHORT).show();
         }
     }
@@ -840,14 +982,31 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         Log.i(TAG, "onDestroyView called");
         binding = null;
     }
+
+    /*
+     * affiche/cache l'écran de chargement en cours'
+     */
+    private void showLoadScreen(){
+        binding.addProgressBarTextView.setText(R.string.progressBar_coordinates_checking);
+        binding.addFrameLayout.setEnabled(false);
+        binding.addProgressBarContainer.setVisibility(View.VISIBLE);
+
+    }
+    private void hideLoadScreen(){
+        binding.addFrameLayout.setEnabled(true);
+        binding.addProgressBarContainer.setVisibility(View.GONE);
+    }
+
+    /*
+     * affiche/cache/met a jour la barre d'upload des photos
+     */
     @Override
     public void startProgressBar(){
-
+        binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,images.size()));
         binding.addFrameLayout.setEnabled(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
         binding.addProgressBarContainer.setEnabled(true);
-        //binding.addProgressBar.animate();
-        binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,images.size()));
+
     }
     @Override
     public void stopProgressBar(){
@@ -867,6 +1026,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         }
     }
 
+    /*
+     * affiche les photos contenues dans l'ArrayList images
+     */
     private void showPictures(){
 
 
@@ -882,7 +1044,9 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         viewPager.invalidate();
 
     }
-
+    /*
+     * callback sur l'ajout a la base de données
+     */
     @Override
     public void onComplete(@NonNull Task task) {
         if (task.isSuccessful()){
@@ -895,9 +1059,12 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
             Log.i(TAG, "onComplete: task get Exception : "+ task.getException());
             Toast.makeText(getContext(), getString(R.string.location_add_fail), Toast.LENGTH_SHORT).show();
         }
+        // retour au menu principal
         NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
     }
-
+    /*
+     * callback sur l'upload des photos
+     */
     @Override
     public void onPicturesUploaded(List<String> uris) {
         if (uris != null && !uris.isEmpty()) {

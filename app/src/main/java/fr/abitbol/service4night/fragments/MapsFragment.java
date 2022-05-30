@@ -1,7 +1,21 @@
+/*
+ * Nom de classe : mapsFragment
+ *
+ * Description   : fragment affichant la carte Google maps.
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.fragments;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -28,6 +42,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -40,11 +55,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.abitbol.service4night.DatabaseService;
+import fr.abitbol.service4night.utils.DatabaseService;
 import fr.abitbol.service4night.InfoWindow;
 import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.MapLocationFilter;
+import fr.abitbol.service4night.utils.MapLocationFilter;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.DrawerFilterBinding;
 import fr.abitbol.service4night.databinding.FragmentMapsBinding;
@@ -63,7 +78,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
     private FragmentMapsBinding binding;
     private DrawerFilterBinding drawerBinding;
     private Location userLocation;
-    private ArrayList<MapLocation> visibleLocations;
+    private ArrayList<MapLocation> locations;
     private Map<String, Service> servicesFilters;
     private LatLng trimmedLatLng;
     private final String TAG = "mapsActivity logging";
@@ -72,19 +87,20 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
     private static final String ADDING_NAME = "adding";
     private static final String SERVICE_FILTERS_NAME = "serviceFilters";
     private static final String USER_LOCATION_NAME = "userLocation";
-    private static final String THEME_NAME = "theme";
-    private static final String SEARCH_STARTED = "searchStarted";
+    private static final String INITIAL_LOCATIONS_COUNT_NAME = "initialLocationsCount";
+    private Integer initialLocationsCount;
     public static final int MAP_TYPE_EXPLORE = 3737;
     public static final int MAP_TYPE_ADD = 7337;
     public static final String MAP_MODE_BUNDLE_NAME = "mapMode";
     public static final String MAP_POINT_EXTRA_NAME = "point";
     public static final String ACTION_GET_POINT_LATLNG = "point_data";
-    public static final int LOCATION_REQUEST_CODE = 8631584;
     public static final String MAPLOCATION_EXTRA_NAME = "mapLocation";
+    private Marker lastInfoWindowMarker;
     boolean adding;
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
+        //TODO gérer orientation après avoir choisi lieu a ajouter
         super.onSaveInstanceState(outState);
         outState.putBoolean(ADDING_NAME,adding);
         if (userLocation != null)
@@ -99,8 +115,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
                 ArrayList<Service> filtersList =  new ArrayList<>(servicesFilters.values());
                 outState.putParcelableArrayList(SERVICE_FILTERS_NAME,filtersList);
             }
-            if (visibleLocations != null)
-                outState.putParcelableArrayList(VISIBLE_LOCATIONS_NAME,visibleLocations);
+            if (initialLocationsCount != null){
+                outState.putInt(INITIAL_LOCATIONS_COUNT_NAME,initialLocationsCount);
+            }
+
+            if (locations != null)
+                outState.putParcelableArrayList(VISIBLE_LOCATIONS_NAME, locations);
         }
 
     }
@@ -112,27 +132,45 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         Log.i(TAG, "onCreate called");
-        //Navigation.findNavController(this,R.id.map).getGraph().
 
         binding = FragmentMapsBinding.inflate(inflater,container,false);
 
+        MainActivity mainActivity = (MainActivity) getActivity();
+        if (mainActivity != null){
+            Log.i(TAG, "onViewCreated: main activity not null");
+            ActionBar actionBar = mainActivity.getSupportActionBar();
+            if (actionBar != null){
+                Log.i(TAG, "onViewCreated: action bar not null");
+                actionBar.hide();
 
+            }
+            else{
+                Log.i(TAG, "onViewCreated: action bar is null");
+            }
 
+            Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
+            mainActivity.setSettingsVisibility(false);
+
+        }
+        else Log.i(TAG, "onViewCreated: mainActivity is null");
+        // applique le thème jour/nuit
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
         theme = preferences.getString(MainActivity.PREFERENCE_THEME_KEY,MainActivity.PREFERENCE_THEME_DEFAULT);
-        if(theme.equals(MainActivity.PREFERENCE_THEME_LIGHT)){
+        if(theme.equals(getString(R.string.theme_light))){
             Log.i(TAG,"theme preference is :" + theme);
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
-        else if (theme.equals(MainActivity.PREFERENCE_THEME_DARK)){
+        else if (theme.equals(getString(R.string.theme_dark))){
             Log.i(TAG,"theme preference is :" + theme);
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
         Log.i(TAG, "onCreate: starting localisation");
+        initialLocationsCount = null;
+        locations = null;
+        lastInfoWindowMarker = null;
 
-        visibleLocations = null;
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(ADDING_NAME)) {
                 adding = savedInstanceState.getBoolean(ADDING_NAME);
@@ -145,12 +183,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
                 userLocation = savedInstanceState.getParcelable(USER_LOCATION_NAME);
             }
             if (!adding) {
-//                servicesFilters = savedInstanceState.getParcelable(SERVICE_FILTERS_NAME);
                 if (savedInstanceState.containsKey(VISIBLE_LOCATIONS_NAME)) {
-                    visibleLocations = savedInstanceState.getParcelableArrayList(VISIBLE_LOCATIONS_NAME);
-                    Log.i(TAG, "onCreate: visible locations are in savedInstanceState : "+ visibleLocations.size() + " locations" );
+                    locations = savedInstanceState.getParcelableArrayList(VISIBLE_LOCATIONS_NAME);
+                    Log.i(TAG, "onCreate: visible locations are in savedInstanceState : "+ locations.size() + " locations" );
 
                 }
+                if (savedInstanceState.containsKey(INITIAL_LOCATIONS_COUNT_NAME)){
+                    initialLocationsCount = savedInstanceState.getInt(INITIAL_LOCATIONS_COUNT_NAME);
+                }
+
                 if (savedInstanceState.containsKey(SERVICE_FILTERS_NAME)){
                     ArrayList<Service> filtersList = savedInstanceState.getParcelableArrayList(SERVICE_FILTERS_NAME);
                     servicesFilters = new HashMap<>();
@@ -168,6 +209,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
 
                 Log.i(TAG, "onCreate: intent is valid and contains opening mode value");
+                // récupère le type de carte exploration/ajout de lieu
                 switch (getArguments().getInt(MAP_MODE_BUNDLE_NAME,-1)){
                     case MAP_TYPE_ADD:
                         adding = true;
@@ -197,13 +239,14 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // affichage du bouton flottant selon le mode d'ouverture
         if (adding){
             binding.mapActionButton.setImageResource(R.drawable.ic_done);
 
         }
-        else{
+        else {
 
-
+            // ajoute le Drawer de filtrage des lieux
             binding.mapActionButton.setImageResource(R.drawable.ic_search);
             drawerBinding = DrawerFilterBinding.inflate(getLayoutInflater());
             binding.getRoot().addView(drawerBinding.getRoot());
@@ -219,31 +262,20 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
             });
             drawerBinding.drawer.setOnDrawerCloseListener(() -> {
                 drawerBinding.getRoot().setClickable(false);
-                if (!servicesFilters.isEmpty()){
+                if (!servicesFilters.isEmpty()) {
                     Log.i(TAG, "onCreate: some filters are selected ");
 
-                }
-                else {
+                } else {
                     Log.i(TAG, "onCreate: serviceFilters is empty ");
                 }
-                if (visibleLocations != null) {
-                    showFilteredLocations(visibleLocations);
+                if (locations != null) {
+                    showFilteredLocations(locations);
                 }
 
             });
 
 
-            //                drawerBinding.getRoot().setOnTouchListener(new View.OnTouchListener() {
-            //                    @Override
-            //                    public boolean onTouch(View view, MotionEvent motionEvent) {
-            //                        return true;
-            //                    }
-            //                });
         }
-
-
-
-        //Log.i(TAG, "onCreate: extra "+ getIntent().getStringExtra(MAP_MODE_BUNDLE_NAME));
 
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -252,6 +284,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
+
+        // localisation de l'utilisateur
         if (userLocation == null){
             new UserLocalisation(getContext()).locateUser(this);
         }
@@ -281,6 +315,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
 
     }
+    // écoute la selection de filtres
     public void listenFilters(){
         servicesFilters = new HashMap();
         drawerBinding.drawerElectricityCheckBox.setOnClickListener(view -> {
@@ -344,10 +379,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
             }
         });
     }
-
+    // affiche les lieux passés en paramètre sur la carte
     public void showMarkers(MapLocation... mapLocations){
         Log.i(TAG, "showMarkers called : "+ mapLocations.length+" markers");
-        Log.i(TAG, "showMarkers: visible location has "+ visibleLocations.size()+ " locations");
+        Log.i(TAG, "showMarkers: visible location has "+ locations.size()+ " locations");
         if (mMap != null) {
             Log.i(TAG, "showMarkers: mMap != null");
             mMap.clear();
@@ -363,6 +398,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
     }
 
     //TODO si temps : prendre en compte booléen confirmed
+
+    // filtre et affiche les lieux
     public void showFilteredLocations(ArrayList<MapLocation> mapLocations){
         if (mMap != null) {
             LatLngBounds searchArea = mMap.getProjection().getVisibleRegion().latLngBounds;
@@ -402,15 +439,26 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
     public void onMapReady(GoogleMap googleMap) {
         Log.i(TAG, "onMapReady called");
         mMap = googleMap;
-        if (theme.equals("Dark")){
+
+        //selectionne le thème de la carte
+        if (theme.equals(getString(R.string.theme_dark))){
             Log.i(TAG,"theme preference is :" + theme);
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(getContext(),R.raw.eg_map_night));
         }
-        else if (theme.equals("Light")){
+        else if (theme.equals(getString(R.string.theme_light))){
             Log.i(TAG,"theme preference is :" + theme);
 
         }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
+
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(@NonNull LatLng latLng) {
+                Toast.makeText(getContext(),getString(R.string.map_button_toast),Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // déplace la caméra sur la position de l'utilisateur si il est localisé'
         if (userLocation != null){
             //TODO si temps changer niveau de zoom dans settings
             Log.i(TAG, "onMapReady: moving camera to user location");
@@ -418,7 +466,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
         }
         else{ Log.i(TAG, "onMapReady: user location is null"); }
 
+        // écoute des boutons en mode ajout de lieu
         if (adding){
+            // long clic : place un marqueur
             mMap.setOnMapLongClickListener(latLng -> {
                 Log.i(TAG, "lat : " + latLng.latitude + "\nlong : "+ latLng.longitude);
                 mMap.clear();
@@ -429,7 +479,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
                 );
 
 
-
+                // active la validation du lieu choisi
                 binding.mapActionButton.setOnClickListener(view -> {
                     Intent pointIntent = new Intent("point_data");
                     pointIntent.putExtra(MAP_POINT_EXTRA_NAME,latLng);
@@ -442,41 +492,52 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
                     trimmedLatLng = new LatLng(trimmedLat,trimmedLng);
                     Log.i(TAG, "onMapReady: trimmed latLng : "+trimmedLatLng.latitude+ " | "+trimmedLatLng.longitude);
                     DatabaseService.startService(getContext(),MapsFragment.this);
-
+                    showLoadScreen();
                 });
 
 
             });
         }
+        //écoute les boutons en mode exploration
         else {
-            if (visibleLocations != null && visibleLocations.size() > 0){
+            if (locations != null && locations.size() > 0){
                 Log.i(TAG, "onMapReady: visible Locations are available");
-                showFilteredLocations(visibleLocations);
+                showFilteredLocations(locations);
             }
 
-            //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 
-            //TODO : fermer infowindow si clic sur retour
+            // mise en place de la prévisualisation des lieux (InfoWindow)
             InfoWindow infoWindow = new InfoWindow(this);
+
             mMap.setInfoWindowAdapter(infoWindow);
+//            mMap.setOnInfoWindowCloseListener(marker -> {
+//            });
             mMap.setOnInfoWindowClickListener(infoWindow);
             mMap.setOnMapLongClickListener(latLng -> {
                 Log.i(TAG, "lat : " + latLng.latitude + "\nlong : "+ latLng.longitude);
 
             });
 
-//        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-//            @Override
-//            public void onMapClick(@NonNull LatLng latLng) {
-//                Toast.makeText(getApplicationContext(),"long click to select location",Toast.LENGTH_LONG).show();
-//            }
-//        });
 
+            // bouton recherche
             binding.mapActionButton.setOnClickListener(view -> {
                 Log.i(TAG, "onMapReady: map search button clicked");
-                DatabaseService.startService(getContext(),this);
+                
+                if (locations == null || locations.isEmpty()) {
+                    Log.i(TAG, "onMapReady: location list is empty or null ");
+                    DatabaseService.startService(getContext(), this);
+                    showLoadScreen();
+                }
+                else if (locations.size() < initialLocationsCount){
+                    Log.i(TAG, "onMapReady: locations list size was modified");
+                    DatabaseService.startService(getContext(), this);
+                    showLoadScreen();
+                }
+                else{
+                    Log.i(TAG, "onMapReady: location list is available");
+                    showFilteredLocations(locations);
+                }
 
-                //TODO : show dialog during locations fetch
             });
         }
 
@@ -485,18 +546,32 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
     }
 
+    private void showLoadScreen(){
+        binding.getRoot().setEnabled(false);
+        binding.mapProgressBarContainer.setVisibility(View.VISIBLE);
+    }
+    private void hideLoadScreen(){
+        binding.getRoot().setEnabled(true);
+        binding.mapProgressBarContainer.setVisibility(View.GONE);
+    }
 
+    // callback passé au service récupérant les lieux enregistrés
     @Override
     public void onComplete(@NonNull Task<QuerySnapshot> task) {
         Log.i(TAG, "onComplete: Maps activity callback received");
+        hideLoadScreen();
+
         if (task.isSuccessful()){
             Log.i(TAG, "onComplete: task successfull");
-            visibleLocations  = new ArrayList<>();
+            locations = new ArrayList<>();
             for (QueryDocumentSnapshot doc : task.getResult()){
 
                 Log.i(TAG, "id : "+doc.getId() + "\ndata : "+ doc.getData());
-                visibleLocations.add(MapLocation.Builder.build(doc.getData()));
+                locations.add(MapLocation.Builder.build(doc.getData()));
             }
+            initialLocationsCount = locations.size();
+
+            // mode ajout :  vérifie que le lieu n'est pas un doublon
             if (adding) {
                 LatLngBounds bounds = new LatLngBounds(new LatLng(
                         (trimmedLatLng.latitude - 0.003),
@@ -504,15 +579,16 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
                         new LatLng((trimmedLatLng.latitude + 0.003),
                                 (trimmedLatLng.longitude + 0.003))
                 );
-                ArrayList<MapLocation> closeLocations = MapLocationFilter.filterByMapBounds(bounds, visibleLocations);
-                if (closeLocations.isEmpty()) {
+                ArrayList<MapLocation> closeLocations = MapLocationFilter.filterByMapBounds(bounds, locations);
+
+                if (closeLocations.isEmpty()) { // pas de lieu a proximité
                     Log.i(TAG, "onComplete: no conflict for this location");
                     Bundle bundle = new Bundle();
                     bundle.putParcelable(MAP_POINT_EXTRA_NAME, trimmedLatLng);
                     NavHostFragment.findNavController(MapsFragment.this).navigate(R.id.action_mapsFragment_to_AddLocationFragment, bundle);
 
                 }
-                else{
+                else{ // lieu trouvé a proximité, possibilité de doublon
                     Log.i(TAG, "onComplete: location found in close proximity");
                     new AlertDialog.Builder(getContext())
                             .setTitle(getString(R.string.location_proximity_title))
@@ -538,22 +614,22 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
             }
             else {
-                showFilteredLocations(visibleLocations);
+                showFilteredLocations(locations);
             }
         }
         else{
             Log.i(TAG, "onComplete: error while getting document");
         }
     }
-
-    public ArrayList<MapLocation> getVisibleLocations() {
-        if (visibleLocations == null){
+    // getter pour l'arrayList contenant les lieux
+    public ArrayList<MapLocation> getLocations() {
+        if (locations == null){
             Log.i(TAG, "getVisibleLocations: array is null");
         }
         else{
             Log.i(TAG, "getVisibleLocations: array is not null");
         }
-        return visibleLocations;
+        return locations;
     }
 
 
@@ -563,7 +639,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
 
 
-
+    // callback sur le clic sur la prévisualisation d'un lieu : ouvre le LocationFragment
     @Override
     public void infoWindowClicked(MapLocation location) {
         Log.i(TAG, "infoWindowClicked called");
@@ -575,6 +651,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
     }
 
+    // callBack sur la localisation de l'utilisateur
     @Override
     public void onCompleteLocation(@NonNull Task<Location> task) {
         if (task.isSuccessful()){
@@ -602,10 +679,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
     }
 
 
+    // getter/setter sur le Marker le plus récent (utilisé par la classe InfoWindow)
+    public Marker getLastInfoWindowMarker() {
+        return lastInfoWindowMarker;
+    }
 
-
-
-    /* bound service response handler */
-
-
+    public void setLastInfoWindowMarker(Marker lastInfoWindowMarker) {
+        this.lastInfoWindowMarker = lastInfoWindowMarker;
+    }
 }

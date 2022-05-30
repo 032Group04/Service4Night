@@ -1,9 +1,19 @@
+/*
+ * Nom de classe : MapLocation
+ *
+ * Description   : représente les lieux
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night;
 
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -13,16 +23,11 @@ import androidx.annotation.Nullable;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.services.Service;
 
@@ -78,10 +83,10 @@ public class MapLocation implements Parcelable {
         confirmed = (boolean) bundle.getBoolean(LocationDAO.CONFIRMED_KEY);
     }
 
-
+    // génère un nom pour les photos
     public static String generatePictureName(String locationId, int picturesCount){
         return locationId+"_pic#"+picturesCount+".jpg "; }
-
+    // ajoute un Service
     public void addService(Service service){
         if (services.containsKey(service.getLabel())){
             services.replace(service.getLabel(),service);
@@ -91,12 +96,7 @@ public class MapLocation implements Parcelable {
         }
     }
 
-    public Map<String,Object> getMappedLocation(){
-        Map<String,Object> locationMap = new HashMap<>();
-        locationMap.put(id,this);
-        return locationMap;
-
-    }
+    // renvoie les services dans une Map
     public Map<Object,Object> getServicesAsMap(){
         Map<Object,Object> mappedServices = new HashMap<>();
         services.forEach((s, service) -> {
@@ -104,12 +104,15 @@ public class MapLocation implements Parcelable {
         });
         return mappedServices;
     }
+    // renvoie les services dans un bundle
     public Bundle getServicesAsBundle(){
         Bundle bundle = new Bundle();
         services.forEach(bundle::putParcelable);
 
         return bundle;
     }
+
+    // renvoie le lieu sous forme de Map
     public Map<Object, Object> getAsMap(){
         Map<Object,Object> mappedLocation = new HashMap<>();
         mappedLocation.put(LocationDAO.LATITUDE_KEY, point.latitude);
@@ -123,6 +126,7 @@ public class MapLocation implements Parcelable {
         mappedLocation.put(LocationDAO.CONFIRMED_KEY, confirmed);
         return mappedLocation;
     }
+    // renvoie le lieu sous forme de Bundle
     public Bundle getAsBundle(){
         Bundle bundle = new Bundle();
         bundle.putDouble(LocationDAO.LATITUDE_KEY, point.latitude);
@@ -184,9 +188,7 @@ public class MapLocation implements Parcelable {
         return id;
     }
 
-//    public Uri getUri(){
-//        return picture;
-//    }
+
 
     public List<String> getPictures() {
         return pictures;
@@ -236,7 +238,6 @@ public class MapLocation implements Parcelable {
         return point;
     }
 
-    //TODO : si temps finir parcelable ici et dans Service
     @Override
     public int describeContents() {
         return 0;
@@ -259,12 +260,12 @@ public class MapLocation implements Parcelable {
         }
     };
 
+    // construit une MapLocation à partir d'une Map générée par fireStore
     public static class Builder {
         private static final String TAG = "LocationBuilder logging";
 
 
         public static MapLocation build(Map<String,Object> data) throws NullPointerException {
-            //TODO : créer constantes dans DataBase pour noms des données
             double latitude = (double) data.get(LocationDAO.LATITUDE_KEY);
             Log.i(TAG, "build: lat  =" + latitude);
             double longitude = (double) data.get(LocationDAO.LONGITUDE_KEY);
@@ -292,7 +293,7 @@ public class MapLocation implements Parcelable {
             return new MapLocation(latitude, longitude, description, services, (String) data.get(LocationDAO.USER_ID_KEY), (String) data.get(LocationDAO.LOCATION_NAME_KEY),pictures, (boolean) data.get(LocationDAO.CONFIRMED_KEY));
         }
 
-
+        // génère un identifiant pour le lieu
         public static String generateId(LatLng point) {
 
             return String.format(Locale.ENGLISH, Double.toString(point.latitude) + '|' + point.longitude);

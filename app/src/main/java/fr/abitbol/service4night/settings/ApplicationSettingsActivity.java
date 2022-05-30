@@ -1,4 +1,17 @@
-package fr.abitbol.service4night;
+/*
+ * Nom de classe : ApplicationSettingsActivity
+ *
+ * Description   : activité des options de l'application
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
+package fr.abitbol.service4night.settings;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +22,8 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import fr.abitbol.service4night.MainActivity;
+import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.ActivityApplicationSettingsBinding;
 
 
@@ -55,6 +70,7 @@ public class ApplicationSettingsActivity extends AppCompatActivity {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
                     Log.i(TAG,"preference listener triggered");
+                    //signale à l'activité principale que le thème a été modifié
                     MainActivity.prefChanged = true;
                     if (preference.getKey().equals(THEME_PREFERENCE_KEY)){
                         Log.i(TAG, "onPreferenceChange: theme was changed");
@@ -69,11 +85,7 @@ public class ApplicationSettingsActivity extends AppCompatActivity {
                         }
                     }
 
-//                    try {
-//                        getActivity().recreate();
-//                    }catch (NullPointerException e){
-//                        Log.e(TAG, "onPreferenceChange: couldn't recreate: NullpointerException");
-//                    }
+
                     return true;
                 }
 

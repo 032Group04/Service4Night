@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : MainActivity
+ *
+ * Description   : activité principale, gère la connection/inscription utilisateur, le NavHost et l'actionBar
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night;
 
 import android.Manifest;
@@ -6,11 +19,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 
@@ -49,8 +63,10 @@ import java.util.List;
 
 import fr.abitbol.service4night.databinding.ActivityMainBinding;
 import fr.abitbol.service4night.fragments.LocationAddFragment;
+import fr.abitbol.service4night.fragments.MapsFragment;
 import fr.abitbol.service4night.fragments.MenuFragment;
 import fr.abitbol.service4night.listeners.OnSettingsNavigation;
+import fr.abitbol.service4night.utils.NetworkReceiver;
 
 public class MainActivity extends AppCompatActivity implements ActivityResultCallback<FirebaseAuthUIAuthenticationResult>, NavController.OnDestinationChangedListener{
 
@@ -60,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     private FirebaseAuth auth;
     private boolean showSettings;
     public static final int LOCATION_REQUEST_CODE = 8631584;
-    public static final int FINE_LOCATION_REQUEST_CODE = 8631547;
+
     public static final String PREFERENCE_THEME_KEY= "theme";
     public static final String PREFERENCE_THEME_LIGHT= "Light";
     public static final String PREFERENCE_THEME_DARK= "Dark";
@@ -69,12 +85,16 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             new FirebaseAuthUIActivityResultContract(),this);
     private final String TAG = "MainActivity logging";
     private static final int menuFragmentId = 2131361800;
+    private static final int mapsFragmentId = 2131362210;
+    private NetworkReceiver networkReceiver;
+    private AlertDialog networkAlertDialog;
     public static boolean prefChanged;
-    boolean askingPermissions;
+    boolean askingLocationPermissions;
     public static boolean coarseLocation = false;
     public static boolean fineLocation = false;
+    public static boolean networkState = false;
 
-    //TODO: ajouter une note aux locations et un favori pour l'utilisateur
+    //TODO si temps: ajouter une note aux locations et un favori pour l'utilisateur
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,27 +103,26 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         }
         Log.i(TAG, "onCreate called");
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        askingPermissions = false;
+        askingLocationPermissions = false;
         auth = FirebaseAuth.getInstance();
-        //TODO : gérer comptes anonymes
         //TODO : tester si internet et sinon passer en mode hors ligne
         user = auth.getCurrentUser();
 
+        // applique le thème choisi
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String theme = preferences.getString(PREFERENCE_THEME_KEY,PREFERENCE_THEME_DEFAULT);
 
-        if(theme.equals(PREFERENCE_THEME_LIGHT)){
+        if(theme.equals(getString(R.string.theme_light))){
             Log.i(TAG,"theme preference is :" + theme);
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
-        else if (theme.equals(PREFERENCE_THEME_DARK)){
+        else if (theme.equals(getString(R.string.theme_dark))){
             Log.i(TAG,"theme preference is :" + theme);
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
 
-        //TODO : cacher toolBar dans la map
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
         
@@ -117,119 +136,216 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
 
     }
-    public void manageToolBar(){
 
+    public AlertDialog getNetworkAlertDialog() {
+        return networkAlertDialog;
     }
-
-
 
     @Override
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "onStart called ");
-
-        if (!fineLocation &&!coarseLocation) {
-            checkLocationAccess();
+        // vérifie les permissions et les demande si nécessaire
+        checkPermissions();
+        if (!fineLocation || !networkState) {
+            requestNeededPermissions();
         }
-
-
     }
-    private void checkLocationAccess(){
-        Log.i(TAG, "startLocation called");
 
+    // vérifie les permissions accordées
+    private void checkPermissions(){
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "startLocation: fine location is granted");
+            Log.i(TAG, "checkPermissions: fine location is granted");
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                Log.i(TAG, "startLocation: gps provider is enabled");
+                Log.i(TAG, "checkPermissions: gps provider is enabled");
                 fineLocation = true;
             } else {
-                Log.i(TAG, "startLocation: gps provider is disabled");
+                Log.i(TAG, "checkPermissions: gps provider is disabled");
             }
         }
         if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "startLocation: coarse location is granted");
+            Log.i(TAG, "checkPermissions: coarse location is granted");
             if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                Log.i(TAG, "startLocation: network provider is enabled");
+                Log.i(TAG, "checkPermissions: network provider is enabled");
                 coarseLocation = true;
             } else {
-                Log.i(TAG, "startLocation: network provider is disabled");
+                Log.i(TAG, "checkPermissions: network provider is disabled");
             }
 
         }
+        if (checkSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED){
+            Log.i(TAG, "checkPermissions: network state is granted");
+            networkState = true;
+        }
+        else{
+            Log.i(TAG, "checkPermissions: network state isn't granted");
+        }
+    }
+
+    //demande les permissions localisation et surveillance du réseau
+    private void requestNeededPermissions(){
+        Log.i(TAG, "checkPermissions called");
+
+
+        String[] permissions;
+        int requestCode = LOCATION_REQUEST_CODE;
+
 //        listener.onLocationChecked(fineLocation,coarseLocation);
         if(!fineLocation){
-            if (!askingPermissions) {
+
                 Log.i(TAG, "onLocationChecked: asking permissions");
-                askingPermissions = true;
+
                 if (!coarseLocation) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
+                    if (networkState) {
+                        permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+
+                    } else {
+                        permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_NETWORK_STATE};
+
+                    }
                 }
                 else{
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, FINE_LOCATION_REQUEST_CODE);
+                    if (networkState) {
+                        permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
+                    } else {
+                        permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_NETWORK_STATE};
+                    }
 
                 }
-            } else {
+                requestPermissions(permissions,requestCode);
+
+        }
+        else{
+            Log.i(TAG, "checkLocationAccess: fine location available");
+            if (networkState){
+                Log.i(TAG, "checkPermissions: network state available");
+            }
+            else{
+                Log.i(TAG, "checkPermissions: network state unavailable, requesting permission...");
+                permissions = new String[]{Manifest.permission.ACCESS_NETWORK_STATE};
+                requestPermissions(permissions,requestCode);
+            }
+        }
+
+
+
+    }
+
+    //gère le résultat des demandes de permissions et ferme l'application si les permissions obligatoires sont refusées
+    private void processPermissionsRequestResult(){
+        checkPermissions();
+        if (networkState) {
+            if (!fineLocation) {
                 if (!coarseLocation) {
                     Log.i(TAG, "onLocationChecked: permissions asked : couldn't access location");
                     Toast.makeText(this, getString(R.string.no_localisation_permissions), Toast.LENGTH_SHORT).show();
+                    delayedFinish();
 
                 }
                 else{
                     Log.i(TAG, "checkLocationAccess: coarse location only");
                     Toast.makeText(this, getString(R.string.coarse_localisation_limit), Toast.LENGTH_SHORT).show();
                 }
+            } else {
+                Log.i(TAG, "processPermissionsRequestResult: all permissions granted");
             }
+        } else {
+            if (!fineLocation) {
+                Toast.makeText(this, getString(R.string.no_localisation_and_network_permissions), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.no_network_permission), Toast.LENGTH_SHORT).show();
+            }
+            delayedFinish();
         }
-        else{
-            Log.i(TAG, "checkLocationAccess: fine location available");
-        }
-
-
-
+    }
+    // retard la fermeture de l'application pour laisser a l'utilisateur le temps de lire le toast
+    private void delayedFinish(){
+        new Thread(() -> {
+            synchronized (this){
+                try {
+                    wait(5000);
+                    finish();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.i(TAG, "onRequestPermissionsResult called");
-        if (requestCode == LOCATION_REQUEST_CODE){
-            if ( grantResults[0] == PackageManager.PERMISSION_GRANTED || grantResults[1] == PackageManager.PERMISSION_GRANTED){
-                Log.i(TAG, "onRequestPermissionsResult: at least one location permissions was granted");
-                checkLocationAccess();
 
+        if (requestCode == LOCATION_REQUEST_CODE) {
+            processPermissionsRequestResult();
+        }
+    }
+
+    // interception de l'appui sur la touche retour
+    @Override
+    public void onBackPressed() {
+        Log.i(TAG, "onBackPressed: back button pressed ");
+        Fragment fragment = getVisibleFragment();
+        if (fragment != null ){
+
+            // si une infoWindow est ouverte sur la carte, la touche retour la referme
+            Log.i(TAG, "onBackPressed: visible fragment is : " +fragment.toString()+" id : "+fragment.getId());
+            if (fragment instanceof MapsFragment || fragment.getId() == mapsFragmentId) {
+                Log.i(TAG, "onBackPressed: fragment is instance of MapsFragment");
+                if (((MapsFragment)fragment).getLastInfoWindowMarker() != null && ((MapsFragment)fragment).getLastInfoWindowMarker().isInfoWindowShown()){
+                    ((MapsFragment)fragment).getLastInfoWindowMarker().hideInfoWindow();
+                }
+                else{
+                    super.onBackPressed();
+                }
             }
-            else{
-                Log.i(TAG, "onRequestPermissionsResult: location permissions were declined");
+            else if (fragment instanceof LocationAddFragment){
+                System.out.println("onBackPressed : fragment is LocationAddFragment");
+                new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.pop_back_abort_title))
+                        .setMessage(getString(R.string.pop_back_abort))
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+//                                NavHostFragment.findNavController(fragment).popBackStack();
+                                MainActivity.super.onBackPressed();
+
+                            }
+                        })
+
+                        // A null listener allows the button to dismiss the dialog and take no further action.
+                        .setNegativeButton(android.R.string.no, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+            }
+
+
+            else {
+                super.onBackPressed();
             }
         }
-        else if (requestCode == FINE_LOCATION_REQUEST_CODE){
-            if ( grantResults[0] == PackageManager.PERMISSION_GRANTED ){
-                Log.i(TAG, "onRequestPermissionsResult: fine location permission was granted");
-                checkLocationAccess();
-
-            }
-            else{
-                Log.i(TAG, "onRequestPermissionsResult: location permissions were declined");
-            }
+        else {
+            super.onBackPressed();
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.i(TAG, "onCreateOptionsMenu called");
-
+        // affiche le menu correspondant au statut utilisateur et au fragment affiché
         if (showSettings) {
-            if (user != null){
+            if (user != null){// menu connecté
                 Log.i(TAG, "onCreateOptionsMenu: user is valid : " + user.getEmail());
 
                 getMenuInflater().inflate(R.menu.menu_logged, menu);
             }
-            else{
+            else{ // menu non connecté
                 Log.i(TAG, "onCreateOptionsMenu: user is null");
                 getMenuInflater().inflate(R.menu.menu_main, menu);
             }
-        } else {
+        } else { // menu avec options cachées (hors menu principal)
             Log.i(TAG, "onCreateOptionsMenu: hiding settings");
             getMenuInflater().inflate(R.menu.menu_empty, menu);
         }
@@ -237,12 +353,10 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
         return true;
     }
-    //TODO : gérer visibilité des menus selon connecté ou non
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         Log.i(TAG, "onOptionsItemSelected called item : "+ item);
-        // TODO : ajouter modification du compte
-
+        // clic sur menu options du compte
         if(item.getItemId() == R.id.account_settings_item){
             if (user != null) {
                 Fragment fragment = getVisibleFragment();
@@ -255,6 +369,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                 Toast.makeText(this, getString(R.string.not_logged_in), Toast.LENGTH_SHORT).show();
             }
         }
+        // interception du bouton home pour demander confirmation avant de quitter l'ajout de lieu
         else if (item.getItemId() == android.R.id.home){
             Log.i(TAG, "onOptionsItemSelected: home button clicked");
             Fragment fragment = getVisibleFragment();
@@ -276,12 +391,13 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
                 }
+
                 else {
                     NavHostFragment.findNavController(fragment).popBackStack();
                 }
             }
         }
-
+        // clic sur menu options de l'application
         else if (item.getItemId() == R.id.app_settings_item){
             //TODO ajouter option vider cache images et vider cache sauf favoris
 //            Intent appSettingsIntent = new Intent(getApplicationContext(),ApplicationSettingsActivity.class);
@@ -293,6 +409,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             }
 
         }
+        // clic sur connexion
         else if (item.getItemId() == R.id.log_in_item){
             List<AuthUI.IdpConfig> providers = Arrays.asList(
                     new AuthUI.IdpConfig.EmailBuilder().build(),
@@ -305,6 +422,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                 .build()
             );
         }
+        // clic sur déconnexion
         else if (item.getItemId() == R.id.log_out_item){
             AuthUI.getInstance().signOut(this).addOnCompleteListener(task -> {
                if (task.isSuccessful()){
@@ -320,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                }
             });
         }
+        // clic sur inscription
         else if (item.getItemId() == R.id.sign_in_item){
             Fragment fragment = getVisibleFragment();
             if (fragment instanceof MenuFragment){
@@ -331,6 +450,8 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
         return true;
     }
+
+    // renvoie le fragment affiché dans le NavHostFragment
     private Fragment getVisibleFragment(){
 
         Fragment fragment = getSupportFragmentManager().findFragmentByTag("fragment_container");
@@ -350,7 +471,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     @Override
     protected void onPause() {
         super.onPause();
-
+        unregisterReceiver(networkReceiver);
         Log.i(TAG,"onPause called");
     }
 
@@ -358,12 +479,20 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     protected void onResume() {
         super.onResume();
         Log.i(TAG,"onResume called");
+        // actualise si les options ont été modifiées
         if (prefChanged){
             Log.i(TAG,"prefChanged is true");
             prefChanged = false;
             recreate();
         }
+        // met l'actionBar a jour
         invalidateOptionsMenu();
+
+        // inscrit le NetworkReceiver
+        networkReceiver = NetworkReceiver.getInstance();
+        IntentFilter networkIntentFilter = new IntentFilter();
+        networkIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkReceiver,networkIntentFilter);
 
 
 
@@ -378,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
 
 
-
+    // callBack sur l'authentification
     @Override
     public void onActivityResult(FirebaseAuthUIAuthenticationResult result) {
         IdpResponse response = result.getIdpResponse();
@@ -404,34 +533,60 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             }
         }
     }
-    public void manageMenu(){
-        if (getVisibleFragment() instanceof MenuFragment){
-            Log.i(TAG, "manageMenu: visible fragment is the menu fragment");
-            setSettingsVisibility(true);
-        }
-        else{
-            Log.i(TAG, "manageMenu: visible fragment is not the menu fragment");
-        }
-    }
-    //TODO: essayer copmprendre fragment visible
+    // gère la visibilité des options selon l'id du fragment passé en paramètre
     public void manageMenu(int id){
         Fragment fragment = getVisibleFragment();
 
         if (fragment != null && (getVisibleFragment() instanceof MenuFragment || getVisibleFragment().getId() == menuFragmentId)) {
             Log.i(TAG, "manageMenu: visible fragment is the menu fragment");
             setSettingsVisibility(true);
+            setActionBarVisibility(true);
         }
         else if (id == menuFragmentId){
             Log.i(TAG, "manageMenu: destination is menu fragment");
             setSettingsVisibility(true);
+            setActionBarVisibility(true);
         }
         else{
+            setSettingsVisibility(false);
             Log.i(TAG, "manageMenu: visible fragment is not the menu fragment");
         }
 
 
 
 
+    }
+    // affiche la boite de dialogue d'erreur de déconnexion
+    public void showNetworkError(){
+        Log.i(TAG, "showNetworkError called");
+        networkAlertDialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.network_error_title))
+                .setMessage(getString(R.string.network_error_message))
+                .setPositiveButton(R.string.network_error_quit_option, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+
+                    }
+                })
+
+                // A null listener allows the button to dismiss the dialog and take no further action.
+
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+
+
+    }
+    public void setActionBarVisibility(boolean b){
+        Log.i(TAG, "setActionBarVisibility called : "+ b);
+        if (getSupportActionBar()!=null) {
+            if (b){
+                getSupportActionBar().show();
+            }
+            else{
+                getSupportActionBar().hide();
+            }
+
+        }
     }
     public void setTitle(String title) throws NullPointerException{
         binding.toolbar.setTitle(title);
@@ -439,6 +594,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     public void setSettingsVisibility(boolean b){
         Log.i(TAG, "setSettingsVisibility called : "+b);
         showSettings = b;
+
         invalidateOptionsMenu();
 
     }

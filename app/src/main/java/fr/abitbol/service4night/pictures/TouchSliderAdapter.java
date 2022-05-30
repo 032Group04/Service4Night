@@ -1,4 +1,17 @@
-package fr.abitbol.service4night.utils;
+/*
+ * Nom de classe : TouchSliderAdapter
+ *
+ * Description   : adapter pour le viewPager plein écran permettant de zoomer
+ *
+ * Auteur        : Olivier Baylac, modification du code de Golap Gunjan Barman (https://medium.com/swlh/android-infinite-auto-image-slider-using-view-pager-2-android-studio-java-a0e450dec071)
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
+package fr.abitbol.service4night.pictures;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,10 +26,10 @@ import java.util.List;
 
 import fr.abitbol.service4night.R;
 
-public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderViewHolder> {
+public class TouchSliderAdapter extends RecyclerView.Adapter<TouchSliderAdapter.SliderViewHolder> {
     private List<SliderItem> sliderItems;
     private ViewPager2 viewPager2;
-    public SliderAdapter(List<SliderItem> _sliderItems, ViewPager2 _viewPager2) {
+    public TouchSliderAdapter(List<SliderItem> _sliderItems, ViewPager2 _viewPager2) {
         this.sliderItems = _sliderItems;
         this.viewPager2 = _viewPager2;
     }
@@ -25,7 +38,7 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
     public SliderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return new SliderViewHolder(
                 LayoutInflater.from(parent.getContext()).inflate(
-                        R.layout.image_view_container, parent, false
+                        R.layout.image_view_touch_container, parent, false
                 ) );
     }
     public SliderItem getSliderItem(int position){
@@ -44,10 +57,10 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
         return sliderItems.size();
     }
     class SliderViewHolder extends RecyclerView.ViewHolder {
-        private ImageView imageView;
+        private TouchImageView imageView;
         SliderViewHolder(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.imageView_slider);
+            imageView = itemView.findViewById(R.id.touch_imageView_slider);
         }
         void setImage(SliderItem sliderItems){
             //use glide or picasso in case you get image from internet

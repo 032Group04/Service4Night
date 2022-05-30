@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : LocationUpdateFragment
+ *
+ * Description   : fragment servant à modifier un lieu.
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.fragments;
 
 import android.app.AlertDialog;
@@ -54,16 +67,16 @@ import fr.abitbol.service4night.services.ElectricityService;
 import fr.abitbol.service4night.services.InternetService;
 import fr.abitbol.service4night.services.Service;
 import fr.abitbol.service4night.services.WaterService;
-import fr.abitbol.service4night.utils.ExifUtil;
-import fr.abitbol.service4night.utils.PictureDeleteTask;
-import fr.abitbol.service4night.utils.PictureDownloader;
-import fr.abitbol.service4night.utils.PicturesDeleteAdapter;
-import fr.abitbol.service4night.utils.PicturesUploadAdapter;
-import fr.abitbol.service4night.utils.SliderAdapter;
-import fr.abitbol.service4night.utils.SliderItem;
+import fr.abitbol.service4night.pictures.ExifUtil;
+import fr.abitbol.service4night.pictures.PictureDeleteTask;
+import fr.abitbol.service4night.pictures.PictureDownloader;
+import fr.abitbol.service4night.pictures.PicturesDeleter;
+import fr.abitbol.service4night.pictures.PicturesUploader;
+import fr.abitbol.service4night.pictures.SliderAdapter;
+import fr.abitbol.service4night.pictures.SliderItem;
 
 
-public class LocationUpdateFragment extends Fragment implements OnCompleteListener<Void>, OnPictureDownloadListener,PicturesUploadAdapter, PicturesDeleteAdapter {
+public class LocationUpdateFragment extends Fragment implements OnCompleteListener<Void>, OnPictureDownloadListener, PicturesUploader, PicturesDeleter {
 
 
 
@@ -91,6 +104,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
     //TODO: problème écran noir depuis mapActivity quand réseau faible
 
+    /*
+     * Activity contract de prise de photo
+     */
     private ActivityResultLauncher<Uri> takePictureContract = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
 
 
@@ -134,10 +150,14 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             }
         }
     });
+
+    /*
+     * activity contract de choix de photo sur le téléphone
+     */
     private ActivityResultLauncher<String> pickPictureContract = registerForActivityResult(new ActivityResultContracts.GetContent(), new ActivityResultCallback<Uri>() {
         @Override
         public void onActivityResult(Uri result) {
-            if (currentPictureName != null && currentPicTurePath != null) {
+            if (result != null) {
                 try {
                     Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), result);
                     pictureTaken = true;
@@ -172,6 +192,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             }
         }
     });
+    /*
+     * mise a jour des photos sur cloud storage et dans la base de données
+     */
     public synchronized void updatePicture(int index,Bitmap bitmap){
         Log.i(TAG, "updatePicture: index : " + index);
         CloudStoragePictureDAO pictureDAO = new CloudStoragePictureDAO();
@@ -203,19 +226,6 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         }).start();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-    }
-
-
-    @Override
-    public void onResume() {
-        Log.i(TAG, "onResume called ");
-        super.onResume();
-
-    }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -248,11 +258,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             NavHostFragment.findNavController(LocationUpdateFragment.this).popBackStack();        }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
 
-    }
 
     @Override
     public View onCreateView(
@@ -260,6 +266,8 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             Bundle savedInstanceState
     ) {
         Log.i(TAG, "onCreateView: called");
+
+        // vérifier que l'utilisateur est connecté
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null){
 
@@ -278,6 +286,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         pictureTaken = false;
         viewPager = binding.locationAddViewPager;
 
+        // reconstruction du layout et des attributs sauvegardés
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(MAPLOCATION_NAME)){
                 Log.i(TAG, "onCreateView: rebuilding mapLocation");
@@ -326,7 +335,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         else{
             Log.i(TAG, "onCreateView: savedinstancestate is null");
 
-
+            // premier appel de onCreateView
             if (getArguments() != null) {
 
 
@@ -428,15 +437,20 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         return binding.getRoot();
 
     }
-
+    /*
+     * charge les photos du lieu
+     */
     private void loadPictures(){
         if (mapLocation.getPictures()!= null && mapLocation.getPictures().size() > 0) {
-            showLoadScreen();
+            showPicturesLoadScreen();
             PictureDownloader.getBitmapsFromURL(mapLocation,new ArrayList<String>(),new ArrayList<String>(),getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES),this);
         } else {
             Log.i(TAG, "loadPictures: no pictures in mapLocation");
         }
     }
+    /*
+     * remplit le layout avec les données du lieu
+     */
     private void loadInputs(){
         binding.locationAddTextviewCoordinates.setText(mapLocation.getPoint().toString());
 
@@ -507,6 +521,10 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 //        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
     }
+
+    /*
+     * active la fonction de suppression des photos
+     */
     private void enablePictureDelete(boolean enabled){
         if (enabled){
             binding.pictureDeleteButton.setVisibility(View.VISIBLE);
@@ -585,6 +603,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             binding.pictureDeleteButton.setVisibility(View.GONE);
         }
     }
+    /*
+     * applique le nom du lieu a l'actionBar
+     */
     private void setTitle() {
 
 
@@ -665,6 +686,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
             }
         });
+        // bouton supprimer le lieu
         binding.buttonDelete.setOnClickListener(v ->{
             new AlertDialog.Builder(getContext())
                     .setTitle(getString(R.string.delete_location))
@@ -711,6 +733,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         });
 
     }
+    /*
+     * renvoie un espace photo libre
+     */
     private Integer getPictureSpace(){
         Log.i(TAG, "getPictureSpace called");
         if (mapLocation.getPictures() == null){
@@ -733,7 +758,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         return null;
 
     }
-
+    /*
+     * récupère les données saisies dans le layout
+     */
     private boolean processInputs(){
         boolean servicePresent = false;
         String description = mapLocation.getDescription();
@@ -852,7 +879,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
 
 
     }
-
+    /*
+     * extrait un double du prix saisi
+     */
     private double parsePrice(EditText editText, String name) throws NumberFormatException{
         double price;
         try{
@@ -866,10 +895,15 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         }
         return price;
     }
+    /*
+     * lance la selection de photo dans le téléphone
+     */
     private void pickPicture(){
         pickPictureContract.launch("image/*");
     }
-
+    /*
+     * lance la prise de photo
+     */
     private void takePicture() throws IOException {
 //        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
 
@@ -906,16 +940,22 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         binding = null;
     }
 
-
-    private void showLoadScreen(){
+    /*
+     * affiche/cache l'écran de chargement des photos
+     */
+    private void showPicturesLoadScreen(){
+        binding.addProgressBarTextView.setText(R.string.loading_pictures);
         binding.addFrameLayout.setEnabled(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
-        binding.addProgressBarTextView.setText(R.string.loading_pictures);
+
     }
     private void hideLoadScreen(){
         binding.addFrameLayout.setEnabled(true);
         binding.addProgressBarContainer.setVisibility(View.GONE);
     }
+    /*
+     * affiche les photos contenues dans l'ArrayList images
+     */
     private void showPictures(){
 
         Log.i(TAG, "showPictures called");
@@ -932,7 +972,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         viewPager.invalidate();
 
     }
-
+    /*
+     * callback sur l'ajout a la base de données
+     */
     @Override
     public void onComplete(@NonNull Task task) {
         if (task.isSuccessful()){
@@ -950,7 +992,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     }
 
 
-
+    /*
+     * callback sur le téléchargement des photos
+     */
     @Override
     public void onPictureDownload(ArrayList<SliderItem> _images) {
         if (_images != null) {
@@ -960,14 +1004,18 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             getActivity().runOnUiThread(this::hideLoadScreen);
         }
     }
+
+    /*
+     * affiche/cache/met a jour la barre d'upload des photos
+     */
     @Override
     public void startProgressBar(){
-
+        binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,1));
         binding.addFrameLayout.setEnabled(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
         binding.addProgressBarContainer.setEnabled(true);
         //binding.addProgressBar.animate();
-        binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,1));
+
     }
     @Override
     public void stopProgressBar(){
@@ -991,7 +1039,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     public void onPicturesUploaded(List<String> uris) {
 
     }
-
+    /*
+     * affiche/cache/met a jour/arrête la barre de suppression des photos
+     */
     @Override
     public void startDeleteBar() {
         binding.addFrameLayout.setEnabled(false);
@@ -1019,7 +1069,9 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             Toast.makeText(getContext(), String.format(getString(R.string.deleteBar_picture_failed),(done-1)), Toast.LENGTH_SHORT).show();
         }
     }
-
+    /*
+     * callback sur la suppression des photos
+     */
     @Override
     public void onPictureDelete(boolean result) {
         if (result){

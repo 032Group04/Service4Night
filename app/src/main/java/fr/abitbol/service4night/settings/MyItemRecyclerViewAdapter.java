@@ -1,6 +1,18 @@
+/*
+ * Nom de classe : MyItemRecyclerViewAdapter
+ *
+ * Description   : adapter de la liste des lieux d'un utilisateur
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.settings;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;

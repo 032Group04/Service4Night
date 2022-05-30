@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : FirestoreLocationDAO
+ *
+ * Description   : implémentation firestore de LocationDAO.
+ *
+ * Auteur        : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.DAO;
 
 import android.util.Log;
@@ -165,19 +178,17 @@ public class FirestoreLocationDAO implements LocationDAO {
         mappedLocation.put(LocationDAO.LOCATION_NAME_KEY, obj.getName());
         if (obj.getPictures() != null) mappedLocation.put(LocationDAO.PICTURES_URI_KEY,obj.getPictures());
         mappedLocation.put(LocationDAO.CONFIRMED_KEY, obj.isConfirmed());
-        if (listener != null) {
+        if (listener != null) { // insert without listener on result
             Log.i(TAG, "insert: listened insert");
 
-            // voir firestore storage pour les photos et checker quelles classes sont serialisables
             dataBase.collection("locations").document(obj.getId())
                     .set(mappedLocation)
                     .addOnCompleteListener(listener);
         }
-        else {
+        else { // insert with a callback
             Log.i(TAG, "insert: not listened insert");
             AtomicBoolean success = new AtomicBoolean(false);
             
-            // voir firestore storage pour les photos et checker quelles classes sont serialisables
             dataBase.collection("locations").document(obj.getId())
                     .set(mappedLocation)
                     .addOnCompleteListener(task -> {

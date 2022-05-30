@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : DumpService
+ *
+ * Description   : implémentation de Service pour les poubelles
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.services;
 
 import android.os.Bundle;

@@ -1,13 +1,21 @@
-package fr.abitbol.service4night.utils;
+/*
+        * Nom de classe : PictureDownloader
+        *
+        * Description   : télécharge les photos a partir d'urls
+        *
+        * Auteur        : Olivier Baylac.
+        *
+        * Version       : 1.0
+        *
+        * Date          : 28/05/2022
+        *
+        * Copyright     : CC-BY-SA
+        */
+package fr.abitbol.service4night.pictures;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
-
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.storage.FileDownloadTask;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -17,10 +25,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 
 import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
 
 public class PictureDownloader {

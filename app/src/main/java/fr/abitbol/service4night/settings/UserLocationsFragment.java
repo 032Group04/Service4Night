@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : UserLocationsFragment
+ *
+ * Description   : fragment affichant les lieux d'un utilisateur
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.settings;
 
 import android.os.Bundle;
@@ -23,9 +36,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.abitbol.service4night.DatabaseService;
+import fr.abitbol.service4night.utils.DatabaseService;
 import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.MapLocationFilter;
+import fr.abitbol.service4night.utils.MapLocationFilter;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentUserLocationsListBinding;
 import fr.abitbol.service4night.fragments.LocationUpdateFragment;
@@ -36,17 +49,11 @@ import fr.abitbol.service4night.listeners.OnItemClickedListener;
  */
 public class UserLocationsFragment extends Fragment implements OnCompleteListener<QuerySnapshot>, OnItemClickedListener {
 
-    // TODO: Customize parameter argument names
-    private static final String ARG_COLUMN_COUNT = "column-count";
+
     private static final String TAG = "UserLocationsFragment logging";
-    // TODO: Customize parameters
-    private final int mColumnCount = 1;
     private FragmentUserLocationsListBinding binding;
     private FirebaseUser user;
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
+
     public UserLocationsFragment() {
     }
 

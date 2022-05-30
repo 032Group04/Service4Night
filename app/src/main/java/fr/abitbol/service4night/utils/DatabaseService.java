@@ -1,4 +1,17 @@
-package fr.abitbol.service4night;
+/*
+ * Nom de classe : DatabaseService
+ *
+ * Description   : Intent service récuperant les lieux dans la base de données
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
+package fr.abitbol.service4night.utils;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -14,32 +27,24 @@ import fr.abitbol.service4night.DAO.DAOFactory;
 public class DatabaseService extends IntentService {
 
     private static final String TAG = "DataBaseBindService logging";
-//    private IBinder binderInterface;
     private static OnCompleteListener<QuerySnapshot> listener;
     public static final String ACTION_GET_LOCATIONS = "getLocations";
 
 
-    // TODO: Rename parameters
+
     private static final String EXTRA_COLLECTION_NAME = "collection";
 
     public DatabaseService() {
         super("DatabaseService");
     }
 
-//    @Nullable
-//    @Override
-//    public IBinder onBind(Intent intent) {
-//        Log.i(TAG, "onBind called");
-//        binderInterface = new ServiceBinder();
-//        return binderInterface;
-//    }
 
+    // démarre le service
     public static void startService(Context context, OnCompleteListener<QuerySnapshot> _listener){
         listener = _listener;
         Intent getLocationsIntent = new Intent(context, DatabaseService.class);
         getLocationsIntent.setAction(DatabaseService.ACTION_GET_LOCATIONS);
         context.startService(getLocationsIntent);
-//                    bindService(getLocationsIntent, this, BIND_AUTO_CREATE);
 
     }
 
@@ -63,29 +68,14 @@ public class DatabaseService extends IntentService {
             }
         }
     }
-//    public boolean isServiceBound(){
-//        Log.i(TAG, "isServiceBound? yes");
-//        return true;
-//    }
-//
-//    public void stopBindService(){
-//
-//        Log.i(TAG, "stopBindService called");
-//        stopService(new Intent(this,DatabaseService.class));
-//    }
+
 
 
     public void getLocations(OnCompleteListener<QuerySnapshot> caller) {
         Log.i(TAG, "getLocations called");
         DAOFactory.getLocationDAOOnline().selectAll(caller);
     }
-//    public class ServiceBinder extends Binder {
-//        public DatabaseService getBoundService(OnCompleteListener<QuerySnapshot> caller){
-//            mapsActivity = (MapsActivity) caller;
-//            return DatabaseService.this;
-//        }
-//
-//    }
+
 
 
 }

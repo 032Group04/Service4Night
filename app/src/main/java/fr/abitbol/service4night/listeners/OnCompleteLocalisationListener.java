@@ -1,3 +1,16 @@
+/*
+ * Nom d'interface' : OnCompleteLocalisationListener
+ *
+ * Description   : interface fonctionelle sur la localisation de l'utilisateur
+ *
+ * Auteur       : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.listeners;
 
 import android.location.Location;

@@ -7,6 +7,7 @@
     <string name="Menu_fragment_label" translatable="false">Service4Night</string>
     <string name="AddLocation_fragment_label">Add a Location</string>
     <string name="Menu_fragment" translatable="false">Main menu</string>
+    <string name="Maps_fragment" translatable="false">mapsFragment</string>
     <!--  Strings for labels (buttons, checkboxes, etc...)   -->
     <string name="add_location">Add a Location from map</string>
     <string name="validate">Validate</string>
@@ -67,6 +68,7 @@
     <string name="password_confirm_hint">Password (confirm)</string>
     <string name="sign_in_title">Sign in</string>
     <string name="password_requirements">Password must be 8–25 symbols, digits, lower and upper case characters.</string>
+    <string name="progressBar_coordinates_checking">Checking coordinates…</string>
     <string name="progressBar_text_format">Uploading picture %d of %d…</string>
     <string name="progressBar_picture_failed">Picture %d upload failed.</string>
     <string name="deleteBar_text_format">Deleting picture %d of %d…</string>
@@ -80,7 +82,10 @@
     <string name="google_maps_itinerary_label">Google Maps Itinerary</string>
     <string name="search_in_google_label">Search in google</string>
     <string name="title_activity_full_screen_picture_slide" translatable="false">FullScreenPictureSlideActivity</string>
-
+    <string name="network_error_message">No internet connection available, awaiting Connection…</string>
+    <string name="network_error_title">Network error</string>
+    <string name="network_error_quit_option">Exit application</string>
+    <string name="network_error_wait_option">Wait</string>
     <string name="fullscreen_button_content_description">fullscreen button</string>
     <string name="loading_pictures">loading pictures…</string>
     <string name="delete_picture_title">Delete picture</string>
@@ -97,5 +102,7 @@
     <string name="pick_a_picture">Pick in storage</string>
     <string name="explore_map">Explore map</string>
     <string name="delete_location">Delete location</string>
+    <string name="loading_locations">loading locations…</string>
+<!--TODO: si temps trier et grouper les strings-->
 
 </resources>

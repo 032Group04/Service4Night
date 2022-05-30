@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : UserLocalisation
+ *
+ * Description   : localise l'utilisateur
+ *
+ * Auteur        : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.utils;
 
 import android.annotation.SuppressLint;

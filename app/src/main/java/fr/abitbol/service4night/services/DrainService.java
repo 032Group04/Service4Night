@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : DrainService
+ *
+ * Description   : implémentation de Service pour les vidanges d'eau sale
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.services;
 
 import android.os.Bundle;

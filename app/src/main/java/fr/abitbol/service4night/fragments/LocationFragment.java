@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : LocationFragment
+ *
+ * Description   : affichage des lieux
+ *
+ * Auteur        : Olivier Baylac.
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.fragments;
 
 import android.content.Intent;
@@ -39,10 +52,10 @@ import fr.abitbol.service4night.MapLocation;
 
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
-import fr.abitbol.service4night.utils.ExifUtil;
-import fr.abitbol.service4night.utils.PictureDownloader;
-import fr.abitbol.service4night.utils.SliderAdapter;
-import fr.abitbol.service4night.utils.SliderItem;
+import fr.abitbol.service4night.pictures.ExifUtil;
+import fr.abitbol.service4night.pictures.PictureDownloader;
+import fr.abitbol.service4night.pictures.SliderAdapter;
+import fr.abitbol.service4night.pictures.SliderItem;
 import fr.abitbol.service4night.databinding.FragmentLocationBinding;
 import fr.abitbol.service4night.services.DrainService;
 import fr.abitbol.service4night.services.ElectricityService;
@@ -83,7 +96,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         outState.putParcelable(MAPLOCATION_NAME,mapLocation);
 
 
-        if (images != null && images.size() == mapLocation.getPictures().size()){
+        if (images != null && images.size() > 0){
             Log.i(TAG, "onSaveInstanceState: images are fully loaded, saving images");
 
             outState.putStringArrayList(EXTRA_PICTURES_PATHS,picturesPaths);
@@ -198,20 +211,26 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 
 
         Log.i(TAG, "getInfoContents: mapLocation is not null");
-//        binding.locationNameTextView.setText(mapLocation.getName());
         binding.locationDescriptionEditText.setText(mapLocation.getDescription());
         Log.i(TAG, "getInfoContents: description is : " + mapLocation.getDescription());
         binding.locationCoordinatesTextView.setText(String.format(Locale.ENGLISH, "Lat : %f - Long : %f", mapLocation.getPoint().latitude, mapLocation.getPoint().longitude));
 
+        /*
+         * affichage des images si elles ont déja été chargées
+         */
         if (!images.isEmpty() ){
             showPictures();
         }
         else {
-
+            /*
+             * téléchargement des images
+             */
             if (mapLocation.getPictures() != null && !mapLocation.getPictures().isEmpty()) {
-                //getBitmapsFromURL();
                 downloadPictures();
             }
+            /*
+             * le lieu n'a pas d'images
+             */
             else{
                 Log.i(TAG, "onCreateView: location without pictures");
                 binding.fullscreenButton.setVisibility(View.GONE);
@@ -228,26 +247,38 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
     }
     //TODO si temps: bouton street view
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        binding.buttonItinerary.setOnClickListener(v -> {
+            Intent itineraryIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q="+mapLocation.getPoint().latitude+","+mapLocation.getPoint().longitude));
+            itineraryIntent.setPackage("com.google.android.apps.maps");
+            startActivity(itineraryIntent);
+        });
+        binding.buttonGoogleView.setOnClickListener(v ->{
+            Intent searchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" +mapLocation.getPoint().latitude +","+
+                    mapLocation.getPoint().longitude +" ("+mapLocation.getName()+")"));
+            searchIntent.setPackage("com.google.android.apps.maps");
+            startActivity(searchIntent);
+        });
+
+    }
+
+    /*
+     * affichage des services présents
+     */
+
     private void showServices() {
         Map<String, Service> services = mapLocation.getServices();
 
+        // eau
         if (services.containsKey(Service.WATER_SERVICE)) {
             WaterService waterService = (WaterService) services.get(Service.WATER_SERVICE);
             Log.i(TAG, "getInfoContents:  instance of water service");
 
             CheckBox[] box = getCheckBoxesPosition(3);
 
-            /*
-            lignes de test
-             */
-//            for (CheckBox c : box) {
-//                if (c == null) {
-//                    Log.i(TAG, "onCreateView: checkbox is null");
-//                    if (binding.locationCheckBox11 == null) {
-//                        Log.i(TAG, "onCreateView: checkBox is null at source");
-//                    }
-//                }
-//            }
             if (box != null) {
                 box[0].setButtonDrawable(R.drawable.ic_service_water);
                 box[0].setText(R.string.waterLabel);
@@ -279,7 +310,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             } else {
             }
         }
-
+        // électricité
         if (services.containsKey(Service.ELECTRICITY_SERVICE)) {
             ElectricityService electricityService = (ElectricityService) services.get(Service.ELECTRICITY_SERVICE);
             Log.i(TAG, "getInfoContents:  instance of electricity service");
@@ -307,6 +338,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             }
 
         }
+        // poubelles
         if (services.containsKey(Service.DUMPSTER_SERVICE)) {
             Log.i(TAG, "getInfoContents:  instance of dump service");
             CheckBox[] boxArray =getCheckBoxesPosition(1);
@@ -319,7 +351,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             }
 
         }
-
+        // accès internet
         if (services.containsKey(Service.INTERNET_SERVICE)) {
             InternetService internetService = (InternetService) services.get(Service.INTERNET_SERVICE);
             Log.i(TAG, "getInfoContents:  instance of internet service");
@@ -356,7 +388,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             }
 
         }
-
+        // vidange eaux sales
         if (services.containsKey(Service.DRAINAGE_SERVICE)) {
             Service drainService = services.get(Service.DRAINAGE_SERVICE);
             Log.i(TAG, "getInfoContents:  instance of drain service");
@@ -367,24 +399,10 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         }
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
 
-            binding.buttonItinerary.setOnClickListener(v -> {
-                Intent itineraryIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q="+mapLocation.getPoint().latitude+","+mapLocation.getPoint().longitude));
-                itineraryIntent.setPackage("com.google.android.apps.maps");
-                startActivity(itineraryIntent);
-            });
-            binding.buttonGoogleView.setOnClickListener(v ->{
-                Intent searchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" +mapLocation.getPoint().latitude +","+
-                        mapLocation.getPoint().longitude +" ("+mapLocation.getName()+")"));
-                searchIntent.setPackage("com.google.android.apps.maps");
-                startActivity(searchIntent);
-            });
-
-    }
-
+    /*
+     * renvoie l'emplacement d'affichage de service correspondant à l'index passé en paramètre
+     */
     public CheckBox getCheckbox(int count){
         Log.i(TAG, "getCheckbox: asked position : "+ count);
         switch (count){
@@ -412,7 +430,9 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         Log.i(TAG, "getCheckbox: is returning null");
         return null;
     }
-
+    /*
+     * attribue les emplacements d'affichage de service selon le nombre de cases nécessaires
+     */
     private CheckBox[] getCheckBoxesPosition(int groupSize) {
         Log.i(TAG, "getPosition: "+groupSize+ " blocs asked");
         switch (groupSize) {
@@ -480,6 +500,9 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         return null;
     }
 
+    /*
+     * charge les photos dans le viewPager
+     */
     private void showPictures(){
 
 
@@ -495,13 +518,7 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             ImageButton button = binding.fullscreenButton;
             button.setOnClickListener(view -> {
                 Log.i(TAG, "showPictures: listener on viewPager called");
-//                Bitmap[] bitmaps = new Bitmap[images.size()];
-//                String[] names = new String[images.size()];
                 Bundle bundle = new Bundle();
-//                for (int i = 0;i < images.size(); i++){
-//                    bitmaps[i] = images.get(i).getImage();
-//                    names[i] = images.get(i).getName();
-//                }
 
                 //TODO si temps : remplacer sauvegarde des photos par url en sauvegarde par noms et passer par DAO cloud storage pour récupérer photos+ metadata (pour ne pas recréer un nom)
 
@@ -511,7 +528,6 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 
                 Intent intent = new Intent(getContext(), FullScreenPictureSlideActivity.class);
                 intent.putExtras(bundle);
-//                intent.putExtra(LocationDAO.PICTURES_URI_KEY,bitmaps);
                 Log.i(TAG, "showPictures: starting intent");
                 startActivity(intent);
             });
@@ -519,6 +535,10 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
 
 
     }
+    /*
+     * affiche/cache l'écran de chargement en cours
+     */
+
     private void showLoadScreen(){
         binding.getRoot().setEnabled(false);
         binding.locationProgressBarContainer.setVisibility(View.VISIBLE);
@@ -527,6 +547,9 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
         binding.getRoot().setEnabled(true);
         binding.locationProgressBarContainer.setVisibility(View.GONE);
     }
+    /*
+     * télécharge les photos à partir des url présentes dans le lieu
+     */
     public void downloadPictures(){
         if (mapLocation.getPictures() != null) {
             showLoadScreen();
@@ -535,79 +558,10 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             Log.i(TAG, "downloadPictures: no pictures in mapLocation");
         }
     }
-    public void getBitmapsFromURL() {
 
-        new Thread(() -> {
-            try {
-                int i = 1;
-                getActivity().runOnUiThread(this::showLoadScreen);
-                for (String s : mapLocation.getPictures()) {
-
-                    if (s != null) {
-                        String pictureName;
-                        String picTurePath;
-                        URL url = new URL(s);
-                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                        connection.setDoInput(true);
-                        connection.connect();
-
-                        InputStream input = connection.getInputStream();
-
-                        File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), PictureDownloader.PICTURES_LOCAL_FOLDER);
-
-                        // Create the storage directory if it does not exist
-                        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
-                            Log.d(TAG, "failed to create directory");
-                        }
-                        Log.i(TAG, "takePicture: file path is: "+ mediaStorageDir.getPath());
-                        // Return the file target for the photo based on filename
-                        pictureName = MapLocation.generatePictureName(mapLocation.getId(),i);
-                        picTurePath = mediaStorageDir.getPath() + File.separator + pictureName;
-                        File file = new File(picTurePath);
-                        if(!file.exists()) {
-                            Log.i(TAG, "getBitmapsFromURL: picture file does not exist");
-                            file.createNewFile();
-                            BufferedInputStream bufferedInputStream = new BufferedInputStream(input);
-                            FileOutputStream fos = new FileOutputStream(file);
-                            int in = 0;
-                            Log.i(TAG, "getBitmapsFromURL: writing on file...");
-                            while ((in = bufferedInputStream.read()) != -1){
-                                fos.write(in);
-                            }
-                            
-                        }
-                        else{
-                            Log.i(TAG, "getBitmapsFromURL: picture already exists");
-                        }
-                        picturesPaths.add(picTurePath);
-                        picturesNames.add(pictureName);
-
-                        Log.i(TAG, "getBitmapsFromURL: getting Bitmap from file");
-                        Bitmap myBitmap = BitmapFactory.decodeFile(picTurePath);
-                        myBitmap = ExifUtil.rotateBitmap(picTurePath,myBitmap);
-                        Log.i(TAG, "getBitmapsFromURL: bitmap width : "+myBitmap.getWidth()+" height : "+myBitmap.getHeight());
-                        images.add(new SliderItem(myBitmap,pictureName));
-                        i++;
-                    }
-                }
-
-                getActivity().runOnUiThread(() ->{
-                    showPictures();
-                    hideLoadScreen();
-                });
-
-
-
-            } catch (IOException e) {
-                Toast.makeText(getContext(), getString(R.string.picture_retrieve_error), Toast.LENGTH_SHORT).show();
-
-            }
-
-        }).start();
-
-
-    }
-
+    /*
+     * callback sur le téléchargement des photos
+     */
     @Override
     public void onPictureDownload(ArrayList<SliderItem> _images) {
         if (_images != null) {

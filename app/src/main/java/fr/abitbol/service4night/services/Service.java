@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : Service
+ *
+ * Description   : classe abstraite représentant les services disponibles
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.services;
 
 import android.os.Bundle;
@@ -30,7 +43,7 @@ public abstract class Service implements Parcelable {
     public String getLabel() {
         return label;
     }
-    //TODO : reflechir a une interface Filterable
+    //TODO si temps : reflechir a une interface Filterable
     public abstract boolean matchFilter(Service filter);
     public abstract Map<Object,Object> getAsMap();
     public abstract Bundle getAsBundle();

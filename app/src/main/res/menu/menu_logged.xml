@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <item
         android:id="@+id/app_settings_item"
-        android:orderInCategory="99"
+        android:orderInCategory="95"
         android:title="@string/application_settings_title"
         android:icon="@android:drawable/ic_menu_manage"
         app:showAsAction="ifRoom"
@@ -14,13 +14,13 @@
 
         android:id="@+id/account_settings_item"
         android:icon="@mipmap/ic_account_settings"
-        android:orderInCategory="100"
+        android:orderInCategory="96"
         app:showAsAction="never"
         />
     <item
         android:title="@string/log_out_menu_item"
         android:id="@+id/log_out_item"
-        android:orderInCategory="96"
+        android:orderInCategory="99"
         app:showAsAction="never"
         android:icon="@mipmap/ic_log_out"/>
 </menu>

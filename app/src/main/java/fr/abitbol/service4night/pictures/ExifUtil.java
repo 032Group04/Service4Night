@@ -1,22 +1,25 @@
-package fr.abitbol.service4night.utils;
+/*
+ * Nom de classe : ExifUtil
+ *
+ * Description   : gère l'orientation et le redimensionnement des images
+ *
+ * Auteur        : Olivier Baylac, modification du code de Taro Kobayashi (https://gist.github.com/9re)
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
+package fr.abitbol.service4night.pictures;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
-import android.net.Uri;
-import android.os.Build;
+
 import android.util.Log;
 
 public class ExifUtil {
@@ -27,7 +30,7 @@ public class ExifUtil {
      */
 
     public static Bitmap resizeBitmap(Bitmap bitmap){
-        //TODO : a modifier selon blocage orientation photos
+        //TODO si bloquage orientation photos : a modifier selon blocage orientation photos
         Log.i(TAG, "resizeBitmap: untouched bytes = "+ bitmap.getByteCount());
         if (bitmap.getHeight() > bitmap.getWidth()){
             Log.i(TAG, "resizeBitmap: height is bigger");
@@ -44,8 +47,7 @@ public class ExifUtil {
             bitmap.recycle();
             Log.i(TAG, "resizeBitmap: new width = "+resized.getWidth()+" new height = "+resized.getHeight()+ "byte count = "+resized.getByteCount());
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//            bitmap.compress(Bitmap.CompressFormat.JPEG,60,outputStream);
-//            BitmapFactory.
+
             return resized;
         }
         else return bitmap;
@@ -121,21 +123,10 @@ public class ExifUtil {
         int orientation = 1;
         
         try {
-//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//            //src.compress(Bitmap.CompressFormat.JPEG,100,outputStream);
-//            byte[] bitMapBytes = outputStream.toByteArray();
-
             ExifInterface exif = new ExifInterface(src);
-
-
             orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
             Log.i(TAG, "getExifOrientation: orientation = "+orientation);
-//            Constructor<?> exifConstructor = exifClass.getConstructor(new Class[] { String.class });
-//            Object exifInstance = exifConstructor.newInstance(new Object[] { src });
-//            Method getAttributeInt = exifClass.getMethod("getAttributeInt", new Class[] { String.class, int.class });
-//            Field tagOrientationField = exifClass.getField("TAG_ORIENTATION");
-//            String tagOrientation = (String) tagOrientationField.get(null);
-//            orientation = (Integer) getAttributeInt.invoke(exifInstance, new Object[] { tagOrientation, 1});
+
         } catch (SecurityException e) {
             e.printStackTrace();
         } catch (IllegalArgumentException e) {

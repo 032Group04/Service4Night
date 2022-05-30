@@ -1,28 +1,49 @@
+/*
+ * Nom de classe : FullScreenPictureSlideActivity
+ *
+ * Description   : activité affichant le viewPager en plein écran
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night;
 
 import android.annotation.SuppressLint;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import fr.abitbol.service4night.databinding.ActivityFullScreenPictureSlideBinding;
 import fr.abitbol.service4night.fragments.LocationFragment;
-import fr.abitbol.service4night.utils.SliderAdapter;
-import fr.abitbol.service4night.utils.SliderItem;
+import fr.abitbol.service4night.pictures.SliderAdapter;
+import fr.abitbol.service4night.pictures.SliderItem;
+import fr.abitbol.service4night.pictures.TouchSliderAdapter;
+
+
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -45,11 +66,18 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
+    private static final String PICTURES_PATHS_LIST_NAME = "picturesPaths";
+    private static final String PICTURES_NAMES_LIST_NAME = "picturesNames";
     private static final int UI_ANIMATION_DELAY = 300;
     private static final String TAG = "FullScreePictureSlideActivity logging";
     private final Handler mHideHandler = new Handler();
     private View mContentView;
     private ViewPager2 viewPager;
+    private static int lastOrientation = -1;
+    private OrientationEventListener orientationListener;
+    private ArrayList<String> paths;
+    private ArrayList<String> names;
+    private ArrayList<SliderItem> images;
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -71,7 +99,6 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
             }
         }
     };
-    private View mControlsView;
     private final Runnable mShowPart2Runnable = new Runnable() {
         @Override
         public void run() {
@@ -80,7 +107,6 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
             if (actionBar != null) {
                 actionBar.show();
             }
-            mControlsView.setVisibility(View.VISIBLE);
         }
     };
     private boolean mVisible;
@@ -98,6 +124,7 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
     private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
+            Log.i(TAG, "onTouch called");
             switch (motionEvent.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     if (AUTO_HIDE) {
@@ -116,6 +143,43 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
     private ActivityFullScreenPictureSlideBinding binding;
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause called");
+        if (orientationListener != null){
+            Log.i(TAG, "onPause: disabling orientation listener");
+            orientationListener.disable();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume called");
+        if (orientationListener != null){
+            Log.i(TAG, "onResume: re-enabling orientation listener");
+            orientationListener.enable();
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.i(TAG, "onRestart called");
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (names != null){
+            outState.putStringArrayList(PICTURES_NAMES_LIST_NAME,names);
+        }
+        if (paths != null){
+            outState.putStringArrayList(PICTURES_PATHS_LIST_NAME,paths);
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate called");
@@ -127,31 +191,41 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
 
             Bundle extras = getIntent().getExtras();
 
-            ArrayList<String> paths = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_PATHS);
-            ArrayList<String> names = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_NAMES);
+            paths = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_PATHS);
+            names = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_NAMES);
 
-            ArrayList<SliderItem> images = new ArrayList<>();
-            for (int i = 0;i < paths.size();i++){
-                Bitmap bitmap = BitmapFactory.decodeFile(paths.get(i));
-                if (bitmap != null){
-                    Log.i(TAG, "onCreate: bitmap "+ names.get(i) + "successfully created");
-                    images.add(new SliderItem(bitmap,names.get(i)));
-
-                }
-                else Log.i(TAG, "onCreate: bitmap "+ names.get(i) + " creation failed");
-            }
-
-
-            viewPager.setAdapter(new SliderAdapter(images,viewPager));
 
 
         }
         else Log.i(TAG, "onCreate: intent or extra is null");
+        if (savedInstanceState != null){
+            if (savedInstanceState.containsKey(PICTURES_PATHS_LIST_NAME)){
+                paths = savedInstanceState.getStringArrayList(PICTURES_PATHS_LIST_NAME);
+            }
+            if (savedInstanceState.containsKey(PICTURES_NAMES_LIST_NAME)){
+                names = savedInstanceState.getStringArrayList(PICTURES_NAMES_LIST_NAME);
+            }
+        }
+
+        images = new ArrayList<>();
+        for (int i = 0;i < paths.size();i++){
+            Bitmap bitmap = BitmapFactory.decodeFile(paths.get(i));
+            if (bitmap != null){
+                Log.i(TAG, "onCreate: bitmap "+ names.get(i) + "successfully created");
+                images.add(new SliderItem(bitmap,names.get(i)));
+
+            }
+            else Log.i(TAG, "onCreate: bitmap "+ names.get(i) + " creation failed");
+        }
+
+
+        viewPager.setAdapter(new TouchSliderAdapter(images,viewPager));
+
 
         setContentView(binding.getRoot());
 
         mVisible = true;
-        mControlsView = binding.floatingActionButton;
+
         mContentView = binding.fullScreenContent;
 
         // Set up the user interaction to manually show or hide the system UI.
@@ -169,10 +243,34 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
     }
 
 
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        Log.i(TAG, "onPostCreate: called");
+        WindowManager windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
+        orientationListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int i) {
+//                Log.i(TAG, "onOrientationChanged called");
+                Display display = windowManager.getDefaultDisplay();
+                int rotation = display.getRotation();
+                if (rotation != lastOrientation){
+                    Log.i(TAG, "onOrientationChanged: orientation changed");
+                    viewPager.setAdapter(new TouchSliderAdapter(images,viewPager));
+                    viewPager.invalidate();
+                }
+                lastOrientation = rotation;
+            }
+        };
+        if (orientationListener.canDetectOrientation()){
+            Log.i(TAG, "onCreate: listener can detect orientation");
+            orientationListener.enable();
+        }
+        else{
+            Log.i(TAG, "onCreate: listener can't detect orientation");
+        }
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
@@ -193,7 +291,6 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.hide();
         }
-        mControlsView.setVisibility(View.GONE);
         mVisible = false;
 
         // Schedule a runnable to remove the status and navigation bar after a delay

@@ -1,3 +1,16 @@
+/*
+ * Nom de classe : ServiceParameters
+ *
+ * Description   : classe dédiée à la reflectivité (probable utilisation future pour générifier la reconstruction des objets Service depuis firestore)
+ *
+ * Auteur        : Olivier Baylac
+ *
+ * Version       : 1.0
+ *
+ * Date          : 28/05/2022
+ *
+ * Copyright     : CC-BY-SA
+ */
 package fr.abitbol.service4night.services;
 
 import java.util.LinkedHashMap;
