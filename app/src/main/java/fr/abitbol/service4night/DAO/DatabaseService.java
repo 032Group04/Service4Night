@@ -11,7 +11,7 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night.utils;
+package fr.abitbol.service4night.DAO;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -20,8 +20,6 @@ import android.util.Log;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.QuerySnapshot;
-
-import fr.abitbol.service4night.DAO.DAOFactory;
 
 
 public class DatabaseService extends IntentService {

@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Service4Night</string>
+    <string name="title_user_locations_list">Mes lieux</string>
+    <string name="title_account_options_fragment">Options du compte</string>
+    <string name="title_sign_in_fragment">Inscription</string>
+    <string name="title_menu_fragment">Accueil</string>
     <string name="pop_back_abort">Toutes les informations saisies seront perdues, continuer ?</string>
     <string name="pop_back_abort_title">Annuler</string>
     <string name="AddLocation_fragment_label">Ajouter un lieu</string>
@@ -47,6 +51,7 @@
     <string name="network_error_quit_option">Quitter l\'application</string>
     <string name="network_error_wait_option">Attendre</string>
     <string name="need_location_permissions">Cette fonctionnalité nécessite l\'accès à la localisation</string>
+    <string name="no_network_quitting">L\'application nécessite une connexion internet, fermeture…</string>
     <string name="add_location">Ajouter depuis la carte</string>
     <string name="validate">Valider</string>
     <string name="direct_add_button">Enregistrer ma position</string>

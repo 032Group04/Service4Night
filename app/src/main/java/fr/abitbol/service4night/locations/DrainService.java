@@ -11,7 +11,7 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night.services;
+package fr.abitbol.service4night.locations;
 
 import android.os.Bundle;
 import android.os.Parcel;

@@ -7,7 +7,7 @@
     <fragment
         android:id="@+id/accountSettingsMenuFragment"
         android:name="fr.abitbol.service4night.settings.AccountSettingsMenuFragment"
-        android:label="fragment_account_settings_menu"
+        android:label="@string/title_account_options_fragment"
         tools:layout="@layout/fragment_account_settings_menu" >
         <action
             android:id="@+id/action_accountSettingsMenuFragment_to_userLocationsFragment"
@@ -20,7 +20,7 @@
     <fragment
         android:id="@+id/userLocationsFragment"
         android:name="fr.abitbol.service4night.settings.UserLocationsFragment"
-        android:label="fragment_user_locations_list"
+        android:label="@string/title_user_locations_list"
         tools:layout="@layout/fragment_user_locations_list" >
         <action
             android:id="@+id/action_userLocationsFragment_to_locationUpdateFragment"

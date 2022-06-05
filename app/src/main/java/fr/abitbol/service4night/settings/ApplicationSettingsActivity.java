@@ -84,11 +84,8 @@ public class ApplicationSettingsActivity extends AppCompatActivity {
                             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                         }
                     }
-
-
                     return true;
                 }
-
             });
 
             Log.i(TAG," after listener preference is: " + preference.getSummary());

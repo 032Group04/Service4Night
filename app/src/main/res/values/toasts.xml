@@ -42,4 +42,5 @@
     <string name="mapsActivity_open_mode_missing">Error : Map opening mode missing</string>
     <string name="location_filter_no_result">No matching locations found</string>
     <string name="location_added_no_pictures">Pictures upload failed, you can add some later using \"account options\" from main menu</string>
+    <string name="no_network_quitting">The application need a valid connexion, closing…</string>
 </resources>

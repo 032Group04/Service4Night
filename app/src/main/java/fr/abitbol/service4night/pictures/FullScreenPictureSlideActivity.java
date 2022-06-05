@@ -11,7 +11,7 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.pictures;
 
 import android.annotation.SuppressLint;
 
@@ -184,18 +184,11 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate called");
         binding = ActivityFullScreenPictureSlideBinding.inflate(getLayoutInflater());
-        viewPager = binding.fullscreenViewPager;
         if (getIntent() != null && getIntent().getExtras()!=null){
             Log.i(TAG, "onCreate: intent and extras are valid");
-            
-
             Bundle extras = getIntent().getExtras();
-
             paths = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_PATHS);
             names = extras.getStringArrayList(LocationFragment.EXTRA_PICTURES_NAMES);
-
-
-
         }
         else Log.i(TAG, "onCreate: intent or extra is null");
         if (savedInstanceState != null){
@@ -206,6 +199,7 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
                 names = savedInstanceState.getStringArrayList(PICTURES_NAMES_LIST_NAME);
             }
         }
+        viewPager = binding.fullscreenViewPager;
 
         images = new ArrayList<>();
         for (int i = 0;i < paths.size();i++){
@@ -217,7 +211,6 @@ public class FullScreenPictureSlideActivity extends AppCompatActivity {
             }
             else Log.i(TAG, "onCreate: bitmap "+ names.get(i) + " creation failed");
         }
-
 
         viewPager.setAdapter(new TouchSliderAdapter(images,viewPager));
 

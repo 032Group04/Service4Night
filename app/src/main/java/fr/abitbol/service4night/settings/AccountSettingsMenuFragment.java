@@ -13,6 +13,7 @@
  */
 package fr.abitbol.service4night.settings;
 
+import android.app.ActionBar;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import fr.abitbol.service4night.MainActivity;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentAccountSettingsMenuBinding;
 
@@ -41,6 +43,31 @@ public class AccountSettingsMenuFragment extends Fragment {
 
         // Required empty public constructor
     }
+//    private void setTitle() {
+//
+//
+//        /*
+//         * modification du titre
+//         */
+//
+//        if (getActivity() != null) {
+//            Log.i(TAG, "onViewCreated: main activity not null");
+//            ActionBar actionBar = getActivity().getActionBar();
+//            if (actionBar != null) {
+//                Log.i(TAG, "onViewCreated: action bar not null");
+//                actionBar.setTitle(getString(R.string.title_user_locations_list));
+//
+//            } else {
+//                Log.i(TAG, "onViewCreated: action bar is null");
+//            }
+//
+//
+//
+//        } else Log.i(TAG, "onViewCreated: mainActivity is null");
+//
+//
+//
+//    }
 
 
     @Override

@@ -30,10 +30,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import fr.abitbol.service4night.databinding.WindowInfoBinding;
 import fr.abitbol.service4night.fragments.MapsFragment;
-import fr.abitbol.service4night.services.DrainService;
-import fr.abitbol.service4night.services.ElectricityService;
-import fr.abitbol.service4night.services.Service;
-import fr.abitbol.service4night.services.WaterService;
+import fr.abitbol.service4night.locations.DrainService;
+import fr.abitbol.service4night.locations.ElectricityService;
+import fr.abitbol.service4night.locations.MapLocation;
+import fr.abitbol.service4night.locations.Service;
+import fr.abitbol.service4night.locations.WaterService;
 
 
 public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInfoWindowClickListener {
@@ -141,6 +142,11 @@ public class InfoWindow  implements GoogleMap.InfoWindowAdapter, GoogleMap.OnInf
                 if (electricityService.getPrice() == 0){
                     box2.setButtonDrawable(R.drawable.ic_service_free);
                     box2.setText(R.string.free_electricity);
+                    box2.setVisibility(View.VISIBLE);
+                }
+                else{
+                    box2.setButtonDrawable(R.drawable.ic_service_paying);
+                    box2.setText(String.valueOf(electricityService.getPrice()) + " €");
                     box2.setVisibility(View.VISIBLE);
                 }
 

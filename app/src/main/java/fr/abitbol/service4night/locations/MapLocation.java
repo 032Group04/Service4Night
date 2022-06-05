@@ -11,7 +11,7 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night;
+package fr.abitbol.service4night.locations;
 
 import android.os.Bundle;
 import android.os.Parcel;
@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import fr.abitbol.service4night.DAO.LocationDAO;
-import fr.abitbol.service4night.services.Service;
 
 public class MapLocation implements Parcelable {
 

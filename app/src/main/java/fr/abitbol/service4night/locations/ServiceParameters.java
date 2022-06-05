@@ -11,10 +11,9 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night.services;
+package fr.abitbol.service4night.locations;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class ServiceParameters {
     private LinkedHashMap <String,Class<?>> parameters;

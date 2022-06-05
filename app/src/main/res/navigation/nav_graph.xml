@@ -19,9 +19,6 @@
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
         <action
-            android:id="@+id/action_MenuFragment_to_LocationFragment"
-            app:destination="@id/LocationFragment" />
-        <action
             android:id="@+id/action_MenuFragment_to_signInFragment"
             app:destination="@id/signInFragment"
             app:enterAnim="@anim/fui_slide_in_right"
@@ -69,7 +66,7 @@
     <fragment
         android:id="@+id/signInFragment"
         android:name="fr.abitbol.service4night.fragments.SignInFragment"
-        android:label="fragment_sign_in"
+        android:label="@string/title_sign_in_fragment"
         tools:layout="@layout/fragment_sign_in" >
         <action
             android:id="@+id/action_signInFragment_to_MenuFragment"

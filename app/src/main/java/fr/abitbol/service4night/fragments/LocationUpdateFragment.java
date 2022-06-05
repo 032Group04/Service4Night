@@ -17,6 +17,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -32,8 +33,10 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -56,17 +59,17 @@ import fr.abitbol.service4night.DAO.CloudStoragePictureDAO;
 import fr.abitbol.service4night.DAO.DAOFactory;
 import fr.abitbol.service4night.DAO.LocationDAO;
 import fr.abitbol.service4night.MainActivity;
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
 import fr.abitbol.service4night.listeners.OnPictureDeleteListener;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
-import fr.abitbol.service4night.services.DrainService;
-import fr.abitbol.service4night.services.DumpService;
-import fr.abitbol.service4night.services.ElectricityService;
-import fr.abitbol.service4night.services.InternetService;
-import fr.abitbol.service4night.services.Service;
-import fr.abitbol.service4night.services.WaterService;
+import fr.abitbol.service4night.locations.DrainService;
+import fr.abitbol.service4night.locations.DumpService;
+import fr.abitbol.service4night.locations.ElectricityService;
+import fr.abitbol.service4night.locations.InternetService;
+import fr.abitbol.service4night.locations.Service;
+import fr.abitbol.service4night.locations.WaterService;
 import fr.abitbol.service4night.pictures.ExifUtil;
 import fr.abitbol.service4night.pictures.PictureDeleteTask;
 import fr.abitbol.service4night.pictures.PictureDownloader;
@@ -79,7 +82,7 @@ import fr.abitbol.service4night.pictures.SliderItem;
 public class LocationUpdateFragment extends Fragment implements OnCompleteListener<Void>, OnPictureDownloadListener, PicturesUploader, PicturesDeleter {
 
 
-
+    private static final String ILLUSTRATION_PICTURE_NAME = "illustrationPicture";
     private FragmentAddLocationBinding binding;
 
     private final String TAG = "LocationUpdateFragment logging";
@@ -122,6 +125,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
                 try {
 
                     if (currentPictureName != null && currentPicTurePath != null && currentPictureUri != null) {
+                        viewPager.setAdapter(null);
                         if (currentPictureSpace == null){
                             Log.i(TAG, "onActivityResult: currentPictureSpacze is null");
                             currentPictureSpace = getPictureSpace();
@@ -159,6 +163,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         public void onActivityResult(Uri result) {
             if (result != null) {
                 try {
+                    viewPager.setAdapter(null);
                     Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), result);
                     pictureTaken = true;
                     currentPicTurePath =result.toString();
@@ -362,7 +367,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             }
 
 
-            viewPager.setAdapter(new SliderAdapter(images, viewPager));
+
 
 
             /** test uniquement :*/
@@ -374,7 +379,8 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
              */
         }
         setTitle();
-        if (!images.isEmpty()){
+        //active le bouton supprimer la photo si images n'est pas vide et ne contient pas l'image d'illustration
+        if (!images.isEmpty() && !(images.get(0).getName().equals(ILLUSTRATION_PICTURE_NAME))){
             enablePictureDelete(true);
         }
         if (binding.addWaterCheckBox.isChecked()) {
@@ -446,6 +452,11 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             PictureDownloader.getBitmapsFromURL(mapLocation,new ArrayList<String>(),new ArrayList<String>(),getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES),this);
         } else {
             Log.i(TAG, "loadPictures: no pictures in mapLocation");
+            //ajoute l'image d'illustration
+            List<SliderItem> tempList = new ArrayList<>();
+            tempList.add(new SliderItem(BitmapFactory.decodeResource(getResources(),R.drawable.no_picture),ILLUSTRATION_PICTURE_NAME));
+            viewPager.setAdapter(new SliderAdapter(tempList,viewPager));
+            viewPager.invalidate();
         }
     }
     /*
@@ -612,23 +623,40 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
             /*
              * modification du titre
              */
-            MainActivity mainActivity = (MainActivity) getActivity();
-            if (mainActivity != null) {
-                Log.i(TAG, "onViewCreated: main activity not null");
-                ActionBar actionBar = mainActivity.getSupportActionBar();
-                if (actionBar != null) {
-                    Log.i(TAG, "onViewCreated: action bar not null");
-                    actionBar.setTitle(mapLocation.getName());
+        MainActivity mainActivity = (MainActivity) getActivity();
+        if (mainActivity != null) {
+            Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
+            mainActivity.setSettingsVisibility(false);
+            int metricsDensity = getResources().getDisplayMetrics().densityDpi;
 
-                } else {
-                    Log.i(TAG, "onViewCreated: action bar is null");
+
+            if (metricsDensity == DisplayMetrics.DENSITY_HIGH){
+                Log.i(TAG, "onCreateView: density is high");
+                mainActivity.setTitle(mapLocation.getName());
+                mainActivity.setActionBarVisible(true);
+            }
+            else {
+                Log.i(TAG, "setTitle: density is medium-low");
+                int orientation = mainActivity.getWindowManager().getDefaultDisplay().getRotation();
+                if (orientation == Surface.ROTATION_0 || orientation == Surface.ROTATION_180) {
+                    Log.i(TAG, "onCreateView: screen in default rotation, showing actionBar ");
+
+                    mainActivity.setTitle(mapLocation.getName());
+                    mainActivity.setActionBarVisible(true);
+
+                } else if (orientation == Surface.ROTATION_90 || orientation == Surface.ROTATION_270) {
+                    Log.i(TAG, "onCreateView: screen is in secondary rotation, hiding actionBar");
+                    mainActivity.setActionBarVisible(false);
                 }
+                Log.i(TAG, "onViewCreated: main activity not null, setting title");
+            }
 
-                Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
-                mainActivity.setSettingsVisibility(false);
 
-            } else Log.i(TAG, "onViewCreated: mainActivity is null");
+        }
+        else{
+            Log.i(TAG, "onCreateView: mainActivity is null");
 
+        }
 
 
     }
@@ -946,11 +974,15 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     private void showPicturesLoadScreen(){
         binding.addProgressBarTextView.setText(R.string.loading_pictures);
         binding.addFrameLayout.setEnabled(false);
+        binding.getRoot().setEnabled(false);
+        binding.getRoot().setClickable(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
 
     }
     private void hideLoadScreen(){
         binding.addFrameLayout.setEnabled(true);
+        binding.getRoot().setEnabled(true);
+        binding.getRoot().setClickable(true);
         binding.addProgressBarContainer.setVisibility(View.GONE);
     }
     /*
@@ -1000,6 +1032,7 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
         if (_images != null) {
             Log.i(TAG, "onPictureDownload: download complete : "+ _images.size()+ " images");
             images = _images;
+
             getActivity().runOnUiThread(this::showPictures);
             getActivity().runOnUiThread(this::hideLoadScreen);
         }
@@ -1012,6 +1045,8 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     public void startProgressBar(){
         binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,1));
         binding.addFrameLayout.setEnabled(false);
+        binding.getRoot().setEnabled(false);
+        binding.getRoot().setClickable(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
         binding.addProgressBarContainer.setEnabled(true);
         //binding.addProgressBar.animate();
@@ -1020,6 +1055,8 @@ public class LocationUpdateFragment extends Fragment implements OnCompleteListen
     @Override
     public void stopProgressBar(){
         binding.addFrameLayout.setEnabled(true);
+        binding.getRoot().setEnabled(true);
+        binding.getRoot().setClickable(true);
         binding.addProgressBarContainer.setVisibility(View.GONE);
     }
     @Override

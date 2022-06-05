@@ -11,7 +11,7 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night.services;
+package fr.abitbol.service4night.locations;
 
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -23,8 +23,6 @@ import androidx.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import fr.abitbol.service4night.DAO.LocationDAO;
 
 public abstract class Service implements Parcelable {
 

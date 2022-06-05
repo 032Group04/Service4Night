@@ -21,7 +21,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 import fr.abitbol.service4night.databinding.FragmentUserLocationsBinding;
 import fr.abitbol.service4night.listeners.OnItemClickedListener;
 

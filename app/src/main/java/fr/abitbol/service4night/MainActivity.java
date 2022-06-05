@@ -38,12 +38,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
+import androidx.navigation.NavHost;
 import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -72,14 +74,14 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
-    private FirebaseUser user;
     private FirebaseAuth auth;
-    private boolean showSettings;
+    private FirebaseUser user;
     public static final int LOCATION_REQUEST_CODE = 8631584;
-
+    private static int QUIT_DELAY = 3000;
     public static final String PREFERENCE_THEME_KEY= "theme";
-    public static final String PREFERENCE_THEME_LIGHT= "Light";
-    public static final String PREFERENCE_THEME_DARK= "Dark";
+    public static final String ACTION_BAR_TITLE_NAME= "actionBarTitle";
+    public static final String VISIBLE_SETTINGS_NAME= "visibleSettings";
+    public static final String VISIBLE_ACTION_BAR_NAME= "visibleActionBar";
     public static final String PREFERENCE_THEME_DEFAULT= "Default";
     private final ActivityResultLauncher<Intent> launcher = registerForActivityResult(
             new FirebaseAuthUIActivityResultContract(),this);
@@ -89,20 +91,49 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     private NetworkReceiver networkReceiver;
     private AlertDialog networkAlertDialog;
     public static boolean prefChanged;
+    private boolean visibleActionBar;
+    private boolean visibleSettings;
+    private String actionBarTitle;
     boolean askingLocationPermissions;
     public static boolean coarseLocation = false;
     public static boolean fineLocation = false;
     public static boolean networkState = false;
 
     //TODO si temps: ajouter une note aux locations et un favori pour l'utilisateur
+
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(VISIBLE_ACTION_BAR_NAME,visibleActionBar);
+        outState.putBoolean(VISIBLE_SETTINGS_NAME,visibleSettings);
+        if (actionBarTitle != null){
+            outState.putString(ACTION_BAR_TITLE_NAME,actionBarTitle);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(savedInstanceState == null){
-            showSettings = true;
+            visibleSettings = true;
+            visibleActionBar = true;
+            actionBarTitle = null;
+        }
+        else{
+            visibleActionBar = savedInstanceState.getBoolean(VISIBLE_ACTION_BAR_NAME);
+            visibleSettings = savedInstanceState.getBoolean(VISIBLE_SETTINGS_NAME);
+//            if (savedInstanceState.containsKey(ACTION_BAR_TITLE_NAME)){
+//                actionBarTitle = savedInstanceState.getString(ACTION_BAR_TITLE_NAME);
+//
+//            }
+//            else{
+//                actionBarTitle = null;
+//            }
         }
         Log.i(TAG, "onCreate called");
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+        Log.i(TAG, "onCreate: binding created");
         askingLocationPermissions = false;
         auth = FirebaseAuth.getInstance();
         //TODO : tester si internet et sinon passer en mode hors ligne
@@ -123,22 +154,36 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
 
+        Log.i(TAG, "onCreate : visible action bar : " +visibleActionBar);
+
+
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
-        
+        if (visibleActionBar) {
+            getSupportActionBar().show();
+        } else {
+            getSupportActionBar().hide();
+        }
+
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         navController.addOnDestinationChangedListener(this);
 
 
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
+        if (actionBarTitle != null){
+            binding.toolbar.setTitle(actionBarTitle);
+        }
 
 
     }
 
     public AlertDialog getNetworkAlertDialog() {
         return networkAlertDialog;
+    }
+
+    public void setNetworkAlertDialog(AlertDialog networkAlertDialog) {
+        this.networkAlertDialog = networkAlertDialog;
     }
 
     @Override
@@ -261,11 +306,12 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         }
     }
     // retard la fermeture de l'application pour laisser a l'utilisateur le temps de lire le toast
+    //TODO: remplacer par un callBack sur la fermeture du toast
     private void delayedFinish(){
         new Thread(() -> {
             synchronized (this){
                 try {
-                    wait(5000);
+                    wait(QUIT_DELAY);
                     finish();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -335,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.i(TAG, "onCreateOptionsMenu called");
         // affiche le menu correspondant au statut utilisateur et au fragment affiché
-        if (showSettings) {
+        if (visibleSettings) {
             if (user != null){// menu connecté
                 Log.i(TAG, "onCreateOptionsMenu: user is valid : " + user.getEmail());
 
@@ -349,10 +395,10 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             Log.i(TAG, "onCreateOptionsMenu: hiding settings");
             getMenuInflater().inflate(R.menu.menu_empty, menu);
         }
-
-
         return true;
     }
+    //TODO : si temps : sauvegarder données location dans sharedPreferences pour reprendre plus tard
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         Log.i(TAG, "onOptionsItemSelected called item : "+ item);
@@ -375,33 +421,25 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
             Fragment fragment = getVisibleFragment();
             if (fragment != null){
                 if (fragment instanceof LocationAddFragment){
-                    //TODO : si temps : sauvegarder données location dans sharedPreferences pour reprendre plus tard
                     new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.pop_back_abort_title))
                         .setMessage(getString(R.string.pop_back_abort))
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 NavHostFragment.findNavController(fragment).popBackStack();
-
                             }
                         })
-
                         // A null listener allows the button to dismiss the dialog and take no further action.
                         .setNegativeButton(android.R.string.no, null)
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
                 }
-
-                else {
-                    NavHostFragment.findNavController(fragment).popBackStack();
-                }
+                else { NavHostFragment.findNavController(fragment).popBackStack(); }
             }
         }
         // clic sur menu options de l'application
         else if (item.getItemId() == R.id.app_settings_item){
             //TODO ajouter option vider cache images et vider cache sauf favoris
-//            Intent appSettingsIntent = new Intent(getApplicationContext(),ApplicationSettingsActivity.class);
-//            startActivity(appSettingsIntent);
             Fragment fragment = getVisibleFragment();
             if (fragment instanceof OnSettingsNavigation) {
                 Log.i(TAG, "onOptionsItemSelected: fragment does implements OnSettingsNavigation");
@@ -415,7 +453,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                     new AuthUI.IdpConfig.EmailBuilder().build(),
                     new AuthUI.IdpConfig.GoogleBuilder().build()
             );
-
+            // ouverture de la page de connexion
             launcher.launch(AuthUI.getInstance()
                 .createSignInIntentBuilder()
                 .setAvailableProviders(providers)
@@ -434,7 +472,6 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                else{
                    Log.i(TAG, "onOptionsItemSelected: logged out fail");
                    Toast.makeText(this, getString(R.string.log_out_failed), Toast.LENGTH_SHORT).show();
-
                }
             });
         }
@@ -445,9 +482,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
                 Log.i(TAG, "onOptionsItemSelected: visible fragment is a MenuFragment");
                 ((MenuFragment) fragment).navigateToSignIn();
             }
-
         }
-
         return true;
     }
 
@@ -457,9 +492,12 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         Fragment fragment = getSupportFragmentManager().findFragmentByTag("fragment_container");
         List<Fragment> fragments = fragment.getChildFragmentManager().getFragments();
         for (Fragment f : fragments){
-            if(f!=null && f.isVisible()){
+            if(f!=null ){
                 Log.i(TAG, "getvisiblefragment returns a fragment : tostring = " + f.toString()+ " "+f.getId());
+                if (!f.isVisible()){
+                    Log.i(TAG, "getVisibleFragment: fragment is not visible");}
                 return f;
+                
             }
         }
         Log.i(TAG, "getvisiblefragment returns null");
@@ -540,12 +578,12 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         if (fragment != null && (getVisibleFragment() instanceof MenuFragment || getVisibleFragment().getId() == menuFragmentId)) {
             Log.i(TAG, "manageMenu: visible fragment is the menu fragment");
             setSettingsVisibility(true);
-            setActionBarVisibility(true);
+            setActionBarVisible(true);
         }
         else if (id == menuFragmentId){
             Log.i(TAG, "manageMenu: destination is menu fragment");
             setSettingsVisibility(true);
-            setActionBarVisibility(true);
+            setActionBarVisible(true);
         }
         else{
             setSettingsVisibility(false);
@@ -562,38 +600,61 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
         networkAlertDialog = new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.network_error_title))
                 .setMessage(getString(R.string.network_error_message))
-                .setPositiveButton(R.string.network_error_quit_option, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-
-                    }
+                .setPositiveButton(R.string.network_error_quit_option, (dialog, which) -> finish())
+                .setOnDismissListener(dialogInterface -> {
+                    Toast.makeText(this, getString(R.string.no_network_quitting), Toast.LENGTH_SHORT).show();
+                    delayedFinish();
                 })
-
-                // A null listener allows the button to dismiss the dialog and take no further action.
-
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
-
-
     }
-    public void setActionBarVisibility(boolean b){
+    public void setActionBarVisible(boolean b){
         Log.i(TAG, "setActionBarVisibility called : "+ b);
-        if (getSupportActionBar()!=null) {
-            if (b){
-                getSupportActionBar().show();
+        boolean last = visibleActionBar;
+        visibleActionBar = b;
+        if (last != visibleActionBar){
+            Log.i(TAG, "setActionBarVisible: actionBar visibility has been changed");
+            if (getSupportActionBar()!=null) {
+                Log.i(TAG, "setActionBarVisible: action bar is not null");
+                if (b){
+                    getSupportActionBar().show();
+                }
+                else{
+                    getSupportActionBar().hide();
+                }
+
             }
-            else{
-                getSupportActionBar().hide();
+            else {
+                Log.i(TAG, "setActionBarVisibility: actionBar is null");
+
+                recreate();
+
             }
 
         }
+
+
     }
     public void setTitle(String title) throws NullPointerException{
-        binding.toolbar.setTitle(title);
+        if (title != null && !title.isEmpty() ) {
+            actionBarTitle = title;
+            if (getSupportActionBar()!= null){
+                Log.i(TAG, "setTitle: action bar is valid");
+                getSupportActionBar().setTitle(title);
+            }
+            else{
+                Log.i(TAG, "setTitle: action bar is null");
+
+            }
+
+        } else {
+            actionBarTitle = null;
+
+        }
     }
     public void setSettingsVisibility(boolean b){
         Log.i(TAG, "setSettingsVisibility called : "+b);
-        showSettings = b;
+        visibleSettings = b;
 
         invalidateOptionsMenu();
 
@@ -603,7 +664,7 @@ public class MainActivity extends AppCompatActivity implements ActivityResultCal
     @Override
     public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
         Log.i(TAG, "onDestinationChanged called :id= "+ destination.getId()+ "name ="+destination.getNavigatorName()+"label = "+destination.getLabel());
-        manageMenu((destination.getLabel()!=null)? destination.getId(): -1);
+//        manageMenu((destination.getLabel()!=null)? destination.getId(): -1);
 
     }
 }

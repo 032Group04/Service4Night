@@ -28,14 +28,14 @@
             android:value="${MAPS_API_KEY}" />
 
         <activity
-            android:name=".FullScreenPictureSlideActivity"
+            android:name=".pictures.FullScreenPictureSlideActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
             android:label="@string/title_activity_full_screen_picture_slide"
             android:theme="@style/Theme.Service4Night.Fullscreen" />
 
         <service
-            android:name=".utils.DatabaseService"
+            android:name=".DAO.DatabaseService"
             android:exported="false" />
 
         <meta-data

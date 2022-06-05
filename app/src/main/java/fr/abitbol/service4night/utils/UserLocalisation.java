@@ -27,11 +27,12 @@ public class UserLocalisation  {
     private static final String TAG = "UserLocalisation logging";
     private FusedLocationProviderClient locationProviderClient;
     private OnCompleteLocalisationListener listener;
-    boolean askingPermissions;
     public UserLocalisation(Context context){
         locationProviderClient = LocationServices.getFusedLocationProviderClient(context);
     }
+// L'IDE pense naîvement pouvoir régler le problème de permission avec quelques lignes dans le MANIFEST
     @SuppressLint("MissingPermission")
+
     public synchronized void locateUser(OnCompleteLocalisationListener _listener){
         Log.i(TAG, "locateUser: called");
         if (MainActivity.coarseLocation || MainActivity.fineLocation) {
@@ -46,11 +47,7 @@ public class UserLocalisation  {
             Log.i(TAG, "locateUser: location thread started");
 
         }
-        else{
-            Log.i(TAG, "locateUser: no location permissions available");
-        }
-        
-
+        else{ Log.i(TAG, "locateUser: no location permissions available"); }
     }
 
 

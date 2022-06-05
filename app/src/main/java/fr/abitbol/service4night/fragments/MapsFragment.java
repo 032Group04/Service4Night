@@ -55,22 +55,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.abitbol.service4night.utils.DatabaseService;
+import fr.abitbol.service4night.DAO.DatabaseService;
 import fr.abitbol.service4night.InfoWindow;
 import fr.abitbol.service4night.MainActivity;
-import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.utils.MapLocationFilter;
+import fr.abitbol.service4night.locations.MapLocation;
+import fr.abitbol.service4night.locations.MapLocationFilter;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.DrawerFilterBinding;
 import fr.abitbol.service4night.databinding.FragmentMapsBinding;
 import fr.abitbol.service4night.listeners.OnCompleteLocalisationListener;
 import fr.abitbol.service4night.listeners.OnInfoWindowClickedAdapter;
-import fr.abitbol.service4night.services.DrainService;
-import fr.abitbol.service4night.services.DumpService;
-import fr.abitbol.service4night.services.ElectricityService;
-import fr.abitbol.service4night.services.InternetService;
-import fr.abitbol.service4night.services.Service;
-import fr.abitbol.service4night.services.WaterService;
+import fr.abitbol.service4night.locations.DrainService;
+import fr.abitbol.service4night.locations.DumpService;
+import fr.abitbol.service4night.locations.ElectricityService;
+import fr.abitbol.service4night.locations.InternetService;
+import fr.abitbol.service4night.locations.Service;
+import fr.abitbol.service4night.locations.WaterService;
 import fr.abitbol.service4night.utils.UserLocalisation;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback, OnCompleteListener<QuerySnapshot>, OnCompleteLocalisationListener, OnInfoWindowClickedAdapter {
@@ -138,18 +138,19 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
         MainActivity mainActivity = (MainActivity) getActivity();
         if (mainActivity != null){
             Log.i(TAG, "onViewCreated: main activity not null");
-            ActionBar actionBar = mainActivity.getSupportActionBar();
-            if (actionBar != null){
-                Log.i(TAG, "onViewCreated: action bar not null");
-                actionBar.hide();
-
-            }
-            else{
-                Log.i(TAG, "onViewCreated: action bar is null");
-            }
-
-            Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
-            mainActivity.setSettingsVisibility(false);
+//            ActionBar actionBar = mainActivity.getSupportActionBar();
+//            if (actionBar != null){
+//                Log.i(TAG, "onViewCreated: action bar not null");
+//                actionBar.hide();
+//
+//            }
+//            else{
+//                Log.i(TAG, "onViewCreated: action bar is null");
+//            }
+//
+//            Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
+//            mainActivity.setSettingsVisibility(false);
+            mainActivity.setActionBarVisible(false);
 
         }
         else Log.i(TAG, "onViewCreated: mainActivity is null");
@@ -220,6 +221,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
                         break;
                     default:
+                        // pas de mode d'ouverture : retour au menu principal
                         Log.i(TAG, "onCreate: no extra in map intent");
                         Toast.makeText(getContext(), getString(R.string.mapsActivity_open_mode_missing), Toast.LENGTH_SHORT).show();
                         NavHostFragment.findNavController(MapsFragment.this).popBackStack();
@@ -451,12 +453,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
         }
         else{ Log.i(TAG,"theme preference unknown:" + theme);}
 
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(@NonNull LatLng latLng) {
-                Toast.makeText(getContext(),getString(R.string.map_button_toast),Toast.LENGTH_LONG).show();
-            }
-        });
+
 
         // déplace la caméra sur la position de l'utilisateur si il est localisé'
         if (userLocation != null){
@@ -468,6 +465,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, OnComp
 
         // écoute des boutons en mode ajout de lieu
         if (adding){
+            //clic simple : affiche un toast
+            mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                @Override
+                public void onMapClick(@NonNull LatLng latLng) {
+                    Toast.makeText(getContext(),getString(R.string.map_button_toast),Toast.LENGTH_LONG).show();
+                }
+            });
             // long clic : place un marqueur
             mMap.setOnMapLongClickListener(latLng -> {
                 Log.i(TAG, "lat : " + latLng.latitude + "\nlong : "+ latLng.longitude);

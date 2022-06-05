@@ -11,7 +11,7 @@
  *
  * Copyright     : CC-BY-SA
  */
-package fr.abitbol.service4night.utils;
+package fr.abitbol.service4night.locations;
 
 import android.util.Log;
 
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.services.Service;
+import fr.abitbol.service4night.locations.MapLocation;
+import fr.abitbol.service4night.locations.Service;
 
 public class MapLocationFilter {
     private static final String TAG = "MapLocationFilter logging";

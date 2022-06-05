@@ -26,7 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
 
 public class PictureDownloader {

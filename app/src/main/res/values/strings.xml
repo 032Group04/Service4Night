@@ -2,6 +2,10 @@
     <string name="app_name">Service4Night</string>
     <string name="title_activity_maps" translatable="false">MapsActivity</string>
     <string name="title_activity_main" translatable="false">MainActivity</string>
+    <string name="title_user_locations_list">My locations</string>
+    <string name="title_account_options_fragment">Account options</string>
+    <string name="title_sign_in_fragment">Sign in</string>
+    <string name="title_menu_fragment">Main menu</string>
 
     <!-- Strings used for fragments for navigation -->
     <string name="Menu_fragment_label" translatable="false">Service4Night</string>

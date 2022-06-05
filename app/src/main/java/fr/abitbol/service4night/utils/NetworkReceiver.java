@@ -43,25 +43,25 @@ public class NetworkReceiver extends BroadcastReceiver {
         Log.i(TAG, "onReceive: network changed");
         ConnectivityManager connManager = context.getSystemService(ConnectivityManager.class);
         networkInfo = connManager.getActiveNetworkInfo();
-
         if (mainActivity == null && context instanceof MainActivity){
             Log.i(TAG, "onReceive: context is mainActivity");
+            // récupération de l'instance de MainActivity
             mainActivity = (MainActivity) context;
         }
         if (mainActivity != null) {
             if (networkInfo == null || !networkInfo.isConnected()|| !networkInfo.isAvailable()) {
                 Log.i(TAG, "onReceive: network unavailable");
-
+                // affiche la boite de dialogue erreur réseau
                 mainActivity.showNetworkError();
-
             } else {
                 Log.i(TAG, "onReceive: network available");
                 if (mainActivity.getNetworkAlertDialog() != null) {
+                    // désactive la boite de dialogue
                     mainActivity.getNetworkAlertDialog().cancel();
+                    mainActivity.setNetworkAlertDialog(null);
                 }
             }
         }
-
     }
 
     public NetworkInfo getNetworkInfo() {

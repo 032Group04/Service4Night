@@ -15,12 +15,11 @@ package fr.abitbol.service4night.DAO;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.List;
 
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 
 public interface LocationDAO {
     /*

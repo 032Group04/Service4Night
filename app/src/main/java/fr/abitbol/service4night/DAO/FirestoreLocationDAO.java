@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 
 public class FirestoreLocationDAO implements LocationDAO {
     private static final String collection = "locations";
@@ -178,14 +178,14 @@ public class FirestoreLocationDAO implements LocationDAO {
         mappedLocation.put(LocationDAO.LOCATION_NAME_KEY, obj.getName());
         if (obj.getPictures() != null) mappedLocation.put(LocationDAO.PICTURES_URI_KEY,obj.getPictures());
         mappedLocation.put(LocationDAO.CONFIRMED_KEY, obj.isConfirmed());
-        if (listener != null) { // insert without listener on result
+        if (listener != null) { // insert with listener on result
             Log.i(TAG, "insert: listened insert");
 
             dataBase.collection("locations").document(obj.getId())
                     .set(mappedLocation)
                     .addOnCompleteListener(listener);
         }
-        else { // insert with a callback
+        else { // insert without a callback
             Log.i(TAG, "insert: not listened insert");
             AtomicBoolean success = new AtomicBoolean(false);
             

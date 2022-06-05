@@ -14,7 +14,6 @@
 package fr.abitbol.service4night.fragments;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,41 +26,35 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
-import fr.abitbol.service4night.FullScreenPictureSlideActivity;
+import fr.abitbol.service4night.databinding.FragmentLocationBinding;
+import fr.abitbol.service4night.pictures.FullScreenPictureSlideActivity;
 import fr.abitbol.service4night.MainActivity;
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.listeners.OnPictureDownloadListener;
-import fr.abitbol.service4night.pictures.ExifUtil;
 import fr.abitbol.service4night.pictures.PictureDownloader;
 import fr.abitbol.service4night.pictures.SliderAdapter;
 import fr.abitbol.service4night.pictures.SliderItem;
-import fr.abitbol.service4night.databinding.FragmentLocationBinding;
-import fr.abitbol.service4night.services.DrainService;
-import fr.abitbol.service4night.services.ElectricityService;
-import fr.abitbol.service4night.services.InternetService;
-import fr.abitbol.service4night.services.Service;
-import fr.abitbol.service4night.services.WaterService;
+import fr.abitbol.service4night.locations.DrainService;
+import fr.abitbol.service4night.locations.ElectricityService;
+import fr.abitbol.service4night.locations.InternetService;
+import fr.abitbol.service4night.locations.Service;
+import fr.abitbol.service4night.locations.WaterService;
 
 
 public class LocationFragment extends Fragment implements OnPictureDownloadListener {
@@ -84,7 +77,6 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
     private ViewPager2 viewPager;
     private ArrayList<String> picturesPaths;
     private ArrayList<String> picturesNames;
-
     public LocationFragment() {
         // Required empty public constructor
     }
@@ -191,21 +183,33 @@ public class LocationFragment extends Fragment implements OnPictureDownloadListe
             /*
              * modification du titre
              */
+
         MainActivity mainActivity = (MainActivity) getActivity();
         if (mainActivity != null) {
-            Log.i(TAG, "onViewCreated: main activity not null");
-            ActionBar actionBar = mainActivity.getSupportActionBar();
-            if (actionBar != null) {
-                Log.i(TAG, "onViewCreated: action bar not null");
-                actionBar.setTitle(mapLocation.getName());
-
-            } else {
-                Log.i(TAG, "onViewCreated: action bar is null");
-
-            }
-
             Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
             mainActivity.setSettingsVisibility(false);
+            int metricsDensity = getResources().getDisplayMetrics().densityDpi;
+            if (metricsDensity == DisplayMetrics.DENSITY_HIGH){
+                Log.i(TAG, "onCreateView: density is high");
+                mainActivity.setTitle(mapLocation.getName());
+                mainActivity.setActionBarVisible(true);
+            }
+            else {
+                Log.i(TAG, "onCreateView: density is medium or low");
+                int orientation = mainActivity.getWindowManager().getDefaultDisplay().getRotation();
+                if (orientation == Surface.ROTATION_0 || orientation == Surface.ROTATION_180) {
+                    Log.i(TAG, "onCreateView: screen in default rotation, showing actionBar ");
+                    mainActivity.setTitle(mapLocation.getName());
+                    mainActivity.setActionBarVisible(true);
+                } else if (orientation == Surface.ROTATION_90 || orientation == Surface.ROTATION_270) {
+                    Log.i(TAG, "onCreateView: screen is in secondary rotation, hiding actionBar");
+                    mainActivity.setActionBarVisible(false);
+                }
+            }
+            Log.i(TAG, "onViewCreated: main activity not null, setting title");
+        }
+        else{
+            Log.i(TAG, "onCreateView: mainActivity is null");
 
         }
 

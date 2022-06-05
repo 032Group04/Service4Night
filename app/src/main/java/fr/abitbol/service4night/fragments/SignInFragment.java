@@ -81,6 +81,7 @@ public class SignInFragment extends Fragment implements OnCompleteListener<AuthR
                     Log.i(TAG, "onViewCreated: mail length > 0");
                     if (checkPassword() && checkMail()){
                         Log.i(TAG, "onViewCreated: password check passed");
+                        binding.signInButton.setEnabled(false);
                         registerUser();
                     }
                 }
@@ -106,7 +107,7 @@ public class SignInFragment extends Fragment implements OnCompleteListener<AuthR
     public boolean checkPassword(){
         if (binding.signInPassword.getText().toString().equals(binding.signInPasswordConfirm.getText().toString())){
             Log.i(TAG, "checkPassword: confirm ok");
-            if (binding.signInPassword.getText().toString().matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,25}$")){
+            if (binding.signInPassword.getText().toString().matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+./\\=])(?=\\S+$).{8,25}$")){
                 Log.i(TAG, "checkPassword: regex passed");
                 return true;
             }
@@ -142,6 +143,8 @@ public class SignInFragment extends Fragment implements OnCompleteListener<AuthR
         if (task.isSuccessful()){
             if (FirebaseAuth.getInstance().getCurrentUser()!=null) {
                 Log.i(TAG, "registerUser: success , user :" + FirebaseAuth.getInstance().getCurrentUser().getEmail());
+                Toast.makeText(getContext(), getString(R.string.sign_in_success), Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(SignInFragment.this).popBackStack();
             }
 
         }

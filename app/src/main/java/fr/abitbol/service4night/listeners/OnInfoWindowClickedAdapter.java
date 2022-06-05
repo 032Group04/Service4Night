@@ -15,7 +15,7 @@ package fr.abitbol.service4night.listeners;
 
 
 
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 
 public interface OnInfoWindowClickedAdapter {
     public void infoWindowClicked(MapLocation location);

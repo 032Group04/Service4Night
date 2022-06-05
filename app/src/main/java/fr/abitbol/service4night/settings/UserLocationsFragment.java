@@ -36,9 +36,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.abitbol.service4night.utils.DatabaseService;
-import fr.abitbol.service4night.MapLocation;
-import fr.abitbol.service4night.utils.MapLocationFilter;
+import fr.abitbol.service4night.DAO.DatabaseService;
+import fr.abitbol.service4night.locations.MapLocation;
+import fr.abitbol.service4night.locations.MapLocationFilter;
 import fr.abitbol.service4night.R;
 import fr.abitbol.service4night.databinding.FragmentUserLocationsListBinding;
 import fr.abitbol.service4night.fragments.LocationUpdateFragment;

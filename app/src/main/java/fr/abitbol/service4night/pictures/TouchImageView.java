@@ -80,20 +80,20 @@ public class TouchImageView extends ImageView {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-//                Log.i(TAG, "onTouch called ");
                 mScaleDetector.onTouchEvent(event);
                 PointF curr = new PointF(event.getX(), event.getY());
 
                 switch (event.getAction()) {
+                    //passe en mode DRAG pour déplacer la photo zoomée lorsque l'utilisateur touche l'écran
                     case MotionEvent.ACTION_DOWN:
                         Log.i(TAG, "onTouch: action is down");
                         last.set(curr);
                         start.set(last);
                         mode = DRAG;
                         break;
-
                     case MotionEvent.ACTION_MOVE:
                         if (mode == DRAG) {
+                            // déplace la photo
                             Log.i(TAG, "onTouch: drag mode acion_move");
                             float deltaX = curr.x - last.x;
                             float deltaY = curr.y - last.y;
@@ -106,22 +106,22 @@ public class TouchImageView extends ImageView {
                             last.set(curr.x, curr.y);
                         }
                         break;
-
+                    // arrête le mode DRAG lorsque l'utilisateur lève le doigt de l'écran
                     case MotionEvent.ACTION_UP:
                         Log.i(TAG, "onTouch: action is up");
                         mode = NONE;
                         int xDiff = (int) Math.abs(curr.x - start.x);
                         int yDiff = (int) Math.abs(curr.y - start.y);
                         if (xDiff < CLICK && yDiff < CLICK)
+                            // transmet le clic
                             performClick();
                         break;
-
                     case MotionEvent.ACTION_POINTER_UP:
                         Log.i(TAG, "onTouch: action is pointer_up");
                         mode = NONE;
                         break;
                 }
-
+                //effectue la translation
                 setImageMatrix(matrix);
                 invalidate();
                 return true; // indicate event was handled
@@ -145,7 +145,6 @@ public class TouchImageView extends ImageView {
 
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            Log.i(TAG, "onScale called");
             float mScaleFactor = detector.getScaleFactor();
             float origScale = saveScale;
             saveScale *= mScaleFactor;

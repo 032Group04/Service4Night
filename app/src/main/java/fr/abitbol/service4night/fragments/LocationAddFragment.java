@@ -23,8 +23,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -61,10 +63,10 @@ import java.util.Map;
 
 import fr.abitbol.service4night.DAO.DAOFactory;
 import fr.abitbol.service4night.DAO.LocationDAO;
-import fr.abitbol.service4night.utils.DatabaseService;
+import fr.abitbol.service4night.DAO.DatabaseService;
 import fr.abitbol.service4night.pictures.ExifUtil;
 import fr.abitbol.service4night.MainActivity;
-import fr.abitbol.service4night.MapLocation;
+import fr.abitbol.service4night.locations.MapLocation;
 import fr.abitbol.service4night.pictures.PictureDownloader;
 import fr.abitbol.service4night.pictures.PicturesUploader;
 import fr.abitbol.service4night.pictures.PicturesUploadTask;
@@ -73,12 +75,12 @@ import fr.abitbol.service4night.pictures.SliderAdapter;
 import fr.abitbol.service4night.pictures.SliderItem;
 import fr.abitbol.service4night.utils.UserLocalisation;
 import fr.abitbol.service4night.databinding.FragmentAddLocationBinding;
-import fr.abitbol.service4night.services.DrainService;
-import fr.abitbol.service4night.services.DumpService;
-import fr.abitbol.service4night.services.ElectricityService;
-import fr.abitbol.service4night.services.InternetService;
-import fr.abitbol.service4night.services.Service;
-import fr.abitbol.service4night.services.WaterService;
+import fr.abitbol.service4night.locations.DrainService;
+import fr.abitbol.service4night.locations.DumpService;
+import fr.abitbol.service4night.locations.ElectricityService;
+import fr.abitbol.service4night.locations.InternetService;
+import fr.abitbol.service4night.locations.Service;
+import fr.abitbol.service4night.locations.WaterService;
 
 
 public class LocationAddFragment extends Fragment implements OnCompleteListener<Void>, PicturesUploader {
@@ -90,6 +92,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private static final String PICTURE_TAKEN_NAME = "pictureTaken";
     private static final String PICTURES_PATHS_LIST_NAME = "picturesPaths";
     private static final String PICTURES_NAMES_LIST_NAME = "picturesNames";
+    private static final String NAME_NAME = "name";
     private static final String MAPLOCATION_NAME = "mapLocation";
     private static final String POINT_NAME = "point";
 
@@ -134,24 +137,14 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
      * Activity contract de prise de photo
      */
     private ActivityResultLauncher<Uri> takePictureContract = registerForActivityResult(new ActivityResultContracts.TakePicture(), new ActivityResultCallback<Boolean>() {
-
-
-
         @Override
         public void onActivityResult(Boolean result) {
             Log.i(TAG, "onActivityResult: picture result : "+result);
-            if (result){
-
+            if (result){ // résultat du contrat valide
                 if(!pictureTaken){
                     pictureTaken = true;
-
-//                    if (images.get(0).getName().equals(EMPTY_VIEWPAGER_PICTURE_NAME)) {
-//                        images.remove(0);
-//                    }
-
                     viewPager.registerOnPageChangeCallback(onPageChangeCallback);
                 }
-
                 try {
                     Bitmap picture = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), currentPictureUri);
                     int pictureNum = getPictureNumber();
@@ -162,28 +155,27 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                     picture = ExifUtil.rotateBitmap(currentPicTurePath,picture);
                     picture = ExifUtil.resizeBitmap(picture);
                     int orientation = ExifUtil.getExifOrientation(currentPicTurePath);
+                    // ajout à la liste d'images
                     images.add(new SliderItem(picture,currentPictureName, currentPicTurePath));
+                    // ajout à la liste de chemins et de noms
                     picturesPaths.add(currentPicTurePath);
                     picturesNames.add(currentPictureName);
-
-
+                    //affichage des photos
                     showPictures();
                     //reservation du numéro de la photo
                     freePictureSpace[(pictureNum-1)] = false;
+                    //réinitialisation des variables provisoires
                     currentPicTurePath = null;
                     currentPictureName = null;
                     currentPictureUri = null;
+                    //activation de la suppression
                     enablePictureDelete(true);
-
-
-
                 } catch (IOException e) {
                     Toast.makeText(getContext(), "error while getting bitmap from uri", Toast.LENGTH_LONG).show();
                     currentPicTurePath = null;
                     currentPictureUri = null;
                     currentPictureName = null;
                 }
-
             }
         }
     });
@@ -252,7 +244,22 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-
+        // chemins des photos ajoutées
+        if (picturesPaths != null && !picturesPaths.isEmpty()){
+            Log.i(TAG, "onSaveInstanceState: saving images");
+            outState.putStringArrayList(PICTURES_PATHS_LIST_NAME, picturesPaths);
+            outState.putStringArrayList(PICTURES_NAMES_LIST_NAME,picturesNames);
+        }
+        //coordonnées du lieu
+        if (point != null){
+            Log.i(TAG, "onSaveInstanceState: saving point");
+            outState.putParcelable(POINT_NAME,point);
+        }
+        //nom du lieu
+        if (name != null){
+            outState.putString(NAME_NAME,name);
+        }
+        // booléen indiquant l'ajout de photos
         outState.putBoolean(PICTURE_TAKEN_NAME,pictureTaken);
         if (currentPictureName != null){
             outState.putString(CURRENT_PICTURE_NAME,currentPictureName);
@@ -263,17 +270,6 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         if (currentPictureUri != null){
             outState.putParcelable(CURRENT_PICTURE_URI, currentPictureUri);
         }
-        if (picturesPaths != null && !picturesPaths.isEmpty()){
-            Log.i(TAG, "onSaveInstanceState: saving images");
-            outState.putStringArrayList(PICTURES_PATHS_LIST_NAME, picturesPaths);
-            outState.putStringArrayList(PICTURES_NAMES_LIST_NAME,picturesNames);
-        }
-        if (point != null){
-            Log.i(TAG, "onSaveInstanceState: saving point");
-            outState.putParcelable(POINT_NAME,point);
-        }
-
-
         if (mapLocation != null) {
             Log.i(TAG, "onSaveInstanceState: map location not null");
             outState.putParcelable(MAPLOCATION_NAME,mapLocation);
@@ -305,6 +301,36 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         dataBase = DAOFactory.getLocationDAOOnline();
 
         binding = FragmentAddLocationBinding.inflate(inflater, container, false);
+
+        MainActivity mainActivity = (MainActivity) getActivity();
+        if (mainActivity != null) {
+            Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
+            mainActivity.setSettingsVisibility(false);
+
+           
+            int metricsDensity = getResources().getDisplayMetrics().densityDpi;
+
+
+            if (metricsDensity == DisplayMetrics.DENSITY_HIGH){
+                Log.i(TAG, "onCreateView: density is high");
+                mainActivity.setActionBarVisible(true);
+            }
+            else {
+                Log.i(TAG, "onCreateView: density is medium - low");
+                int orientation = mainActivity.getWindowManager().getDefaultDisplay().getRotation();
+                if (orientation == Surface.ROTATION_0 || orientation == Surface.ROTATION_180) {
+                    Log.i(TAG, "onCreateView: screen in default rotation, showing actionBar ");
+                    mainActivity.setActionBarVisible(true);
+                } else if (orientation == Surface.ROTATION_90 || orientation == Surface.ROTATION_270) {
+                    Log.i(TAG, "onCreateView: screen is in secondary rotation, hiding actionBar");
+                    mainActivity.setActionBarVisible(false);
+                }
+            }
+        }
+        else{
+            Log.i(TAG, "onCreateView: mainActivity is null");
+
+        }
         Log.i(TAG, "onCreateView: maplocation :" + String.valueOf(mapLocation == null));
         Log.i(TAG, "onCreateView: images :" + String.valueOf(images == null));
         Log.i(TAG, "onCreateView: picturesCloudUri : "+String.valueOf(picturesCloudUris == null));
@@ -352,10 +378,21 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
 
                 }
+                if (savedInstanceState.containsKey(NAME_NAME)){
+                    name = savedInstanceState.getString(NAME_NAME);
+                }
                 if (savedInstanceState.containsKey(MAPLOCATION_NAME)){
                     Log.i(TAG, "onCreateView: rebuilding mapLocation");
                     mapLocation = (MapLocation) savedInstanceState.getParcelable(MAPLOCATION_NAME);
-
+                    point = mapLocation.getPoint();
+                    if (name == null){
+                        name = mapLocation.getName();
+                    }
+                    try {
+                        showLocationDatas();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
                 }
                 else if (savedInstanceState.containsKey(POINT_NAME)){
@@ -407,6 +444,12 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                         double trimmedLat = Double.parseDouble(new DecimalFormat("##.0000000",dfs).format(task.getResult().getLatitude()));
                         double trimmedLng = Double.parseDouble(new DecimalFormat("##.0000000",dfs).format(task.getResult().getLongitude()));
                         point = new LatLng(trimmedLat,trimmedLng );
+                        try {
+                            showLocationDatas();
+                        } catch (IOException e) {
+                            Log.e(TAG, "onCreateView: ",e );
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
                         LatLngBounds bounds = new LatLngBounds(new LatLng(
                                 (point.latitude - 0.003),
                                 (point.longitude - 0.003)),
@@ -425,7 +468,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                                         try {
                                             LatLng point = new LatLng(doc.getDouble(LocationDAO.LATITUDE_KEY),doc.getDouble(LocationDAO.LONGITUDE_KEY));
                                             if (bounds.contains(point)){
-
+                                                Log.i(TAG, "onCreateView: location detected in procimity");
                                                 //boite de dialogue signalant un éventuel doublon
                                                 new AlertDialog.Builder(getContext())
                                                         .setTitle(getString(R.string.location_proximity_title))
@@ -448,6 +491,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
 
                                             }
 
+
+
                                         } catch (NullPointerException e) {
                                             Log.e(TAG, "onCreateView: couldn't get coordinates for location duplicate check", e);
 
@@ -457,16 +502,12 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
                                     else Log.i(TAG, "onCreateView: couldn't get coordinates for locations :" + doc.getId());
 
                                 }
+                                Log.i(TAG, "onCreateView: no location detected in proximity");
                                 hideLoadScreen();
                             }
                             else{
                                 Log.i(TAG, "onCreateView: task failed, couldn't check duplicate");
-                                try {
-                                    showLocationDatas();
-                                } catch (IOException e) {
-                                    Log.e(TAG, "onCreateView: ", e);
-                                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
+
                             }
                         });
                         showLoadScreen();
@@ -646,7 +687,7 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
         if (!pictureTaken && images.isEmpty()) {
             Log.i(TAG, "onCreateView: adding illustration picture");
             ArrayList<SliderItem> illustration = new ArrayList<>();
-            illustration.add(new SliderItem(BitmapFactory.decodeResource(getResources(), R.drawable.add_picture), EMPTY_VIEWPAGER_PICTURE_NAME));
+            illustration.add(new SliderItem(BitmapFactory.decodeResource(getResources(), R.drawable.add_picture_truck), EMPTY_VIEWPAGER_PICTURE_NAME));
             viewPager.setAdapter(new SliderAdapter(illustration,viewPager));
         }
 
@@ -685,50 +726,45 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
      * met en place les éléments dynamiques du layout.
      */
     private void showLocationDatas() throws IOException {
-        if (point != null) {
-            locationId = MapLocation.Builder.generateId(point);
-            Log.i(TAG, "onCreateView: intent extras: " + point.toString());
-            binding.locationAddTextviewCoordinates.setText(Double.toString(point.latitude)+" | "+Double.toString(point.longitude));
+        if (name == null) {
+            if (point != null) {
+                locationId = MapLocation.Builder.generateId(point);
+                Log.i(TAG, "onCreateView: intent extras: " + point.toString());
+                binding.locationAddTextviewCoordinates.setText(Double.toString(point.latitude)+" | "+Double.toString(point.longitude));
 
 
 
-            /*
-             * récupération du nom du lieu
-             */
-            Geocoder geocoder = new Geocoder(getContext());
-            List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
-            Address address = addresses.get(0);
+                /*
+                 * récupération du nom du lieu
+                 */
+                Geocoder geocoder = new Geocoder(getContext());
+                List<Address> addresses = geocoder.getFromLocation(point.latitude, point.longitude, 1);
+                Address address = addresses.get(0);
 
-            Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
-            if (address.getFeatureName() != null && address.getFeatureName().length() > 8) {
-                name = address.getFeatureName();
-                Log.i(TAG, "onViewCreated: adress feature name :" + name);
-            } else {
-                name = address.getAddressLine(0);
+                Log.i(TAG, "onViewCreated: address 0 = " + address.getAddressLine(0));
+                if (address.getFeatureName() != null && address.getFeatureName().length() > 8) {
+                    name = address.getFeatureName();
+                    Log.i(TAG, "onViewCreated: adress feature name :" + name);
+                } else {
+                    name = address.getAddressLine(0);
+                }
+            }else{
+                Toast.makeText(getContext(), getString(R.string.coordinates_missing_error), Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(LocationAddFragment.this).popBackStack();
             }
-        }else{
-            Toast.makeText(getContext(), getString(R.string.coordinates_missing_error), Toast.LENGTH_SHORT).show();
-            NavHostFragment.findNavController(LocationAddFragment.this).navigate(R.id.action_AddLocationFragment_to_MenuFragment);
         }
         /*
          * modification du titre
          */
         MainActivity mainActivity = (MainActivity) getActivity();
-        if (mainActivity != null){
-            Log.i(TAG, "onViewCreated: main activity not null");
-            ActionBar actionBar = mainActivity.getSupportActionBar();
-            if (actionBar != null){
-                Log.i(TAG, "onViewCreated: action bar not null");
-                actionBar.setTitle(name);
-
-            }
-            else{ Log.i(TAG, "onViewCreated: action bar is null");}
-
-            Log.i(TAG, "onCreateView: mainActivity is not null, hiding settings");
-            mainActivity.setSettingsVisibility(false);
+        if (mainActivity != null) {
+            Log.i(TAG, "onCreateView: mainActivity is not null, setting name");
+            mainActivity.setTitle(name);
+        }
+        else{
+            Log.i(TAG, "onCreateView: mainActivity is null");
 
         }
-        else Log.i(TAG, "onViewCreated: mainActivity is null");
 
 
 
@@ -952,21 +988,21 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
      * lance la prise de photo
      */
     private void takePicture() throws IOException {
-//        File mediaStorageDir = new File(getContext().getFilesDir(), "Service4night pics");
-
+        //accès au répertoire
         File mediaStorageDir = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), PictureDownloader.PICTURES_LOCAL_FOLDER);
-
+        // création du répertoire si il n'existe pas
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()){
             Log.d(TAG, "failed to create directory");
         }
         Log.i(TAG, "takePicture: file path is: "+ mediaStorageDir.getPath());
         int pictureCount;
+        //obtention d'un numéro unique pour la photo et création du nom pour le fichier
         if ((pictureCount = getPictureNumber()) != -1){
             currentPictureName = MapLocation.generatePictureName(locationId, pictureCount);
             currentPicTurePath = mediaStorageDir.getPath() + File.separator + currentPictureName;
             File file = new File(currentPicTurePath);
             currentPictureUri = FileProvider.getUriForFile(getContext(), "fr.abitbol.service4night.fileprovider", file);
-
+            // démarrage de l'activityContract
             takePictureContract.launch(currentPictureUri);
         }
         else{
@@ -989,11 +1025,15 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     private void showLoadScreen(){
         binding.addProgressBarTextView.setText(R.string.progressBar_coordinates_checking);
         binding.addFrameLayout.setEnabled(false);
+        binding.getRoot().setEnabled(false);
+        binding.getRoot().setClickable(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
 
     }
     private void hideLoadScreen(){
         binding.addFrameLayout.setEnabled(true);
+        binding.getRoot().setEnabled(true);
+        binding.getRoot().setClickable(true);
         binding.addProgressBarContainer.setVisibility(View.GONE);
     }
 
@@ -1004,6 +1044,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     public void startProgressBar(){
         binding.addProgressBarTextView.setText(String.format(getString(R.string.progressBar_text_format),1,images.size()));
         binding.addFrameLayout.setEnabled(false);
+        binding.getRoot().setEnabled(false);
+        binding.getRoot().setClickable(false);
         binding.addProgressBarContainer.setVisibility(View.VISIBLE);
         binding.addProgressBarContainer.setEnabled(true);
 
@@ -1011,6 +1053,8 @@ public class LocationAddFragment extends Fragment implements OnCompleteListener<
     @Override
     public void stopProgressBar(){
         binding.addFrameLayout.setEnabled(true);
+        binding.getRoot().setEnabled(true);
+        binding.getRoot().setClickable(true);
         binding.addProgressBarContainer.setVisibility(View.GONE);
     }
     @Override
